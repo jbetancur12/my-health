@@ -1,9 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Search, Plus, Filter, FileText, Users, Stethoscope, Calendar as CalendarIcon } from 'lucide-react';
 import { AppointmentCard } from './components/AppointmentCard';
 import { AppointmentDetail } from './components/AppointmentDetail';
 import { AddAppointmentModal } from './components/AddAppointmentModal';
 import { UpcomingControls } from './components/UpcomingControls';
+import * as api from '../utils/api';
 
 interface Document {
   id: string;
@@ -32,57 +33,9 @@ interface Appointment {
   notes?: string;
 }
 
-const mockAppointments: Appointment[] = [
-  {
-    id: '1',
-    date: new Date('2026-04-15'),
-    specialty: 'Cardiología',
-    doctor: 'Dr. Juan Pérez',
-    documents: [
-      { id: 'd1', type: 'historia_clinica', name: 'Historia clínica - Chequeo anual', date: new Date('2026-04-15') },
-      { id: 'd2', type: 'orden_procedimiento', name: 'Electrocardiograma', date: new Date('2026-04-15') },
-      { id: 'd3', type: 'orden_control', name: 'Control en 6 meses', date: new Date('2026-04-15') }
-    ],
-    notes: 'Presión arterial normal, seguir con medicación actual'
-  },
-  {
-    id: '2',
-    date: new Date('2026-03-20'),
-    specialty: 'Medicina General',
-    doctor: 'Dra. María González',
-    documents: [
-      { id: 'd4', type: 'laboratorio', name: 'Exámenes de sangre completos', date: new Date('2026-03-20') },
-      { id: 'd5', type: 'orden_medicamento', name: 'Ibuprofeno 400mg', date: new Date('2026-03-20') }
-    ],
-    notes: 'Revisión de rutina, valores normales'
-  },
-  {
-    id: '3',
-    date: new Date('2026-02-10'),
-    specialty: 'Oftalmología',
-    doctor: 'Dr. Carlos Ramírez',
-    documents: [
-      { id: 'd6', type: 'historia_clinica', name: 'Examen visual completo', date: new Date('2026-02-10') },
-      { id: 'd7', type: 'orden_procedimiento', name: 'Medición de presión ocular', date: new Date('2026-02-10') },
-      { id: 'd8', type: 'orden_control', name: 'Control en 12 meses', date: new Date('2026-02-10') }
-    ]
-  },
-  {
-    id: '4',
-    date: new Date('2026-01-25'),
-    specialty: 'Endocrinología',
-    doctor: 'Dra. Ana Martínez',
-    documents: [
-      { id: 'd9', type: 'laboratorio', name: 'Perfil tiroideo', date: new Date('2026-01-25') },
-      { id: 'd10', type: 'orden_medicamento', name: 'Levotiroxina 50mcg', date: new Date('2026-01-25') },
-      { id: 'd11', type: 'orden_control', name: 'Control en 3 meses', date: new Date('2026-01-25') }
-    ],
-    notes: 'Ajuste de dosis de tiroides'
-  }
-];
 
 export default function App() {
-  const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [controls, setControls] = useState<Control[]>([]);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -91,6 +44,28 @@ export default function App() {
   const [filterDoctor, setFilterDoctor] = useState<string>('all');
   const [filterDocType, setFilterDocType] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<'appointments' | 'controls'>('appointments');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  async function loadData() {
+    try {
+      setIsLoading(true);
+      const [appointmentsData, controlsData] = await Promise.all([
+        api.getAppointments(),
+        api.getControls()
+      ]);
+      setAppointments(appointmentsData);
+      setControls(controlsData);
+    } catch (error) {
+      console.error('Error loading data from backend:', error);
+      console.log('Usando modo sin conexión - los datos no se guardarán permanentemente');
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   const specialties = useMemo(() => {
     const unique = new Set(appointments.map(a => a.specialty));
@@ -118,30 +93,85 @@ export default function App() {
     }).sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [appointments, searchQuery, filterSpecialty, filterDoctor, filterDocType]);
 
-  const handleAddAppointment = (newApt: Omit<Appointment, 'id'> & { controls?: Omit<Control, 'id' | 'specialty' | 'doctor' | 'relatedAppointmentId'>[] }) => {
-    const appointmentId = Math.random().toString(36).substr(2, 9);
-    const appointment: Appointment = {
-      date: newApt.date,
-      specialty: newApt.specialty,
-      doctor: newApt.doctor,
-      documents: newApt.documents,
-      notes: newApt.notes,
-      id: appointmentId
-    };
-    setAppointments([appointment, ...appointments]);
+  const handleAddAppointment = async (newApt: Omit<Appointment, 'id'> & { controls?: Omit<Control, 'id' | 'specialty' | 'doctor' | 'relatedAppointmentId'>[] }) => {
+    try {
+      const documentsWithoutFiles = newApt.documents.map(doc => ({
+        id: doc.id,
+        type: doc.type,
+        name: doc.name,
+        date: doc.date
+      }));
 
-    if (newApt.controls && newApt.controls.length > 0) {
-      const newControls: Control[] = newApt.controls.map(ctrl => ({
-        ...ctrl,
-        id: Math.random().toString(36).substr(2, 9),
+      const savedAppointment = await api.saveAppointment({
+        date: newApt.date,
         specialty: newApt.specialty,
         doctor: newApt.doctor,
-        relatedAppointmentId: appointmentId
-      }));
-      setControls([...controls, ...newControls]);
-    }
+        documents: documentsWithoutFiles,
+        notes: newApt.notes
+      });
 
-    setShowAddModal(false);
+      for (const doc of newApt.documents) {
+        if (doc.file) {
+          try {
+            const fileUrl = await api.uploadFile(doc.file, savedAppointment.id, doc.id);
+            const docIndex = savedAppointment.documents.findIndex(d => d.id === doc.id);
+            if (docIndex !== -1) {
+              savedAppointment.documents[docIndex].fileUrl = fileUrl;
+            }
+          } catch (error) {
+            console.error(`Error uploading file for document ${doc.id}:`, error);
+          }
+        }
+      }
+
+      setAppointments([savedAppointment, ...appointments]);
+
+      if (newApt.controls && newApt.controls.length > 0) {
+        const savedControls: Control[] = [];
+        for (const ctrl of newApt.controls) {
+          const savedControl = await api.saveControl({
+            date: ctrl.date,
+            type: ctrl.type,
+            specialty: newApt.specialty,
+            doctor: newApt.doctor,
+            relatedAppointmentId: savedAppointment.id
+          });
+          savedControls.push(savedControl);
+        }
+        setControls([...controls, ...savedControls]);
+      }
+
+      setShowAddModal(false);
+    } catch (error) {
+      console.error('Error saving appointment to backend:', error);
+
+      const appointmentId = crypto.randomUUID();
+      const offlineAppointment: Appointment = {
+        id: appointmentId,
+        date: newApt.date,
+        specialty: newApt.specialty,
+        doctor: newApt.doctor,
+        documents: newApt.documents,
+        notes: newApt.notes
+      };
+
+      setAppointments([offlineAppointment, ...appointments]);
+
+      if (newApt.controls && newApt.controls.length > 0) {
+        const offlineControls: Control[] = newApt.controls.map(ctrl => ({
+          id: crypto.randomUUID(),
+          date: ctrl.date,
+          type: ctrl.type,
+          specialty: newApt.specialty,
+          doctor: newApt.doctor,
+          relatedAppointmentId: appointmentId
+        }));
+        setControls([...controls, ...offlineControls]);
+      }
+
+      setShowAddModal(false);
+      console.log('Cita guardada en modo offline - no se sincronizará con el servidor');
+    }
   };
 
   const handleControlClick = (control: Control) => {
@@ -318,11 +348,20 @@ export default function App() {
           )}
 
           <div className="p-4">
-            {activeTab === 'appointments' ? (
+            {isLoading ? (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-blue-600 mb-3"></div>
+                <p className="text-gray-500">Cargando datos...</p>
+              </div>
+            ) : activeTab === 'appointments' ? (
               filteredAppointments.length === 0 ? (
                 <div className="text-center py-12">
                   <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">No se encontraron citas con los filtros aplicados</p>
+                  <p className="text-gray-500">
+                    {appointments.length === 0
+                      ? 'No hay citas registradas. Haz clic en "Nueva Cita" para comenzar.'
+                      : 'No se encontraron citas con los filtros aplicados'}
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
