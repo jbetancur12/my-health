@@ -6,6 +6,11 @@ import { Appointment } from './entities/Appointment.js';
 import { Control } from './entities/Control.js';
 import { Document } from './entities/Document.js';
 import { Medication } from './entities/Medication.js';
+import { MedicalProfile } from './entities/MedicalProfile.js';
+import { NotificationPreference } from './entities/NotificationPreference.js';
+import { TagDefinition } from './entities/TagDefinition.js';
+import { Vaccine } from './entities/Vaccine.js';
+import { VitalSign } from './entities/VitalSign.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,7 +23,17 @@ if (!databaseUrl) {
 
 export default defineConfig({
   clientUrl: databaseUrl,
-  entities: [Appointment, Control, Document, Medication],
+  entities: [
+    Appointment,
+    Control,
+    Document,
+    Medication,
+    MedicalProfile,
+    NotificationPreference,
+    TagDefinition,
+    Vaccine,
+    VitalSign,
+  ],
   debug: process.env.NODE_ENV !== 'production',
   extensions: [Migrator],
   migrations: {
