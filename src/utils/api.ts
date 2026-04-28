@@ -1,6 +1,4 @@
-import { projectId, publicAnonKey } from '../../utils/supabase/info';
-
-const API_BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-342e1137`;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api';
 
 interface Appointment {
   id: string;
@@ -9,6 +7,7 @@ interface Appointment {
   doctor: string;
   documents: Document[];
   notes?: string;
+  tags?: string[];
 }
 
 interface Document {
@@ -29,12 +28,22 @@ interface Control {
   relatedAppointmentId: string;
 }
 
+export interface Medication {
+  id: string;
+  name: string;
+  dosage: string;
+  frequency: string;
+  startDate: Date;
+  endDate?: Date;
+  notes?: string;
+  active: boolean;
+}
+
 async function fetchAPI(endpoint: string, options: RequestInit = {}) {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${publicAnonKey}`,
       ...options.headers,
     },
   });
@@ -43,6 +52,10 @@ async function fetchAPI(endpoint: string, options: RequestInit = {}) {
     const errorText = await response.text();
     console.error(`API error on ${endpoint}: ${response.status} - ${errorText}`);
     throw new Error(`API request failed: ${response.status} - ${errorText}`);
+  }
+
+  if (response.status === 204) {
+    return null;
   }
 
   return response.json();
@@ -85,6 +98,22 @@ export async function saveAppointment(appointment: Omit<Appointment, 'id'>): Pro
   }
 }
 
+export async function updateAppointment(id: string, appointment: Partial<Appointment>): Promise<Appointment> {
+  const data = await fetchAPI(`/appointments/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(appointment),
+  });
+
+  return {
+    ...data.appointment,
+    date: new Date(data.appointment.date),
+    documents: data.appointment.documents.map((doc: any) => ({
+      ...doc,
+      date: new Date(doc.date),
+    })),
+  };
+}
+
 export async function getControls(): Promise<Control[]> {
   try {
     const data = await fetchAPI('/controls');
@@ -123,9 +152,6 @@ export async function uploadFile(file: File, appointmentId: string, documentId: 
 
     const response = await fetch(`${API_BASE_URL}/upload`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${publicAnonKey}`,
-      },
       body: formData,
     });
 
@@ -141,4 +167,45 @@ export async function uploadFile(file: File, appointmentId: string, documentId: 
     console.error('Error uploading file:', error);
     throw error;
   }
+}
+
+export async function getMedications(): Promise<Medication[]> {
+  const data = await fetchAPI('/medications');
+  return data.medications.map((medication: any) => ({
+    ...medication,
+    startDate: new Date(medication.startDate),
+    endDate: medication.endDate ? new Date(medication.endDate) : undefined,
+  }));
+}
+
+export async function saveMedication(medication: Omit<Medication, 'id'>): Promise<Medication> {
+  const data = await fetchAPI('/medications', {
+    method: 'POST',
+    body: JSON.stringify(medication),
+  });
+
+  return {
+    ...data.medication,
+    startDate: new Date(data.medication.startDate),
+    endDate: data.medication.endDate ? new Date(data.medication.endDate) : undefined,
+  };
+}
+
+export async function updateMedication(id: string, medication: Partial<Medication>): Promise<Medication> {
+  const data = await fetchAPI(`/medications/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(medication),
+  });
+
+  return {
+    ...data.medication,
+    startDate: new Date(data.medication.startDate),
+    endDate: data.medication.endDate ? new Date(data.medication.endDate) : undefined,
+  };
+}
+
+export async function deleteMedication(id: string): Promise<void> {
+  await fetchAPI(`/medications/${id}`, {
+    method: 'DELETE',
+  });
 }
