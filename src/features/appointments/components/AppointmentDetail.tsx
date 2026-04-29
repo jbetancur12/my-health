@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { TagDisplay } from './TagManager';
 import type { Appointment, AppointmentTag, Document } from '../../../shared/api/contracts';
 
@@ -64,6 +64,17 @@ export function AppointmentDetail({
   onRetryDocumentSummary,
 }: AppointmentDetailProps) {
   const [expandedSummaries, setExpandedSummaries] = useState<Record<string, boolean>>({});
+  const isStandalonePwa = useMemo(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return false;
+    }
+
+    return (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.matchMedia('(display-mode: fullscreen)').matches ||
+      window.matchMedia('(display-mode: minimal-ui)').matches
+    );
+  }, []);
 
   const toggleSummary = (documentId: string) => {
     setExpandedSummaries((current) => ({
@@ -174,7 +185,7 @@ export function AppointmentDetail({
                           className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
                         >
                           <Download className="h-4 w-4" />
-                          Abrir aparte
+                          {isStandalonePwa ? 'Abrir fuera de la app' : 'Abrir aparte'}
                         </a>
                       </div>
                     ) : (
