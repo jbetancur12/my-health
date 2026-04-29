@@ -45,7 +45,7 @@ docker compose --env-file .env.production -f compose.yaml -f compose.local-infra
    Copia `.env.production.example` a `.env.production`, ajusta secretos y dominio, y luego:
 
 ```bash
-docker compose --env-file .env.production -f compose.yaml -f compose.production.yaml up -d --build
+./deploy.sh
 ```
 
 Servicios del stack Docker:
@@ -58,6 +58,7 @@ Servicios del stack Docker:
 Notas:
 
 - en produccion no se exponen PostgreSQL ni MinIO al exterior
+- si ya tienes un proxy global como Nginx Proxy Manager, usa un `WEB_PORT` distinto, por ejemplo `8081`
 - Nginx ya acepta uploads de hasta `50 MB`, alineado con el limite del backend
 - el backend sigue ejecutando migraciones al iniciar
 - MinIO sigue creando buckets automaticamente desde la app

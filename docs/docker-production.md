@@ -56,6 +56,42 @@ This exposes:
 docker compose --env-file .env.production -f compose.yaml -f compose.production.yaml up -d --build
 ```
 
+### Production on a VPS with Nginx Proxy Manager
+
+This matches your current VPS shape well.
+
+Recommended values:
+
+- `WEB_PORT=8081`
+- `CLIENT_ORIGIN=https://citas.betancur.work`
+
+Deploy with:
+
+```bash
+./deploy.sh
+```
+
+Then create a new Proxy Host in Nginx Proxy Manager:
+
+- Domain Names: `citas.betancur.work`
+- Scheme: `http`
+- Forward Hostname / IP: `127.0.0.1`
+- Forward Port: `8081`
+- Block Common Exploits: enabled
+- Websockets Support: enabled
+
+In the SSL tab:
+
+- Request a new SSL certificate
+- Force SSL
+- HTTP/2 Support
+
+Important:
+
+- do not bind this app directly to `80` or `443`
+- those ports already belong to the global proxy manager
+- this app should only publish an internal host port like `8081`
+
 ## Network model
 
 ```text
@@ -71,6 +107,7 @@ Important decisions:
 - only `web` publishes a port publicly
 - `postgres` and `minio` remain internal in production
 - `app` is only reachable through the internal Docker network
+- when using a global proxy like Nginx Proxy Manager, `web` should publish a non-conflicting host port such as `8081`
 
 ## Why this shape
 
