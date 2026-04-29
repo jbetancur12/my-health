@@ -1,5 +1,5 @@
 import { X, Plus, Upload, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { TagManager } from './TagManager';
 import type {
@@ -9,6 +9,11 @@ import type {
   Document,
   DocumentType,
 } from '../../../shared/api/contracts';
+import {
+  canonicalizeAutocompleteValue,
+  normalizeAutocompleteValue,
+  sanitizeAutocompleteValue,
+} from '../lib/autocomplete';
 
 type PendingControl = Omit<Control, 'specialty' | 'doctor' | 'relatedAppointmentId'>;
 
@@ -157,13 +162,16 @@ export function AddAppointmentModal({
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-    if (!date || !specialty || !doctor) return;
+    const normalizedSpecialty = canonicalizeAutocompleteValue(specialty, existingSpecialties);
+    const normalizedDoctor = canonicalizeAutocompleteValue(doctor, existingDoctors);
+
+    if (!date || !normalizedSpecialty || !normalizedDoctor) return;
 
     onAdd({
       id: editingAppointment?.id,
       date: startOfDay(new Date(date)),
-      specialty,
-      doctor,
+      specialty: normalizedSpecialty,
+      doctor: normalizedDoctor,
       notes: notes || undefined,
       tags: selectedTags.length > 0 ? selectedTags : undefined,
       documents: documents.map((document, index) => ({
@@ -202,29 +210,27 @@ export function AddAppointmentModal({
               onChange={setDate}
               required
             />
-            <DatalistField
+            <AutocompleteField
               label="Especialidad"
               value={specialty}
               onChange={setSpecialty}
               placeholder="Ej: Cardiología, Medicina General"
-              listId="specialties-list"
               options={existingSpecialties}
               helper={
                 existingSpecialties.length > 0
-                  ? 'Selecciona una especialidad existente o escribe una nueva'
+                  ? 'Escribe para ver sugerencias y reutilizar especialidades ya guardadas'
                   : undefined
               }
             />
-            <DatalistField
+            <AutocompleteField
               label="Médico"
               value={doctor}
               onChange={setDoctor}
               placeholder="Nombre del médico"
-              listId="doctors-list"
               options={existingDoctors}
               helper={
                 existingDoctors.length > 0
-                  ? 'Selecciona un médico existente o escribe uno nuevo'
+                  ? 'Escribe para ver sugerencias y reutilizar médicos ya guardados'
                   : undefined
               }
             />
@@ -441,12 +447,11 @@ function InputField({
   );
 }
 
-function DatalistField({
+function AutocompleteField({
   label,
   value,
   onChange,
   placeholder,
-  listId,
   options,
   helper,
 }: {
@@ -454,28 +459,74 @@ function DatalistField({
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
-  listId: string;
   options: string[];
   helper?: string;
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const filteredOptions = useMemo(() => {
+    const normalizedValue = normalizeAutocompleteValue(value);
+    const baseOptions = normalizedValue
+      ? options.filter((option) =>
+          normalizeAutocompleteValue(option).includes(normalizedValue)
+        )
+      : options;
+
+    return baseOptions.slice(0, 8);
+  }, [options, value]);
+
+  const hasSuggestions = filteredOptions.length > 0;
+
+  const handleBlur = () => {
+    setIsOpen(false);
+    onChange(canonicalizeAutocompleteValue(value, options));
+  };
+
+  const handleSelect = (option: string) => {
+    onChange(option);
+    setIsOpen(false);
+  };
+
   return (
-    <div>
+    <div className="relative">
       <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
       <input
         type="text"
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) => {
+          onChange(event.target.value);
+          setIsOpen(true);
+        }}
+        onFocus={() => setIsOpen(true)}
+        onBlur={handleBlur}
         placeholder={placeholder}
-        list={listId}
+        autoComplete="off"
         className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
         required
       />
-      <datalist id={listId}>
-        {options.map((option) => (
-          <option key={option} value={option} />
-        ))}
-      </datalist>
+      {isOpen && hasSuggestions && (
+        <div className="absolute z-10 mt-1 max-h-52 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+          {filteredOptions.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onMouseDown={(event) => {
+                event.preventDefault();
+                handleSelect(option);
+              }}
+              className="block w-full px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-blue-50 hover:text-blue-700"
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      )}
       {helper && <p className="mt-1 text-xs text-gray-500">{helper}</p>}
+      {!helper && sanitizeAutocompleteValue(value) && !hasSuggestions && (
+        <p className="mt-1 text-xs text-gray-500">
+          Si no existe una coincidencia, guardaremos este valor como nuevo.
+        </p>
+      )}
     </div>
   );
 }

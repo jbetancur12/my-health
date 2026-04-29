@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import * as api from '../../../shared/api/api';
 import type { Appointment, AppointmentTag, Control } from '../../../shared/api/contracts';
+import { buildAutocompleteOptions } from '../lib/autocomplete';
 
 type PendingAppointmentControl = Omit<Control, 'specialty' | 'doctor' | 'relatedAppointmentId'>;
 
@@ -37,25 +38,15 @@ export function useAppointmentsData() {
   }
 
   const specialties = useMemo(() => {
-    const specialtyMap = new Map<string, string>();
-    appointments.forEach((appointment) => {
-      const lower = appointment.specialty.toLowerCase();
-      if (!specialtyMap.has(lower)) {
-        specialtyMap.set(lower, appointment.specialty);
-      }
-    });
-    return Array.from(specialtyMap.values()).sort();
+    return buildAutocompleteOptions(
+      appointments.map((appointment) => appointment.specialty)
+    );
   }, [appointments]);
 
   const doctors = useMemo(() => {
-    const doctorMap = new Map<string, string>();
-    appointments.forEach((appointment) => {
-      const lower = appointment.doctor.toLowerCase();
-      if (!doctorMap.has(lower)) {
-        doctorMap.set(lower, appointment.doctor);
-      }
-    });
-    return Array.from(doctorMap.values()).sort();
+    return buildAutocompleteOptions(
+      appointments.map((appointment) => appointment.doctor)
+    );
   }, [appointments]);
 
   async function saveAppointment(
