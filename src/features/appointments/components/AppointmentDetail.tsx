@@ -43,6 +43,14 @@ const documentTypeColors: Record<Document['type'], string> = {
   laboratorio: 'bg-pink-100 text-pink-700',
 };
 
+function formatSummaryLines(summary: string) {
+  return summary
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => line.replace(/\*\*/g, ''));
+}
+
 export function AppointmentDetail({
   appointment,
   onClose,
@@ -170,9 +178,30 @@ export function AppointmentDetail({
 
                     {document.aiSummaryStatus === 'completed' && document.aiSummary ? (
                       <div className="space-y-2">
-                        <p className="whitespace-pre-line text-sm leading-6 text-gray-700">
-                          {document.aiSummary}
-                        </p>
+                        <div className="space-y-2">
+                          {formatSummaryLines(document.aiSummary).map((line, index) => {
+                            const separatorIndex = line.indexOf(':');
+                            const hasLabel = separatorIndex > 0;
+                            const label = hasLabel ? line.slice(0, separatorIndex).trim() : '';
+                            const content = hasLabel ? line.slice(separatorIndex + 1).trim() : line;
+
+                            return (
+                              <div
+                                key={`${document.id}-summary-${index}`}
+                                className="rounded-md bg-white px-3 py-2 text-sm leading-6 text-gray-700"
+                              >
+                                {hasLabel ? (
+                                  <>
+                                    <span className="font-semibold text-gray-900">{label}:</span>{' '}
+                                    <span>{content}</span>
+                                  </>
+                                ) : (
+                                  <span>{content}</span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                         {document.aiSummaryUpdatedAt && (
                           <p className="text-xs text-gray-500">
                             Actualizado el{' '}

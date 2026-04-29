@@ -115,10 +115,10 @@ function summarizeOpenAiError(error: unknown) {
 
 function getSummaryPrompt(contentType: string) {
   if (contentType === 'application/pdf') {
-    return 'Resume este documento médico en español. Devuelve solo texto plano, breve y útil para una persona que luego consultará su historial. Incluye: 1) motivo o tipo de documento, 2) hallazgos o indicaciones principales, 3) medicamentos, exámenes o controles mencionados si aparecen, 4) próximos pasos importantes. Si falta información, dilo con cautela. Máximo 8 líneas.';
+    return 'Resume este documento médico en español. Devuelve solo texto plano, sin markdown, sin asteriscos y sin títulos decorativos. Usa una línea por ítem con este formato exacto cuando aplique: Documento: ..., Motivo: ..., Hallazgos: ..., Diagnóstico: ..., Tratamiento: ..., Exámenes: ..., Próximos pasos: ..., Estado: ... Si un dato no aparece, omítelo. Sé breve, claro y útil para consultar luego el historial.';
   }
 
-  return 'Observa esta imagen de un documento médico y genera un resumen en español. Devuelve solo texto plano, breve y útil para consultar luego el historial. Incluye hallazgos, indicaciones, medicamentos, exámenes o próximos pasos si se alcanzan a leer. Si la imagen no permite verlo con claridad, dilo con cautela. Máximo 8 líneas.';
+  return 'Observa esta imagen de un documento médico y genera un resumen en español. Devuelve solo texto plano, sin markdown, sin asteriscos y sin títulos decorativos. Usa una línea por ítem con este formato exacto cuando aplique: Documento: ..., Motivo: ..., Hallazgos: ..., Diagnóstico: ..., Tratamiento: ..., Exámenes: ..., Próximos pasos: ..., Estado: ... Si algo no se alcanza a leer, dilo con cautela. Omite campos que no aparezcan.';
 }
 
 function trimSummary(summary: string) {
