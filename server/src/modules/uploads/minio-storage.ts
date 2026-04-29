@@ -212,7 +212,6 @@ export async function uploadBufferToMinio({ bucket, objectKey, file }: UploadToM
   const client = getClient();
   await client.putObject(bucket, objectKey, file.buffer, file.buffer.length, {
     'Content-Type': file.mimetype || 'application/octet-stream',
-    'X-Amz-Meta-Original-File-Name': file.originalname,
   });
 }
 
