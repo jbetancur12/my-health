@@ -14,11 +14,14 @@ const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
 const DEFAULT_OPENAI_SUMMARY_MODEL = 'gpt-4.1-mini';
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 const DEFAULT_GEMINI_SUMMARY_MODEL = 'gemini-2.5-flash';
+const GROQ_CHAT_COMPLETIONS_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const DEFAULT_GROQ_SUMMARY_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
 const DEFAULT_MAX_SUMMARY_FILE_BYTES = 12 * 1024 * 1024;
+const GROQ_MAX_RAW_IMAGE_BYTES = 3 * 1024 * 1024;
 const supportedImageMimeTypes = new Set(['image/jpeg', 'image/png']);
 const activeSummaryJobs = new Set<string>();
 
-type SummaryProvider = 'openai' | 'gemini';
+type SummaryProvider = 'openai' | 'gemini' | 'groq';
 
 interface SummaryConfig {
   provider: SummaryProvider;
@@ -29,7 +32,7 @@ interface SummaryConfig {
 
 function getSummaryProviderPreference() {
   const provider = process.env.AI_SUMMARY_PROVIDER?.trim().toLowerCase();
-  if (provider === 'openai' || provider === 'gemini' || provider === 'disabled') {
+  if (provider === 'openai' || provider === 'gemini' || provider === 'groq' || provider === 'disabled') {
     return provider;
   }
 
@@ -70,6 +73,20 @@ function getGeminiSummaryConfig(): SummaryConfig | null {
   };
 }
 
+function getGroqSummaryConfig(): SummaryConfig | null {
+  const apiKey = process.env.GROQ_API_KEY?.trim();
+  if (!apiKey) {
+    return null;
+  }
+
+  return {
+    provider: 'groq',
+    apiKey,
+    model: process.env.GROQ_SUMMARY_MODEL?.trim() || DEFAULT_GROQ_SUMMARY_MODEL,
+    maxFileBytes: Math.min(getSharedSummaryMaxFileBytes(), GROQ_MAX_RAW_IMAGE_BYTES),
+  };
+}
+
 function getSummaryConfig(): SummaryConfig | null {
   const providerPreference = getSummaryProviderPreference();
 
@@ -85,7 +102,11 @@ function getSummaryConfig(): SummaryConfig | null {
     return getGeminiSummaryConfig();
   }
 
-  return getOpenAiSummaryConfig() ?? getGeminiSummaryConfig();
+  if (providerPreference === 'groq') {
+    return getGroqSummaryConfig();
+  }
+
+  return getOpenAiSummaryConfig() ?? getGeminiSummaryConfig() ?? getGroqSummaryConfig();
 }
 
 function isSupportedSummaryMimeType(contentType: string) {
@@ -193,6 +214,12 @@ async function generateSummary(document: Document) {
     throw new Error('Por ahora solo podemos resumir PDFs, JPG y PNG.');
   }
 
+  if (config.provider === 'groq' && contentType === 'application/pdf') {
+    throw new Error(
+      'Groq hoy lo dejamos solo para imágenes JPG/PNG. Para PDFs usa OpenAI o Gemini.'
+    );
+  }
+
   const base64 = buffer.toString('base64');
   const summary =
     config.provider === 'openai'
@@ -203,12 +230,19 @@ async function generateSummary(document: Document) {
           contentType,
           fileName: document.name,
         })
-      : await generateGeminiSummary({
-          apiKey: config.apiKey,
-          model: config.model,
-          base64,
-          contentType,
-        });
+      : config.provider === 'gemini'
+        ? await generateGeminiSummary({
+            apiKey: config.apiKey,
+            model: config.model,
+            base64,
+            contentType,
+          })
+        : await generateGroqSummary({
+            apiKey: config.apiKey,
+            model: config.model,
+            base64,
+            contentType,
+          });
 
   if (!summary) {
     throw new Error('La IA no devolvió un resumen utilizable para este documento.');
@@ -332,6 +366,59 @@ async function generateGeminiSummary(input: {
   );
 
   return summary;
+}
+
+async function generateGroqSummary(input: {
+  apiKey: string;
+  model: string;
+  base64: string;
+  contentType: string;
+}) {
+  const { apiKey, model, base64, contentType } = input;
+  const response = await fetch(GROQ_CHAT_COMPLETIONS_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: getSummaryPrompt(contentType),
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: `data:${contentType};base64,${base64}`,
+              },
+            },
+          ],
+        },
+      ],
+      temperature: 0.2,
+      max_completion_tokens: 700,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Groq respondió ${response.status}: ${errorText}`);
+  }
+
+  const data = (await response.json()) as {
+    choices?: Array<{
+      message?: {
+        content?: string;
+      };
+    }>;
+  };
+
+  return trimSummary(data.choices?.[0]?.message?.content ?? '');
 }
 
 async function processDocumentSummary(documentId: string) {

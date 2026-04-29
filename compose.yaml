@@ -52,6 +52,8 @@ services:
       OPENAI_SUMMARY_MODEL: ${OPENAI_SUMMARY_MODEL}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       GEMINI_SUMMARY_MODEL: ${GEMINI_SUMMARY_MODEL}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      GROQ_SUMMARY_MODEL: ${GROQ_SUMMARY_MODEL}
     depends_on:
       postgres:
         condition: service_healthy
