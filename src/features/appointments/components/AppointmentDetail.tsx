@@ -169,11 +169,12 @@ export function AppointmentDetail({
                         </button>
                         <a
                           href={document.fileUrl}
-                          download={document.name}
+                          target="_blank"
+                          rel="noreferrer"
                           className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
                         >
                           <Download className="h-4 w-4" />
-                          Descargar
+                          Abrir aparte
                         </a>
                       </div>
                     ) : (
