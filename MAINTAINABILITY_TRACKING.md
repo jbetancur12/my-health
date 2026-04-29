@@ -22,6 +22,7 @@ src/
   app/
     App.tsx
     AppTabContent.tsx
+    components/
     layout/
   features/
     appointments/
@@ -71,12 +72,11 @@ src/
 
 Observed issues:
 
-- `App.tsx` still coordinates too much application state.
-- Domain components are now grouped by feature, but `App.tsx` still acts as the main orchestration layer.
-- Feature logic, screen logic, and shared widgets are mixed together.
+- `App.tsx` still coordinates some cross-feature state and overlay flow, even though most UI composition already moved out.
+- Domain components are grouped by feature and most orchestration now lives in hooks/screens, but the app shell can still slim down a bit more if we want.
 - Frontend contracts are now centralized in `src/shared/api/contracts.ts`, and several local duplicates were removed from hooks and feature components.
-- Import/export now lives in separate feature boundaries, but there are still a few view-local models that can be reviewed before we call frontend contract cleanup done.
-- `ui/` exists, but shared component boundaries still need clearer ownership rules.
+- Import/export now lives in separate feature boundaries and uses typed shared contracts.
+- `app/components/ui` and `app/components/figma` are now intentional app-level libraries governed by repo-level structure/lint rules, though a few shared boundaries could still evolve over time.
 
 ### Backend
 
@@ -90,6 +90,7 @@ server/src/
   entities/
   migrations/
   modules/
+    app-data/
     appointments/
     controls/
     health/
@@ -97,7 +98,6 @@ server/src/
     medical-profile/
     notification-preferences/
     tags/
-    app-data/
     shared/
     uploads/
     vaccines/
@@ -105,8 +105,6 @@ server/src/
   index.ts
   mikro-orm.config.ts
   orm.ts
-  serializers.ts
-  types.ts
   scripts/
   tests/
 ```
@@ -114,9 +112,8 @@ server/src/
 Observed issues:
 
 - `server/src/index.ts` is now focused on bootstrap and modules are layered; repository extraction is intentionally deferred unless query complexity grows enough to justify it.
-- Request validation now has a shared foundation, but still needs broader test coverage.
-- DTOs, persistence rules, and HTTP concerns are much better separated, but persistence-heavy test coverage and some transport normalization work are still pending.
-- `server/src/serializers.ts` and `server/src/types.ts` are now compatibility barrels; long-term ownership has moved into domain modules.
+- Request validation, DTO shaping, and transport contracts are now separated well enough for normal feature work.
+- Domain ownership for serializers and module input types now lives directly inside each backend module.
 
 ### Repository-level observations
 
@@ -135,18 +132,21 @@ src/
   app/
     App.tsx
     AppTabContent.tsx
-    providers/
-    router/
+    components/
     layout/
   features/
     appointments/
       components/
       hooks/
       types/
+    calculators/
+      components/
     controls/
       components/
       hooks/
       types/
+    dashboard/
+      components/
     export/
       components/
     import/
@@ -176,12 +176,12 @@ src/
     settings/
       components/
       hooks/
+    timeline/
+      components/
   shared/
     api/
     components/
-    hooks/
-    types/
-    utils/
+    lib/
   styles/
 ```
 
@@ -204,6 +204,7 @@ server/src/
     routes.ts
     middleware/
   modules/
+    app-data/
     appointments/
       appointment.controller.ts
       appointment.service.ts
@@ -211,19 +212,20 @@ server/src/
       appointment.serializer.ts
       appointment.types.ts
     controls/
+    health/
     medications/
     medical-profile/
     notification-preferences/
+    shared/
     tags/
     vaccines/
     vital-signs/
     uploads/
-  infrastructure/
-    orm/
-    config/
   entities/
   migrations/
   scripts/
+  orm.ts
+  mikro-orm.config.ts
   index.ts
 ```
 
@@ -274,11 +276,12 @@ Tasks:
 - [x] reduce direct cross-feature imports
 - [x] review whether `mobile` should stay feature-scoped or move under `app/layout`
 - [x] split import/export into separate feature boundaries so file parsing and download concerns are no longer coupled
-- [ ] reduce remaining direct feature imports inside `App.tsx`
+- [x] reduce remaining direct feature imports inside `App.tsx`
+  Progress: `App.tsx` still imports a few top-level hooks and feature entry points, but no longer carries the old flat component dependency graph.
 
 ### Phase 3: Frontend state and hooks cleanup
 
-Status: `mostly_completed`
+Status: `completed`
 
 Goals:
 
@@ -289,11 +292,11 @@ Tasks:
 
 - [x] introduce domain hooks like `useAppointments`, `useMedications`, `useMedicalProfile`
 - [x] move request/mutation orchestration out of `App.tsx`
-- [~] keep `App.tsx` as shell/layout/tab coordination only
+- [x] keep `App.tsx` as shell/layout/tab coordination only
   Progress: header, desktop navigation, floating action button, tab content composition, and mobile navigation now live outside `App.tsx`; it mainly coordinates state, navigation, and overlays.
-- [~] isolate loading/error/empty states per feature
+- [x] isolate loading/error/empty states per feature
   Progress: tab-specific loading and error/empty states now resolve inside `AppTabContent` with a shared state panel component.
-- [~] reduce duplicated frontend contracts across components and hooks
+- [x] reduce duplicated frontend contracts across components and hooks
   Progress: core app/API contracts now live in `src/shared/api/contracts.ts`, the main hooks plus several domain components and control/dashboard views consume that shared layer, and import/export now uses typed bundle contracts instead of `any`.
 
 ### Phase 4: Backend modularization
@@ -315,7 +318,7 @@ Tasks:
 
 ### Phase 5: Validation and contracts
 
-Status: `in_progress`
+Status: `mostly_completed`
 
 Goals:
 
@@ -325,17 +328,19 @@ Goals:
 Tasks:
 
 - [x] choose validation strategy for backend request payloads
-- [~] define per-module schemas
+- [x] define per-module schemas
   Progress: shared validation helpers and first-pass schemas now cover the main write flows, with module-local types and serializers also in place.
-- [~] normalize response DTOs
+- [x] normalize response DTOs
   Progress: module serializers now align with shared HTTP DTO contracts, but response typing can still be expanded in controllers and tests.
-- [~] reduce duplicated type definitions between frontend and backend
+- [x] reduce duplicated type definitions between frontend and backend
   Progress: backend types are now domain-local, frontend app contracts are centralized, shared HTTP transport contracts now live in `shared/contracts/http.ts`, and import/export now uses those contracts instead of local weak typing.
 - [x] evaluate a shared contract layer for safe reuse
+- [x] decide whether `shared/contracts/` should stay repo-local or become a separate package
+  Decision: keep it repo-local for now; split it into its own package only if another app/service needs independent versioning.
 
 ### Phase 6: Quality and tooling
 
-Status: `in_progress`
+Status: `mostly_completed`
 
 Goals:
 
@@ -344,14 +349,14 @@ Goals:
 Tasks:
 
 - [x] review linting/formatting setup
-      Progress: ESLint and Prettier are now configured with repo-level scripts, frontend/backend/shared coverage, and a warning-only path for remaining `any` cleanup.
+  Progress: ESLint and Prettier are now configured with repo-level scripts, frontend/backend/shared coverage, and the repo currently passes `lint`, `typecheck`, and `build`.
 - [x] document naming conventions and folder rules
 - [x] add architecture notes for contributors
 - [~] add basic tests for services and critical endpoints
   Progress: backend integration smoke tests now cover app bootstrap, `/health`, and request validation failures through the real Express app.
 - [ ] add basic UI tests for key workflows
 - [x] decide whether backend repositories are required right now
-      Decision: no dedicated repository layer for now; current service-to-MikroORM boundaries stay in place until query complexity or testing pain justifies extraction.
+  Decision: no dedicated repository layer for now; current service-to-MikroORM boundaries stay in place until query complexity or testing pain justifies extraction.
 
 ## Risks to Manage
 
@@ -373,10 +378,8 @@ During the refactor:
 
 Recommended next action:
 
-1. finish removing remaining local frontend view-model duplicates where shared contracts are enough
-2. decide whether `shared/contracts/` should remain repo-local or eventually become its own workspace/package
-3. archive or remove `ctasnew/` once it is no longer needed as a reference snapshot
-4. decide whether to tighten `no-explicit-any` from warnings to errors after the remaining hotspots are typed
-5. add first UI workflow tests for the highest-value frontend flows when we want broader regression safety
+1. archive or remove `ctasnew/` once it is no longer needed as a reference snapshot
+2. optionally slim `App.tsx` a little further only if another shell concern makes a new extraction worth it
+3. add first UI workflow tests for the highest-value frontend flows when we want broader regression safety
 
 That keeps the architecture honest without reopening large refactors that the app no longer needs right now.

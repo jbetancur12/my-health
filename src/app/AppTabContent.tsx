@@ -7,6 +7,7 @@ import { ExportData } from '../features/export/components/ExportData';
 import { MedicalProfileScreen } from '../features/medical-profile/screens/MedicalProfileScreen';
 import { SettingsScreen } from '../features/settings/screens/SettingsScreen';
 import { FeatureStatePanel } from '../shared/components/FeatureStatePanel';
+import type { AppointmentStats } from '../features/appointments/hooks/useAppointmentFilters';
 import type {
   Appointment,
   AppDataBundle,
@@ -69,12 +70,6 @@ const PDFReport = lazy(async () => {
   const module = await import('../features/reports/components/PDFReport');
   return { default: module.PDFReport };
 });
-
-interface AppointmentStats {
-  totalAppointments: number;
-  totalDocuments: number;
-  totalSpecialties: number;
-}
 
 interface AppTabContentProps {
   activeTab: AppTab;

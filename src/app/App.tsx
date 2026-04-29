@@ -8,7 +8,7 @@ import { MobileBottomNav } from './layout/MobileBottomNav';
 import { MobileDrawer } from './layout/MobileDrawer';
 import { MobileOptimization } from './layout/MobileOptimization';
 import type { AppTab } from './types';
-import { type SearchFilters } from '../features/appointments/components/AdvancedSearch';
+import { useAppointmentFilters } from '../features/appointments/hooks/useAppointmentFilters';
 import { useAppointmentsData } from '../features/appointments/hooks/useAppointmentsData';
 import { useMedicalProfileData } from '../features/medical-profile/hooks/useMedicalProfileData';
 import { ControlAlerts } from '../features/controls/components/ControlAlerts';
@@ -91,12 +91,22 @@ export default function App() {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
-  const [filterSpecialty, setFilterSpecialty] = useState<string>('all');
-  const [filterDoctor, setFilterDoctor] = useState<string>('all');
-  const [filterDocType, setFilterDocType] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<AppTab>('dashboard');
-  const [searchFilters, setSearchFilters] = useState<SearchFilters>({ query: '', tags: [] });
   const [pdfViewer, setPdfViewer] = useState<{ url: string; name: string } | null>(null);
+  const {
+    filterSpecialty,
+    filterDoctor,
+    filterDocType,
+    filteredAppointments,
+    stats,
+    setFilterSpecialty,
+    setFilterDoctor,
+    setFilterDocType,
+    setSearchFilters,
+  } = useAppointmentFilters({
+    appointments,
+    specialties,
+  });
 
   useEffect(() => {
     if (
@@ -122,47 +132,6 @@ export default function App() {
     const interval = window.setInterval(checkReminders, 60 * 60 * 1000);
     return () => window.clearInterval(interval);
   }, [appointments, controls, medications, notificationPreferences.reminderDays, vaccines]);
-
-  const filteredAppointments = useMemo(() => {
-    return appointments
-      .filter((appointment) => {
-        const textQuery = searchFilters.query;
-        const matchesSearch =
-          textQuery === '' ||
-          appointment.specialty.toLowerCase().includes(textQuery.toLowerCase()) ||
-          appointment.doctor.toLowerCase().includes(textQuery.toLowerCase()) ||
-          appointment.notes?.toLowerCase().includes(textQuery.toLowerCase()) ||
-          appointment.documents.some((document) =>
-            document.name.toLowerCase().includes(textQuery.toLowerCase())
-          );
-
-        const matchesDateFrom =
-          !searchFilters.dateFrom || new Date(appointment.date) >= searchFilters.dateFrom;
-        const matchesDateTo =
-          !searchFilters.dateTo || new Date(appointment.date) <= searchFilters.dateTo;
-        const matchesTags =
-          searchFilters.tags.length === 0 ||
-          (appointment.tags && searchFilters.tags.some((tag) => appointment.tags?.includes(tag)));
-
-        const matchesSpecialty =
-          filterSpecialty === 'all' || appointment.specialty === filterSpecialty;
-        const matchesDoctor = filterDoctor === 'all' || appointment.doctor === filterDoctor;
-        const matchesDocType =
-          filterDocType === 'all' ||
-          appointment.documents.some((document) => document.type === filterDocType);
-
-        return (
-          matchesSearch &&
-          matchesDateFrom &&
-          matchesDateTo &&
-          matchesTags &&
-          matchesSpecialty &&
-          matchesDoctor &&
-          matchesDocType
-        );
-      })
-      .sort((a, b) => b.date.getTime() - a.date.getTime());
-  }, [appointments, filterDocType, filterDoctor, filterSpecialty, searchFilters]);
 
   const handleAddAppointment = async (
     newAppointment: Omit<Appointment, 'id'> & {
@@ -256,18 +225,6 @@ export default function App() {
       setActiveTab('profile');
     }
   };
-
-  const stats = useMemo(
-    () => ({
-      totalAppointments: appointments.length,
-      totalDocuments: appointments.reduce(
-        (sum, appointment) => sum + appointment.documents.length,
-        0
-      ),
-      totalSpecialties: specialties.length,
-    }),
-    [appointments, specialties]
-  );
 
   const exportPayload = useMemo(
     () => ({

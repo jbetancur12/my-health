@@ -159,6 +159,23 @@ It is used by:
 
 This layer should describe network payloads only.
 
+Decision for now:
+
+- `shared/contracts/` stays repo-local
+- it is not becoming a separate package yet
+
+Why:
+
+- there is still only one deployable app and one backend in this repo
+- the contracts are shared at build time, not published independently
+- a separate package would add versioning and workspace overhead before it adds meaningful leverage
+
+When to revisit that:
+
+- another app or service starts consuming the same contracts
+- contracts need independent versioning or release cadence
+- the repo grows into a true multi-package workspace with clear ownership boundaries
+
 Guideline:
 
 - transport contracts use JSON-safe values
@@ -234,5 +251,5 @@ The highest-value next improvements are:
 
 1. review linting/formatting setup so the structure rules become enforceable
 2. continue removing remaining local frontend view-model duplicates
-3. decide whether `shared/contracts/` should later become its own workspace/package
-4. archive or remove `ctasnew/` once it stops being useful as a reference
+3. archive or remove `ctasnew/` once it stops being useful as a reference
+4. optionally slim `App.tsx` a little further only if another shell concern makes it worth extracting
