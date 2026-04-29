@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, ZoomIn, ZoomOut, Download, FileText } from 'lucide-react';
+import { X, ZoomIn, ZoomOut, Download } from 'lucide-react';
 
 interface PDFViewerProps {
   fileUrl: string;
@@ -7,32 +7,36 @@ interface PDFViewerProps {
   onClose: () => void;
 }
 
+function isPdfFile(fileUrl: string, fileName: string) {
+  return fileName.toLowerCase().endsWith('.pdf') || fileUrl.toLowerCase().endsWith('.pdf');
+}
+
 export function PDFViewer({ fileUrl, fileName, onClose }: PDFViewerProps) {
   const [scale, setScale] = useState(1);
-  const isPDF = fileUrl.toLowerCase().endsWith('.pdf') || fileUrl.includes('pdf');
+  const isPDF = isPdfFile(fileUrl, fileName);
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg max-w-6xl w-full h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900 truncate">{fileName}</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+      <div className="flex h-[90vh] w-full max-w-6xl flex-col rounded-lg bg-white">
+        <div className="flex items-center justify-between border-b border-gray-200 p-4">
+          <h2 className="truncate text-lg font-semibold text-gray-900">{fileName}</h2>
           <div className="flex items-center gap-2">
             {!isPDF && (
               <>
                 <button
                   onClick={() => setScale((current) => Math.max(current - 0.2, 0.5))}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="rounded-lg p-2 transition-colors hover:bg-gray-100"
                 >
-                  <ZoomOut className="w-5 h-5" />
+                  <ZoomOut className="h-5 w-5" />
                 </button>
-                <span className="text-sm text-gray-600 min-w-16 text-center">
+                <span className="min-w-16 text-center text-sm text-gray-600">
                   {Math.round(scale * 100)}%
                 </span>
                 <button
                   onClick={() => setScale((current) => Math.min(current + 0.2, 3))}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="rounded-lg p-2 transition-colors hover:bg-gray-100"
                 >
-                  <ZoomIn className="w-5 h-5" />
+                  <ZoomIn className="h-5 w-5" />
                 </button>
               </>
             )}
@@ -40,43 +44,30 @@ export function PDFViewer({ fileUrl, fileName, onClose }: PDFViewerProps) {
             <a
               href={fileUrl}
               download={fileName}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="rounded-lg p-2 transition-colors hover:bg-gray-100"
             >
-              <Download className="w-5 h-5" />
+              <Download className="h-5 w-5" />
             </a>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5" />
+            <button onClick={onClose} className="rounded-lg p-2 transition-colors hover:bg-gray-100">
+              <X className="h-5 w-5" />
             </button>
           </div>
         </div>
 
         <div className="flex-1 overflow-auto bg-gray-100 p-4">
-          <div className="flex justify-center">
+          <div className="flex h-full justify-center">
             {isPDF ? (
-              <div className="bg-white rounded-lg shadow-lg p-8 max-w-4xl text-center space-y-4">
-                <FileText className="w-16 h-16 mx-auto text-blue-600" />
-                <h3 className="text-xl font-semibold text-gray-900">Documento PDF</h3>
-                <p className="text-gray-600">
-                  Para ver este PDF, descárgalo usando el botón de arriba.
-                </p>
-                <a
-                  href={fileUrl}
-                  download={fileName}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <Download className="w-5 h-5" />
-                  Descargar PDF
-                </a>
-              </div>
+              <iframe
+                src={fileUrl}
+                title={fileName}
+                className="h-full w-full rounded-lg border border-gray-200 bg-white shadow-lg"
+              />
             ) : (
-              <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+              <div className="overflow-hidden rounded-lg bg-white shadow-lg">
                 <img
                   src={fileUrl}
                   alt={fileName}
-                  className="max-w-full max-h-[calc(90vh-120px)] object-contain"
+                  className="max-h-[calc(90vh-120px)] max-w-full object-contain"
                   style={{ transform: `scale(${scale})`, transformOrigin: 'center' }}
                 />
               </div>
