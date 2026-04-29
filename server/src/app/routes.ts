@@ -20,10 +20,11 @@ interface RegisterRoutesOptions {
 }
 
 export function registerRoutes({ app, nodeEnv, upload, uploadsRoot }: RegisterRoutesOptions) {
+  void uploadsRoot;
   registerHealthRoutes(app, nodeEnv);
   registerAppointmentRoutes(app);
   registerControlRoutes(app);
-  registerUploadRoutes(app, upload, uploadsRoot);
+  registerUploadRoutes(app, upload);
   registerMedicationRoutes(app);
   registerMedicalProfileRoutes(app);
   registerNotificationPreferenceRoutes(app);

@@ -18,7 +18,9 @@ export function serializeAppointment(appointment: Appointment): AppointmentDto {
         type: document.type,
         name: document.name,
         date: document.date.toISOString(),
-        fileUrl: document.fileUrl,
+        fileUrl: document.storageBucket && document.storageKey
+          ? `/api/documents/${document.id}/file`
+          : document.fileUrl,
       })),
   };
 }

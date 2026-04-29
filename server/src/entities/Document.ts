@@ -29,6 +29,12 @@ export class Document {
   @Property({ type: 'string', nullable: true })
   filePath?: string;
 
+  @Property({ type: 'string', nullable: true })
+  storageBucket?: string;
+
+  @Property({ type: 'string', nullable: true })
+  storageKey?: string;
+
   @ManyToOne(() => Appointment)
   appointment!: Appointment;
 }

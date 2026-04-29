@@ -19,7 +19,7 @@ The current architecture is designed to keep UI concerns, domain logic, transpor
   server/src/             Backend application
   shared/contracts/       Shared HTTP transport contracts
   public/                 Static assets and PWA files
-  uploads/                Local uploaded documents
+  uploads/                Legacy local document fallback
   docs/                   Architecture and contributor guidance
   ctasnew/                Historical reference copy, not the main app
 ```
@@ -220,10 +220,49 @@ Uploads are handled separately from JSON payloads.
 
 - appointment/document metadata is saved through the appointments API
 - actual file bytes go through `POST /api/upload`
-- uploaded files are stored under `uploads/`
-- document entities keep `filePath` and `fileUrl`
+- new file bytes are stored in MinIO
+- document entities keep `storageBucket`, `storageKey`, `filePath`, and `fileUrl`
+- file reads are exposed through `GET /api/documents/:documentId/file`
 
 This means `File` should remain a frontend-only concern, not part of shared HTTP transport contracts.
+
+### MinIO bucket strategy
+
+The application intentionally does not create one bucket for every doctor or specialty.
+
+Reason:
+
+- doctor and specialty are organizational dimensions that grow without a hard bound
+- bucket count should represent administrative or policy boundaries
+- object prefixes are the right place for hierarchy like specialty, doctor, and appointment
+
+Current strategy:
+
+- one bucket per document class
+- object key prefixes inside each bucket for `specialty/doctor/year/appointment`
+
+Current bucket layout:
+
+- `<MINIO_BUCKET_PREFIX>-historias-clinicas`
+- `<MINIO_BUCKET_PREFIX>-ordenes-procedimiento`
+- `<MINIO_BUCKET_PREFIX>-ordenes-medicamento`
+- `<MINIO_BUCKET_PREFIX>-ordenes-control`
+- `<MINIO_BUCKET_PREFIX>-laboratorios`
+
+Current object key layout:
+
+```text
+<specialty>/<doctor>/<year>/<appointmentId>/<documentId>-<sanitized-original-name>
+```
+
+Why this is the chosen balance:
+
+- separates retention and policy boundaries by medical document class
+- avoids an unbounded bucket explosion per doctor or specialty
+- keeps objects easy to browse operationally by prefix
+- preserves room for future lifecycle/versioning policies per bucket
+
+The backend auto-creates required buckets when MinIO is configured and can also enable bucket versioning for safer overwrite behavior.
 
 ## Tests
 

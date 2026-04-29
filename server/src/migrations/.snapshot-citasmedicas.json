@@ -1,5 +1,7 @@
 {
-  "namespaces": ["public"],
+  "namespaces": [
+    "public"
+  ],
   "name": "public",
   "tables": [
     {
@@ -121,7 +123,9 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "appointments_pkey",
@@ -269,7 +273,9 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "controls_pkey",
@@ -280,11 +286,15 @@
       "checks": [],
       "foreignKeys": {
         "controls_appointment_id_foreign": {
-          "columnNames": ["appointment_id"],
+          "columnNames": [
+            "appointment_id"
+          ],
           "constraintName": "controls_appointment_id_foreign",
           "localTableName": "public.controls",
           "referencedTableName": "public.appointments",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "updateRule": "cascade",
           "deleteRule": "no action"
         }
@@ -411,13 +421,47 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "uuid"
+        },
+        "storage_bucket": {
+          "name": "storage_bucket",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "storage_key": {
+          "name": "storage_key",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
         }
       },
       "name": "documents",
       "schema": "public",
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "documents_pkey",
@@ -428,11 +472,15 @@
       "checks": [],
       "foreignKeys": {
         "documents_appointment_id_foreign": {
-          "columnNames": ["appointment_id"],
+          "columnNames": [
+            "appointment_id"
+          ],
           "constraintName": "documents_appointment_id_foreign",
           "localTableName": "public.documents",
           "referencedTableName": "public.appointments",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "updateRule": "cascade",
           "deleteRule": "no action"
         }
@@ -591,7 +639,9 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "medical_profiles_pkey",
@@ -755,7 +805,9 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "medications_pkey",
@@ -903,7 +955,9 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "notification_preferences_pkey",
@@ -987,7 +1041,9 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "tag_definitions_pkey",
@@ -1167,7 +1223,9 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "vaccines_pkey",
@@ -1363,7 +1421,9 @@
       "schema": "public",
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "vital_signs_pkey",
