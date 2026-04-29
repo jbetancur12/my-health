@@ -44,6 +44,26 @@ Flujo recomendado:
 3. Revisa el archivo en `server/src/migrations`.
 4. Aplica cambios con `npm run db:migrate`.
 
+## Pruebas
+
+- Smoke tests backend: `npm run test:server`
+
+La suite actual valida el bootstrap real de Express, `GET /health` y errores de validacion en endpoints seleccionados.
+
+## Calidad de codigo
+
+- Lint: `npm run lint`
+- Lint con auto-fix: `npm run lint:fix`
+- Formato: `npm run format`
+- Verificar formato: `npm run format:check`
+
+ESLint cubre frontend, backend y contratos compartidos. Prettier se usa para mantener formato consistente del repo.
+
+## Documentacion interna
+
+- Arquitectura: [docs/architecture.md](docs/architecture.md)
+- Reglas de estructura: [docs/structure-rules.md](docs/structure-rules.md)
+
 ## API
 
 - `GET /health`

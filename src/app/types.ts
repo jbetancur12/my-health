@@ -1,0 +1,16 @@
+export type AppTab =
+  | 'appointments'
+  | 'calendar'
+  | 'calculators'
+  | 'controls'
+  | 'dashboard'
+  | 'export'
+  | 'import'
+  | 'medications'
+  | 'pdf'
+  | 'profile'
+  | 'search'
+  | 'settings'
+  | 'timeline'
+  | 'vaccines'
+  | 'vitals';

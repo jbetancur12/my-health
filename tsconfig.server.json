@@ -4,8 +4,8 @@
     "lib": ["ES2022"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "rootDir": "server/src",
-    "outDir": "dist/server",
+    "rootDir": ".",
+    "outDir": "dist",
     "strict": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -14,5 +14,5 @@
     "types": ["node"],
     "sourceMap": true
   },
-  "include": ["server/src/**/*.ts"]
+  "include": ["server/src/**/*.ts", "shared/contracts/**/*.ts"]
 }
