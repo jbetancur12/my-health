@@ -182,8 +182,8 @@ export function AddAppointmentModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 pb-24 md:p-4">
+      <div className="max-h-[calc(100vh-7rem)] w-full max-w-2xl overflow-y-auto rounded-lg bg-white md:max-h-[90vh]">
         <div className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-white p-4">
           <h2 className="text-xl font-semibold text-gray-900">
             {editingAppointment ? 'Editar Cita Médica' : 'Nueva Cita Médica'}
@@ -193,7 +193,7 @@ export function AddAppointmentModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6">
+        <form onSubmit={handleSubmit} className="p-4 pb-28 md:p-6 md:pb-6">
           <div className="mb-6 space-y-4">
             <InputField
               label="Fecha de la cita"
@@ -361,7 +361,7 @@ export function AddAppointmentModal({
             ))}
           </div>
 
-          <div className="flex gap-3">
+          <div className="sticky bottom-0 -mx-4 -mb-4 flex gap-3 border-t border-gray-200 bg-white/95 px-4 py-4 backdrop-blur md:static md:m-0 md:border-t-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
             <button
               type="button"
               onClick={onClose}
