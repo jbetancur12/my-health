@@ -30,3 +30,38 @@ export async function createControl(input: ControlInput) {
 
   return serializeControl(control);
 }
+
+export async function updateControl(id: string, input: ControlInput) {
+  const orm = await getOrm();
+  const em = orm.em.fork();
+  const control = await em.findOne(Control, { id });
+  const appointment = await em.findOne(Appointment, { id: input.relatedAppointmentId });
+
+  if (!control || !appointment) {
+    return null;
+  }
+
+  control.date = new Date(input.date);
+  control.specialty = input.specialty.trim();
+  control.doctor = input.doctor.trim();
+  control.type = input.type.trim();
+  control.relatedAppointmentId = appointment.id;
+  control.appointment = appointment;
+
+  await em.flush();
+
+  return serializeControl(control);
+}
+
+export async function deleteControl(id: string) {
+  const orm = await getOrm();
+  const em = orm.em.fork();
+  const control = await em.findOne(Control, { id });
+
+  if (!control) {
+    return false;
+  }
+
+  await em.removeAndFlush(control);
+  return true;
+}

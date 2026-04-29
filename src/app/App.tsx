@@ -136,7 +136,7 @@ export default function App() {
   const handleAddAppointment = async (
     newAppointment: Omit<Appointment, 'id'> & {
       id?: string;
-      controls?: Omit<Control, 'id' | 'specialty' | 'doctor' | 'relatedAppointmentId'>[];
+      controls?: Omit<Control, 'specialty' | 'doctor' | 'relatedAppointmentId'>[];
     }
   ) => {
     try {
@@ -340,6 +340,13 @@ export default function App() {
               existingDoctors={doctors}
               existingSpecialties={specialties}
               editingAppointment={editingAppointment || undefined}
+              existingControls={
+                editingAppointment
+                  ? controls.filter(
+                      (control) => control.relatedAppointmentId === editingAppointment.id
+                    )
+                  : []
+              }
               availableTags={tags}
               onCreateTag={createTag}
             />

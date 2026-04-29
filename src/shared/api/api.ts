@@ -176,6 +176,28 @@ export async function saveControl(control: Omit<Control, 'id'>): Promise<Control
   return parseControl((data as { control: ControlApiDto }).control);
 }
 
+export async function updateControl(id: string, control: Omit<Control, 'id'>): Promise<Control> {
+  const payload: ControlApiPayload = {
+    date: control.date.toISOString(),
+    specialty: control.specialty,
+    doctor: control.doctor,
+    type: control.type,
+    relatedAppointmentId: control.relatedAppointmentId,
+  };
+  const data = await fetchAPI(`/controls/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+
+  return parseControl((data as { control: ControlApiDto }).control);
+}
+
+export async function deleteControl(id: string): Promise<void> {
+  await fetchAPI(`/controls/${id}`, {
+    method: 'DELETE',
+  });
+}
+
 export async function uploadFile(
   file: File,
   appointmentId: string,

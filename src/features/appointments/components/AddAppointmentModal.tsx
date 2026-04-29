@@ -1,19 +1,16 @@
 import { X, Plus, Upload, Trash2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { TagManager } from './TagManager';
 import type {
   Appointment,
   AppointmentTag,
+  Control,
   Document,
   DocumentType,
 } from '../../../shared/api/contracts';
 
-interface PendingControl {
-  id: string;
-  date: Date;
-  type: string;
-}
+type PendingControl = Omit<Control, 'specialty' | 'doctor' | 'relatedAppointmentId'>;
 
 interface AddAppointmentModalProps {
   onClose: () => void;
@@ -30,6 +27,7 @@ interface AddAppointmentModalProps {
   existingDoctors: string[];
   existingSpecialties: string[];
   editingAppointment?: Appointment;
+  existingControls?: Control[];
   availableTags?: AppointmentTag[];
   onCreateTag?: (tag: Omit<AppointmentTag, 'id'>) => void;
 }
@@ -48,12 +46,19 @@ function toDateInputValue(date: Date | string | undefined): string {
   return Number.isNaN(dateObj.getTime()) ? '' : dateObj.toISOString().split('T')[0];
 }
 
+function startOfDay(date: Date) {
+  const next = new Date(date);
+  next.setHours(0, 0, 0, 0);
+  return next;
+}
+
 export function AddAppointmentModal({
   onClose,
   onAdd,
   existingDoctors,
   existingSpecialties,
   editingAppointment,
+  existingControls = [],
   availableTags,
   onCreateTag,
 }: AddAppointmentModalProps) {
@@ -62,11 +67,20 @@ export function AddAppointmentModal({
   const [doctor, setDoctor] = useState('');
   const [notes, setNotes] = useState('');
   const [documents, setDocuments] = useState<Omit<Document, 'id'>[]>([]);
-  const [controls, setControls] = useState<Omit<PendingControl, 'id'>[]>([]);
+  const [controls, setControls] = useState<PendingControl[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   useEffect(() => {
-    if (!editingAppointment) return;
+    if (!editingAppointment) {
+      setDate('');
+      setSpecialty('');
+      setDoctor('');
+      setNotes('');
+      setSelectedTags([]);
+      setDocuments([]);
+      setControls([]);
+      return;
+    }
 
     setDate(toDateInputValue(editingAppointment.date));
     setSpecialty(editingAppointment.specialty);
@@ -82,18 +96,24 @@ export function AddAppointmentModal({
         fileUrl: document.fileUrl,
       }))
     );
-  }, [editingAppointment]);
+    setControls(
+      existingControls.map((control) => ({
+        id: control.id,
+        date: control.date instanceof Date ? control.date : new Date(control.date),
+        type: control.type,
+      }))
+    );
+  }, [editingAppointment, existingControls]);
 
   const handleAddDocument = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    setDocuments([...documents, { type: 'historia_clinica', name: '', date: today }]);
+    setDocuments([...documents, { type: 'historia_clinica', name: '', date: startOfDay(new Date()) }]);
   };
 
   const handleAddControl = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    setControls([...controls, { date: today, type: '' }]);
+    setControls([
+      ...controls,
+      { id: crypto.randomUUID(), date: startOfDay(new Date()), type: '' },
+    ]);
   };
 
   const handleRemoveDocument = (index: number) => {
@@ -127,7 +147,7 @@ export function AddAppointmentModal({
 
   const handleControlChange = (
     index: number,
-    field: keyof Omit<PendingControl, 'id'>,
+    field: keyof PendingControl,
     value: unknown
   ) => {
     const next = [...controls];
@@ -139,12 +159,9 @@ export function AddAppointmentModal({
     event.preventDefault();
     if (!date || !specialty || !doctor) return;
 
-    const appointmentDate = new Date(date);
-    appointmentDate.setHours(0, 0, 0, 0);
-
     onAdd({
       id: editingAppointment?.id,
-      date: appointmentDate,
+      date: startOfDay(new Date(date)),
       specialty,
       doctor,
       notes: notes || undefined,
@@ -159,26 +176,25 @@ export function AddAppointmentModal({
           ? controls.map((control) => ({
               ...control,
               date: control.date instanceof Date ? control.date : new Date(control.date),
-              id: crypto.randomUUID(),
             }))
           : undefined,
     });
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white">
+        <div className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-white p-4">
           <h2 className="text-xl font-semibold text-gray-900">
             {editingAppointment ? 'Editar Cita Médica' : 'Nueva Cita Médica'}
           </h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <X className="w-5 h-5" />
+          <button onClick={onClose} className="rounded-lg p-2 transition-colors hover:bg-gray-100">
+            <X className="h-5 w-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6">
-          <div className="space-y-4 mb-6">
+          <div className="mb-6 space-y-4">
             <InputField
               label="Fecha de la cita"
               type="date"
@@ -214,7 +230,7 @@ export function AddAppointmentModal({
             />
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700">
                 Notas (opcional)
               </label>
               <textarea
@@ -222,7 +238,7 @@ export function AddAppointmentModal({
                 onChange={(event) => setNotes(event.target.value)}
                 placeholder="Observaciones adicionales"
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -242,18 +258,18 @@ export function AddAppointmentModal({
             actionLabel="Agregar documento"
             onClick={handleAddDocument}
           />
-          <div className="space-y-3 mb-6">
+          <div className="mb-6 space-y-3">
             {documents.map((document, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
+              <div key={index} className="rounded-lg border border-gray-200 p-3">
+                <div className="mb-2 grid grid-cols-1 gap-3 md:grid-cols-2">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="mb-1 block text-xs font-medium text-gray-600">
                       Tipo de documento
                     </label>
                     <select
                       value={document.type}
                       onChange={(event) => handleDocumentChange(index, 'type', event.target.value)}
-                      className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       {documentTypes.map((type) => (
                         <option key={type.value} value={type.value}>
@@ -276,16 +292,14 @@ export function AddAppointmentModal({
                   value={document.name}
                   onChange={(event) => handleDocumentChange(index, 'name', event.target.value)}
                   placeholder="Nombre o descripción del documento"
-                  className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+                  className="mb-2 w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
 
                 <div className="flex gap-2">
                   <label className="flex-1">
-                    <div className="flex items-center justify-center gap-2 px-3 py-2 border-2 border-dashed border-gray-300 rounded text-sm cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
-                      <Upload className="w-4 h-4" />
-                      <span>
-                        {document.file ? document.file.name : 'Subir archivo (PDF, imagen)'}
-                      </span>
+                    <div className="flex cursor-pointer items-center justify-center gap-2 rounded border-2 border-dashed border-gray-300 px-3 py-2 text-sm transition-colors hover:border-blue-500 hover:bg-blue-50">
+                      <Upload className="h-4 w-4" />
+                      <span>{document.file ? document.file.name : 'Subir archivo (PDF, imagen)'}</span>
                     </div>
                     <input
                       type="file"
@@ -301,9 +315,9 @@ export function AddAppointmentModal({
                   <button
                     type="button"
                     onClick={() => handleRemoveDocument(index)}
-                    className="px-3 py-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                    className="rounded px-3 py-2 text-red-600 transition-colors hover:bg-red-50"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>
@@ -316,24 +330,24 @@ export function AddAppointmentModal({
             onClick={handleAddControl}
             green
           />
-          <div className="space-y-3 mb-6">
+          <div className="mb-6 space-y-3">
             {controls.map((control, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-3 bg-green-50">
-                <div className="flex gap-2 mb-2">
+              <div key={control.id} className="rounded-lg border border-gray-200 bg-green-50 p-3">
+                <div className="mb-2 flex gap-2">
                   <input
                     type="date"
                     value={toDateInputValue(control.date)}
                     onChange={(event) =>
                       handleControlChange(index, 'date', new Date(event.target.value))
                     }
-                    className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="flex-1 rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                   <button
                     type="button"
                     onClick={() => handleRemoveControl(index)}
-                    className="px-3 py-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                    className="rounded px-3 py-1.5 text-red-600 transition-colors hover:bg-red-50"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="h-4 w-4" />
                   </button>
                 </div>
                 <input
@@ -341,7 +355,7 @@ export function AddAppointmentModal({
                   value={control.type}
                   onChange={(event) => handleControlChange(index, 'type', event.target.value)}
                   placeholder="Tipo de control (ej: Control en 3 meses, Revisión anual)"
-                  className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
             ))}
@@ -351,13 +365,13 @@ export function AddAppointmentModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
             >
               {editingAppointment ? 'Actualizar Cita' : 'Guardar Cita'}
             </button>
@@ -380,16 +394,16 @@ function SectionHeader({
   green?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between mb-3">
+    <div className="mb-3 flex items-center justify-between">
       <h3 className="font-medium text-gray-900">{title}</h3>
       <button
         type="button"
         onClick={onClick}
-        className={`flex items-center gap-2 px-3 py-1.5 text-white rounded-lg transition-colors text-sm ${
+        className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-white transition-colors ${
           green ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'
         }`}
       >
-        <Plus className="w-4 h-4" />
+        <Plus className="h-4 w-4" />
         {actionLabel}
       </button>
     </div>
@@ -413,14 +427,14 @@ function InputField({
 }) {
   return (
     <div>
-      <label className={`block ${compact ? 'text-xs' : 'text-sm'} font-medium text-gray-700 mb-1`}>
+      <label className={`mb-1 block ${compact ? 'text-xs' : 'text-sm'} font-medium text-gray-700`}>
         {label}
       </label>
       <input
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className={`w-full ${compact ? 'px-2 py-1.5 text-sm' : 'px-3 py-2'} border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500`}
+        className={`w-full rounded-lg border border-gray-300 ${compact ? 'px-2 py-1.5 text-sm' : 'px-3 py-2'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
         required={required}
       />
     </div>
@@ -446,14 +460,14 @@ function DatalistField({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
       <input
         type="text"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         list={listId}
-        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
         required
       />
       <datalist id={listId}>
@@ -461,7 +475,7 @@ function DatalistField({
           <option key={option} value={option} />
         ))}
       </datalist>
-      {helper && <p className="text-xs text-gray-500 mt-1">{helper}</p>}
+      {helper && <p className="mt-1 text-xs text-gray-500">{helper}</p>}
     </div>
   );
 }
