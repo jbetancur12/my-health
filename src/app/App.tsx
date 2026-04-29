@@ -46,6 +46,7 @@ export default function App() {
     doctors,
     specialties,
     saveAppointment,
+    removeAppointment,
     createTag,
     replaceAppointmentsData,
   } = useAppointmentsData();
@@ -151,6 +152,23 @@ export default function App() {
   const handleEditAppointment = (appointment: Appointment) => {
     setEditingAppointment(appointment);
     setShowAddModal(true);
+  };
+
+  const handleDeleteAppointment = async (appointment: Appointment) => {
+    const confirmed = window.confirm(
+      `¿Eliminar la cita de ${appointment.specialty} con ${appointment.doctor}?`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await removeAppointment(appointment.id);
+      setSelectedAppointment((current) => (current?.id === appointment.id ? null : current));
+    } catch (error) {
+      console.error('Error deleting appointment:', error);
+    }
   };
 
   const handleImportData = async (data: Partial<AppDataBundle>) => {
@@ -323,6 +341,8 @@ export default function App() {
             <AppointmentDetail
               appointment={selectedAppointment}
               onClose={() => setSelectedAppointment(null)}
+              onDelete={handleDeleteAppointment}
+              onEdit={handleEditAppointment}
               tags={tags}
               onViewFile={(url, name) => setPdfViewer({ url, name })}
             />

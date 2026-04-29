@@ -156,6 +156,12 @@ export async function updateAppointment(
   return parseAppointment((data as { appointment: AppointmentApiDto }).appointment);
 }
 
+export async function deleteAppointment(id: string): Promise<void> {
+  await fetchAPI(`/appointments/${id}`, {
+    method: 'DELETE',
+  });
+}
+
 export async function getControls(): Promise<Control[]> {
   const data = (await fetchAPI('/controls')) as { controls: ControlApiDto[] };
   return data.controls.map(parseControl);

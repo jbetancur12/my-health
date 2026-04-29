@@ -176,6 +176,17 @@ export function useAppointmentsData() {
     return savedTag;
   }
 
+  async function removeAppointment(appointmentId: string) {
+    await api.deleteAppointment(appointmentId);
+
+    setAppointments((current) =>
+      current.filter((appointment) => appointment.id !== appointmentId)
+    );
+    setControls((current) =>
+      current.filter((control) => control.relatedAppointmentId !== appointmentId)
+    );
+  }
+
   function replaceAppointmentsData(data: {
     appointments: Appointment[];
     controls: Control[];
@@ -195,6 +206,7 @@ export function useAppointmentsData() {
     doctors,
     specialties,
     saveAppointment,
+    removeAppointment,
     createTag,
     replaceAppointmentsData,
   };

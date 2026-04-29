@@ -46,3 +46,26 @@ export async function updateAppointment(id: string, input: Partial<AppointmentIn
 
   return serializeAppointment(appointment);
 }
+
+export async function deleteAppointment(id: string) {
+  const orm = await getOrm();
+  const em = orm.em.fork();
+  const appointment = await em.findOne(Appointment, { id }, { populate: ['documents', 'controls'] });
+
+  if (!appointment) {
+    return false;
+  }
+
+  for (const control of appointment.controls.getItems()) {
+    em.remove(control);
+  }
+
+  for (const document of appointment.documents.getItems()) {
+    em.remove(document);
+  }
+
+  em.remove(appointment);
+  await em.flush();
+
+  return true;
+}
