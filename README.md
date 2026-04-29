@@ -97,13 +97,11 @@ La aplicacion puede generar un resumen automatico por documento subido.
 
 Variables relevantes:
 
-- `AI_SUMMARY_PROVIDER` con `openai`, `gemini`, `groq` o `disabled`
+- `AI_SUMMARY_PROVIDER` con `openai`, `gemini` o `disabled`
 - `OPENAI_API_KEY`
 - `OPENAI_SUMMARY_MODEL`
 - `GEMINI_API_KEY`
 - `GEMINI_SUMMARY_MODEL`
-- `GROQ_API_KEY`
-- `GROQ_SUMMARY_MODEL`
 - `AI_SUMMARY_MAX_FILE_BYTES`
 
 Soporte actual de resumen automatico:
@@ -116,14 +114,7 @@ Ejemplos:
 
 - `AI_SUMMARY_PROVIDER=openai` para usar OpenAI
 - `AI_SUMMARY_PROVIDER=gemini` para usar Google AI Studio / Gemini
-- `AI_SUMMARY_PROVIDER=groq` para usar Groq
 - `AI_SUMMARY_PROVIDER=disabled` para desactivar los resumenes sin tocar el resto del flujo de archivos
-
-Notas por proveedor:
-
-- OpenAI: resume PDFs, JPG y PNG
-- Gemini: resume PDFs, JPG y PNG
-- Groq: por ahora lo dejamos solo para JPG y PNG. Si intentas resumir un PDF con Groq, la app te lo indicará claramente para que cambies a OpenAI o Gemini.
 
 ## Migraciones
 
