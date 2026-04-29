@@ -72,6 +72,13 @@ export function ImportData({ onImport }: ImportDataProps) {
             name: document.name,
             date: new Date(document.date),
             fileUrl: document.fileUrl,
+            aiSummary: document.aiSummary,
+            aiSummaryStatus:
+              document.aiSummaryStatus ?? (document.aiSummary ? 'completed' : 'idle'),
+            aiSummaryError: document.aiSummaryError,
+            aiSummaryUpdatedAt: document.aiSummaryUpdatedAt
+              ? new Date(document.aiSummaryUpdatedAt)
+              : undefined,
           })),
         })),
         controls:

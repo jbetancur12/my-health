@@ -1,5 +1,10 @@
 import type { NextFunction, Request, Response } from 'express';
-import { getStoredDocumentFile, uploadDocumentFile } from './upload.service.js';
+import {
+  getStoredDocumentFile,
+  retryDocumentSummary,
+  uploadDocumentFile,
+} from './upload.service.js';
+import { isDocumentSummaryEnabled } from './document-summary.service.js';
 import { isMinioDocumentStorageConfigured } from './minio-storage.js';
 
 export function createUploadController() {
@@ -59,6 +64,37 @@ export function createDocumentFileController() {
       file.stream.on('error', next);
       file.stream.pipe(res);
       return undefined;
+    } catch (error) {
+      return next(error);
+    }
+  };
+}
+
+export function createDocumentSummaryRetryController() {
+  return async function postDocumentSummaryRetry(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const documentId = String(req.params.documentId ?? '');
+
+      if (!documentId) {
+        return res.status(400).json({ error: 'Document id is required' });
+      }
+
+      if (!isDocumentSummaryEnabled()) {
+        return res.status(503).json({
+          error: 'AI summaries are not configured. Set OPENAI_API_KEY to enable them.',
+        });
+      }
+
+      const document = await retryDocumentSummary(documentId);
+      if (!document) {
+        return res.status(404).json({ error: 'Document not found' });
+      }
+
+      return res.status(202).json({ document });
     } catch (error) {
       return next(error);
     }

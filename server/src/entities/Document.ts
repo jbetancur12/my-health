@@ -9,6 +9,14 @@ export enum DocumentType {
   LABORATORIO = 'laboratorio',
 }
 
+export enum DocumentAiSummaryStatus {
+  IDLE = 'idle',
+  PENDING = 'pending',
+  PROCESSING = 'processing',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+}
+
 @Entity({ tableName: 'documents' })
 export class Document {
   @PrimaryKey({ type: 'uuid' })
@@ -34,6 +42,18 @@ export class Document {
 
   @Property({ type: 'string', nullable: true })
   storageKey?: string;
+
+  @Property({ type: 'text', nullable: true })
+  aiSummary?: string;
+
+  @Enum(() => DocumentAiSummaryStatus)
+  aiSummaryStatus: DocumentAiSummaryStatus = DocumentAiSummaryStatus.IDLE;
+
+  @Property({ type: 'text', nullable: true })
+  aiSummaryError?: string;
+
+  @Property({ type: 'timestamptz', nullable: true })
+  aiSummaryUpdatedAt?: Date;
 
   @ManyToOne(() => Appointment)
   appointment!: Appointment;

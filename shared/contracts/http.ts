@@ -110,6 +110,10 @@ export interface AppDataImportPayload {
 
 export interface AppointmentDocumentDto extends AppointmentDocumentPayload {
   fileUrl?: string;
+  aiSummary?: string;
+  aiSummaryStatus: 'idle' | 'pending' | 'processing' | 'completed' | 'failed';
+  aiSummaryError?: string;
+  aiSummaryUpdatedAt?: string;
 }
 
 export interface AppointmentDto {

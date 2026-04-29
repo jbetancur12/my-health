@@ -3,6 +3,7 @@ import path from 'node:path';
 import { promises as fs } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { createApp } from './app/create-app.js';
+import { resumePendingDocumentSummaries } from './modules/uploads/document-summary.service.js';
 import { warmMinioDocumentBuckets } from './modules/uploads/minio-storage.js';
 import { getOrm } from './orm.js';
 
@@ -24,6 +25,7 @@ async function bootstrap() {
   await orm.getMigrator().up();
   await fs.mkdir(uploadsRoot, { recursive: true });
   await warmMinioDocumentBuckets();
+  await resumePendingDocumentSummaries();
 
   const app = createApp({ clientOrigin, nodeEnv, uploadsRoot });
   app.listen(port, () => {

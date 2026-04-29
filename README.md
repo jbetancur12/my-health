@@ -14,7 +14,8 @@ La carpeta `ctasnew/` se conserva solo como referencia del origen migrado.
 1. Crea `.env` a partir de `.env.example`.
 2. Asegura que PostgreSQL este corriendo y que `DATABASE_URL` apunte a una base valida.
 3. Configura MinIO con las variables `MINIO_*` del ejemplo.
-4. Instala dependencias con `npm install`.
+4. Si quieres resumenes automaticos de documentos, configura `OPENAI_API_KEY`.
+5. Instala dependencias con `npm install`.
 
 En desarrollo, el servidor intenta crear la base si no existe.
 En produccion, la base debe existir previamente.
@@ -85,6 +86,27 @@ La aplicacion intenta crear esos buckets automaticamente al iniciar y tambien al
 
 Los documentos se sirven al frontend por `GET /api/documents/:documentId/file`, asi que la UI no depende de URLs publicas directas del bucket.
 
+## Resumenes con IA
+
+La aplicacion puede generar un resumen automatico por documento subido.
+
+- el resumen se guarda por documento, no mezclado con las notas humanas de la cita
+- al subir un archivo, el backend lo marca `pending` y procesa el resumen en segundo plano
+- si el servidor reinicia, retoma documentos que quedaron `pending` o `processing`
+- si falla, el documento queda `failed` y la UI permite `Reintentar resumen`
+
+Variables relevantes:
+
+- `OPENAI_API_KEY`
+- `OPENAI_SUMMARY_MODEL`
+- `OPENAI_SUMMARY_MAX_FILE_BYTES`
+
+Soporte actual de resumen automatico:
+
+- PDF
+- JPG
+- PNG
+
 ## Migraciones
 
 El proyecto usa migraciones reales de MikroORM.
@@ -137,3 +159,4 @@ ESLint cubre frontend, backend y contratos compartidos. Prettier se usa para man
 - `DELETE /api/medications/:id`
 - `POST /api/upload`
 - `GET /api/documents/:documentId/file`
+- `POST /api/documents/:documentId/summary/retry`

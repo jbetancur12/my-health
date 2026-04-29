@@ -1,4 +1,17 @@
-import { X, Calendar, User, FileText, Eye, Download, Edit, Trash2 } from 'lucide-react';
+import {
+  X,
+  Calendar,
+  User,
+  FileText,
+  Eye,
+  Download,
+  Edit,
+  Trash2,
+  RefreshCw,
+  Sparkles,
+  AlertCircle,
+  LoaderCircle,
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { TagDisplay } from './TagManager';
@@ -11,6 +24,7 @@ interface AppointmentDetailProps {
   onEdit: (appointment: Appointment) => void;
   tags?: AppointmentTag[];
   onViewFile?: (url: string, name: string) => void;
+  onRetryDocumentSummary?: (documentId: string) => void | Promise<unknown>;
 }
 
 const documentTypeLabels: Record<Document['type'], string> = {
@@ -36,6 +50,7 @@ export function AppointmentDetail({
   onEdit,
   tags = [],
   onViewFile,
+  onRetryDocumentSummary,
 }: AppointmentDetailProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -144,6 +159,68 @@ export function AppointmentDetail({
                       </div>
                     ) : (
                       <span className="text-sm text-gray-400">Sin archivo subido</span>
+                    )}
+                  </div>
+
+                  <div className="mt-4 rounded-lg border border-gray-100 bg-gray-50 p-3">
+                    <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <Sparkles className="h-4 w-4 text-blue-500" />
+                      Resumen IA
+                    </div>
+
+                    {document.aiSummaryStatus === 'completed' && document.aiSummary ? (
+                      <div className="space-y-2">
+                        <p className="whitespace-pre-line text-sm leading-6 text-gray-700">
+                          {document.aiSummary}
+                        </p>
+                        {document.aiSummaryUpdatedAt && (
+                          <p className="text-xs text-gray-500">
+                            Actualizado el{' '}
+                            {format(document.aiSummaryUpdatedAt, "d 'de' MMMM, yyyy h:mm a", {
+                              locale: es,
+                            })}
+                          </p>
+                        )}
+                      </div>
+                    ) : null}
+
+                    {(document.aiSummaryStatus === 'pending' ||
+                      document.aiSummaryStatus === 'processing') && (
+                      <div className="flex items-start gap-2 text-sm text-blue-700">
+                        <LoaderCircle className="mt-0.5 h-4 w-4 animate-spin" />
+                        <p>
+                          Estamos procesando este archivo para generar un resumen automático.
+                          Mantén abierta esta vista o vuelve a entrar en unos segundos.
+                        </p>
+                      </div>
+                    )}
+
+                    {document.aiSummaryStatus === 'failed' && (
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-2 text-sm text-amber-700">
+                          <AlertCircle className="mt-0.5 h-4 w-4" />
+                          <div>
+                            <p className="font-medium">No pudimos generar el resumen.</p>
+                            {document.aiSummaryError && (
+                              <p className="mt-1 text-amber-700/90">{document.aiSummaryError}</p>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => onRetryDocumentSummary?.(document.id)}
+                          className="inline-flex items-center gap-2 rounded-lg border border-amber-200 px-3 py-2 text-sm text-amber-700 transition-colors hover:bg-amber-50"
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                          Reintentar resumen
+                        </button>
+                      </div>
+                    )}
+
+                    {document.aiSummaryStatus === 'idle' && (
+                      <p className="text-sm text-gray-500">
+                        Este documento aún no tiene un resumen automático disponible.
+                      </p>
                     )}
                   </div>
                 </div>

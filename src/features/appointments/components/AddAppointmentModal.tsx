@@ -99,6 +99,10 @@ export function AddAppointmentModal({
         date: document.date instanceof Date ? document.date : new Date(document.date),
         file: document.file,
         fileUrl: document.fileUrl,
+        aiSummary: document.aiSummary,
+        aiSummaryStatus: document.aiSummaryStatus,
+        aiSummaryError: document.aiSummaryError,
+        aiSummaryUpdatedAt: document.aiSummaryUpdatedAt,
       }))
     );
     setControls(
@@ -111,7 +115,15 @@ export function AddAppointmentModal({
   }, [editingAppointment, existingControls]);
 
   const handleAddDocument = () => {
-    setDocuments([...documents, { type: 'historia_clinica', name: '', date: startOfDay(new Date()) }]);
+    setDocuments([
+      ...documents,
+      {
+        type: 'historia_clinica',
+        name: '',
+        date: startOfDay(new Date()),
+        aiSummaryStatus: 'idle',
+      },
+    ]);
   };
 
   const handleAddControl = () => {
@@ -146,6 +158,10 @@ export function AddAppointmentModal({
       file,
       fileUrl: URL.createObjectURL(file),
       name: next[index].name || file.name,
+      aiSummary: undefined,
+      aiSummaryStatus: 'idle',
+      aiSummaryError: undefined,
+      aiSummaryUpdatedAt: undefined,
     };
     setDocuments(next);
   };

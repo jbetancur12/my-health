@@ -1,5 +1,6 @@
 import { Appointment } from '../../entities/Appointment.js';
 import type { AppointmentDto } from '../../../../shared/contracts/http.js';
+import { serializeAppointmentDocument } from '../uploads/document.serializer.js';
 
 export function serializeAppointment(appointment: Appointment): AppointmentDto {
   return {
@@ -13,14 +14,6 @@ export function serializeAppointment(appointment: Appointment): AppointmentDto {
     documents: appointment.documents
       .getItems()
       .sort((a, b) => a.date.getTime() - b.date.getTime())
-      .map((document) => ({
-        id: document.id,
-        type: document.type,
-        name: document.name,
-        date: document.date.toISOString(),
-        fileUrl: document.storageBucket && document.storageKey
-          ? `/api/documents/${document.id}/file`
-          : document.fileUrl,
-      })),
+      .map(serializeAppointmentDocument),
   };
 }

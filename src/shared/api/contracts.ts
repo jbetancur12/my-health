@@ -28,6 +28,10 @@ export interface Document {
   date: Date;
   file?: File;
   fileUrl?: string;
+  aiSummary?: string;
+  aiSummaryStatus: 'idle' | 'pending' | 'processing' | 'completed' | 'failed';
+  aiSummaryError?: string;
+  aiSummaryUpdatedAt?: Date;
 }
 
 export interface Appointment {

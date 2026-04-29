@@ -73,6 +73,9 @@ function parseAppointment(appointment: AppointmentApiDto): Appointment {
     documents: appointment.documents.map((document) => ({
       ...document,
       date: new Date(document.date),
+      aiSummaryUpdatedAt: document.aiSummaryUpdatedAt
+        ? new Date(document.aiSummaryUpdatedAt)
+        : undefined,
     })),
   };
 }
@@ -208,7 +211,7 @@ export async function uploadFile(
   file: File,
   appointmentId: string,
   documentId: string
-): Promise<string> {
+): Promise<Appointment['documents'][number]> {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('appointmentId', appointmentId);
@@ -225,8 +228,30 @@ export async function uploadFile(
     throw new Error(`Upload failed: ${response.status} - ${errorText}`);
   }
 
-  const data = await response.json();
-  return data.fileUrl;
+  const data = (await response.json()) as { document: AppointmentApiDto['documents'][number] };
+  return {
+    ...data.document,
+    date: new Date(data.document.date),
+    aiSummaryUpdatedAt: data.document.aiSummaryUpdatedAt
+      ? new Date(data.document.aiSummaryUpdatedAt)
+      : undefined,
+  };
+}
+
+export async function retryDocumentSummary(
+  documentId: string
+): Promise<Appointment['documents'][number]> {
+  const data = (await fetchAPI(`/documents/${documentId}/summary/retry`, {
+    method: 'POST',
+  })) as { document: AppointmentApiDto['documents'][number] };
+
+  return {
+    ...data.document,
+    date: new Date(data.document.date),
+    aiSummaryUpdatedAt: data.document.aiSummaryUpdatedAt
+      ? new Date(data.document.aiSummaryUpdatedAt)
+      : undefined,
+  };
 }
 
 export async function getMedications(): Promise<Medication[]> {

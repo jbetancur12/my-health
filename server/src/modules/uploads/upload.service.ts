@@ -1,5 +1,6 @@
 import { createReadStream, promises as fs } from 'node:fs';
 import { Readable } from 'node:stream';
+import { DocumentAiSummaryStatus } from '../../entities/Document.js';
 import { Document } from '../../entities/Document.js';
 import { getOrm } from '../../orm.js';
 import {
@@ -11,6 +12,8 @@ import {
   statMinioObject,
   uploadBufferToMinio,
 } from './minio-storage.js';
+import { serializeAppointmentDocument } from './document.serializer.js';
+import { isDocumentSummaryEnabled, queueDocumentSummary } from './document-summary.service.js';
 
 interface UploadDocumentFileInput {
   appointmentId: string;
@@ -54,9 +57,22 @@ export async function uploadDocumentFile({ appointmentId, documentId, file }: Up
   document.storageKey = objectKey;
   document.filePath = buildDocumentDebugPath(bucket, objectKey);
   document.fileUrl = `/api/documents/${document.id}/file`;
+  document.aiSummary = undefined;
+  document.aiSummaryError = undefined;
+  document.aiSummaryUpdatedAt = undefined;
+  document.aiSummaryStatus = isDocumentSummaryEnabled()
+    ? DocumentAiSummaryStatus.PENDING
+    : DocumentAiSummaryStatus.IDLE;
   await em.flush();
 
-  return { fileUrl: document.fileUrl };
+  if (isDocumentSummaryEnabled()) {
+    const queuedDocument = await queueDocumentSummary(document.id, true);
+    if (queuedDocument) {
+      return { document: queuedDocument };
+    }
+  }
+
+  return { document: serializeAppointmentDocument(document) };
 }
 
 export async function getStoredDocumentFile(documentId: string): Promise<StoredDocumentFile | null> {
@@ -97,4 +113,8 @@ export async function getStoredDocumentFile(documentId: string): Promise<StoredD
   }
 
   return null;
+}
+
+export async function retryDocumentSummary(documentId: string) {
+  return queueDocumentSummary(documentId, true);
 }

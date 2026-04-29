@@ -50,6 +50,8 @@ export default function App() {
     removeAppointment,
     createTag,
     replaceAppointmentsData,
+    retryDocumentSummaryForAppointment,
+    refreshAppointmentsData,
   } = useAppointmentsData();
   const {
     medications,
@@ -110,6 +112,39 @@ export default function App() {
     appointments,
     specialties,
   });
+
+  useEffect(() => {
+    if (
+      !selectedAppointment ||
+      !selectedAppointment.documents.some(
+        (document) =>
+          document.aiSummaryStatus === 'pending' ||
+          document.aiSummaryStatus === 'processing'
+      )
+    ) {
+      return;
+    }
+
+    const refreshSelectedAppointment = async () => {
+      const refreshed = await refreshAppointmentsData();
+      if (!refreshed) {
+        return;
+      }
+
+      const updatedAppointment = refreshed.appointments.find(
+        (appointment) => appointment.id === selectedAppointment.id
+      );
+
+      setSelectedAppointment(updatedAppointment ?? null);
+    };
+
+    void refreshSelectedAppointment();
+    const interval = window.setInterval(() => {
+      void refreshSelectedAppointment();
+    }, 5000);
+
+    return () => window.clearInterval(interval);
+  }, [refreshAppointmentsData, selectedAppointment]);
 
   useEffect(() => {
     if (
@@ -350,6 +385,19 @@ export default function App() {
               onEdit={handleEditAppointment}
               tags={tags}
               onViewFile={(url, name) => setPdfViewer({ url, name })}
+              onRetryDocumentSummary={async (documentId) => {
+                const updatedDocument = await retryDocumentSummaryForAppointment(documentId);
+                setSelectedAppointment((current) =>
+                  current
+                    ? {
+                        ...current,
+                        documents: current.documents.map((document) =>
+                          document.id === documentId ? { ...document, ...updatedDocument } : document
+                        ),
+                      }
+                    : current
+                );
+              }}
             />
           </LazyOverlay>
         )}

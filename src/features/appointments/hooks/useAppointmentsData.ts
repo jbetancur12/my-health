@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as api from '../../../shared/api/api';
 import type { Appointment, AppointmentTag, Control } from '../../../shared/api/contracts';
 import { buildAutocompleteOptions } from '../lib/autocomplete';
@@ -12,11 +12,7 @@ export function useAppointmentsData() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    void loadData();
-  }, []);
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -29,13 +25,19 @@ export function useAppointmentsData() {
       setAppointments(appointmentsData);
       setControls(controlsData);
       setTags(tagsData);
+      return { appointments: appointmentsData, controls: controlsData, tags: tagsData };
     } catch (error) {
       console.error('Error loading appointments data:', error);
       setError('No pudimos cargar citas, controles y etiquetas en este momento.');
+      return null;
     } finally {
       setIsLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
 
   const specialties = useMemo(() => {
     return buildAutocompleteOptions(
@@ -60,6 +62,11 @@ export function useAppointmentsData() {
       type: document.type,
       name: document.name,
       date: document.date,
+      fileUrl: document.fileUrl,
+      aiSummary: document.aiSummary,
+      aiSummaryStatus: document.aiSummaryStatus,
+      aiSummaryError: document.aiSummaryError,
+      aiSummaryUpdatedAt: document.aiSummaryUpdatedAt,
     }));
 
     let savedAppointment: Appointment;
@@ -86,10 +93,17 @@ export function useAppointmentsData() {
 
     for (const document of appointment.documents) {
       if (document.file) {
-        const fileUrl = await api.uploadFile(document.file, savedAppointment.id, document.id);
+        const uploadedDocument = await api.uploadFile(
+          document.file,
+          savedAppointment.id,
+          document.id
+        );
         const docIndex = savedAppointment.documents.findIndex((item) => item.id === document.id);
         if (docIndex !== -1) {
-          savedAppointment.documents[docIndex].fileUrl = fileUrl;
+          savedAppointment.documents[docIndex] = {
+            ...savedAppointment.documents[docIndex],
+            ...uploadedDocument,
+          };
         }
       }
     }
@@ -178,6 +192,21 @@ export function useAppointmentsData() {
     );
   }
 
+  async function retryDocumentSummaryForAppointment(documentId: string) {
+    const updatedDocument = await api.retryDocumentSummary(documentId);
+
+    setAppointments((current) =>
+      current.map((appointment) => ({
+        ...appointment,
+        documents: appointment.documents.map((document) =>
+          document.id === documentId ? { ...document, ...updatedDocument } : document
+        ),
+      }))
+    );
+
+    return updatedDocument;
+  }
+
   function replaceAppointmentsData(data: {
     appointments: Appointment[];
     controls: Control[];
@@ -200,5 +229,7 @@ export function useAppointmentsData() {
     removeAppointment,
     createTag,
     replaceAppointmentsData,
+    retryDocumentSummaryForAppointment,
+    refreshAppointmentsData: loadData,
   };
 }
