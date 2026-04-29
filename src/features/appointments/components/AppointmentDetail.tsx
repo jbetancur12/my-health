@@ -11,9 +11,12 @@ import {
   Sparkles,
   AlertCircle,
   LoaderCircle,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useState } from 'react';
 import { TagDisplay } from './TagManager';
 import type { Appointment, AppointmentTag, Document } from '../../../shared/api/contracts';
 
@@ -60,6 +63,15 @@ export function AppointmentDetail({
   onViewFile,
   onRetryDocumentSummary,
 }: AppointmentDetailProps) {
+  const [expandedSummaries, setExpandedSummaries] = useState<Record<string, boolean>>({});
+
+  const toggleSummary = (documentId: string) => {
+    setExpandedSummaries((current) => ({
+      ...current,
+      [documentId]: !current[documentId],
+    }));
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white">
@@ -171,12 +183,25 @@ export function AppointmentDetail({
                   </div>
 
                   <div className="mt-4 rounded-lg border border-gray-100 bg-gray-50 p-3">
-                    <div className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                      <Sparkles className="h-4 w-4 text-blue-500" />
-                      Resumen IA
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => toggleSummary(document.id)}
+                      className="flex w-full items-center justify-between gap-3 text-left"
+                    >
+                      <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                        <Sparkles className="h-4 w-4 text-blue-500" />
+                        <span>Resumen IA</span>
+                      </div>
+                      {expandedSummaries[document.id] ? (
+                        <ChevronDown className="h-4 w-4 text-gray-500" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4 text-gray-500" />
+                      )}
+                    </button>
 
-                    {document.aiSummaryStatus === 'completed' && document.aiSummary ? (
+                    {expandedSummaries[document.id] &&
+                    document.aiSummaryStatus === 'completed' &&
+                    document.aiSummary ? (
                       <div className="space-y-2">
                         <div className="space-y-2">
                           {formatSummaryLines(document.aiSummary).map((line, index) => {
@@ -213,9 +238,10 @@ export function AppointmentDetail({
                       </div>
                     ) : null}
 
-                    {(document.aiSummaryStatus === 'pending' ||
-                      document.aiSummaryStatus === 'processing') && (
-                      <div className="flex items-start gap-2 text-sm text-blue-700">
+                    {expandedSummaries[document.id] &&
+                      (document.aiSummaryStatus === 'pending' ||
+                        document.aiSummaryStatus === 'processing') && (
+                      <div className="mt-3 flex items-start gap-2 text-sm text-blue-700">
                         <LoaderCircle className="mt-0.5 h-4 w-4 animate-spin" />
                         <p>
                           Estamos procesando este archivo para generar un resumen automático.
@@ -224,8 +250,8 @@ export function AppointmentDetail({
                       </div>
                     )}
 
-                    {document.aiSummaryStatus === 'failed' && (
-                      <div className="space-y-3">
+                    {expandedSummaries[document.id] && document.aiSummaryStatus === 'failed' && (
+                      <div className="mt-3 space-y-3">
                         <div className="flex items-start gap-2 text-sm text-amber-700">
                           <AlertCircle className="mt-0.5 h-4 w-4" />
                           <div>
@@ -246,8 +272,8 @@ export function AppointmentDetail({
                       </div>
                     )}
 
-                    {document.aiSummaryStatus === 'idle' && (
-                      <p className="text-sm text-gray-500">
+                    {expandedSummaries[document.id] && document.aiSummaryStatus === 'idle' && (
+                      <p className="mt-3 text-sm text-gray-500">
                         Este documento aún no tiene un resumen automático disponible.
                       </p>
                     )}
