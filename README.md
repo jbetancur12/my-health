@@ -28,6 +28,40 @@ Servicios:
 - Frontend: `http://localhost:5173`
 - Backend: `http://localhost:3001`
 
+La app puede seguir desarrollandose sin Docker si ya usas PostgreSQL y MinIO locales.
+
+## Docker
+
+El repo queda preparado para dos escenarios:
+
+1. Infraestructura local opcional
+   Levanta solo PostgreSQL y MinIO si algun dia quieres dejar de instalarlos en tu maquina:
+
+```bash
+docker compose --env-file .env.production -f compose.yaml -f compose.local-infra.yaml up -d postgres minio
+```
+
+2. Produccion en un solo servidor
+   Copia `.env.production.example` a `.env.production`, ajusta secretos y dominio, y luego:
+
+```bash
+docker compose --env-file .env.production -f compose.yaml -f compose.production.yaml up -d --build
+```
+
+Servicios del stack Docker:
+
+- `web`: Nginx sirviendo el frontend y haciendo proxy a `/api`
+- `app`: backend Express compilado
+- `postgres`: base de datos PostgreSQL
+- `minio`: almacenamiento S3-compatible para documentos
+
+Notas:
+
+- en produccion no se exponen PostgreSQL ni MinIO al exterior
+- Nginx ya acepta uploads de hasta `50 MB`, alineado con el limite del backend
+- el backend sigue ejecutando migraciones al iniciar
+- MinIO sigue creando buckets automaticamente desde la app
+
 ## Almacenamiento de archivos
 
 La aplicacion ya no guarda nuevos archivos medicos en un folder local como estrategia principal.
@@ -86,6 +120,7 @@ ESLint cubre frontend, backend y contratos compartidos. Prettier se usa para man
 
 - Arquitectura: [docs/architecture.md](docs/architecture.md)
 - Reglas de estructura: [docs/structure-rules.md](docs/structure-rules.md)
+- Produccion Docker: [docs/docker-production.md](docs/docker-production.md)
 
 ## API
 
