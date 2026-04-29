@@ -1,19 +1,18 @@
-import { defineConfig } from 'vite'
-import path from 'path'
-import tailwindcss from '@tailwindcss/vite'
-import react from '@vitejs/plugin-react'
-
+import { defineConfig } from 'vite';
+import path from 'path';
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
 
 function figmaAssetResolver() {
   return {
     name: 'figma-asset-resolver',
     resolveId(id: string) {
       if (id.startsWith('figma:asset/')) {
-        const filename = id.replace('figma:asset/', '')
-        return path.resolve(__dirname, 'src/assets', filename)
+        const filename = id.replace('figma:asset/', '');
+        return path.resolve(__dirname, 'src/assets', filename);
       }
     },
-  }
+  };
 }
 
 export default defineConfig({
@@ -35,26 +34,26 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (!id.includes('node_modules')) {
-            return undefined
+            return undefined;
           }
 
           if (id.includes('jspdf') || id.includes('html2canvas') || id.includes('dompurify')) {
-            return 'pdf-vendor'
+            return 'pdf-vendor';
           }
 
           if (id.includes('recharts') || id.includes('d3-')) {
-            return 'charts-vendor'
+            return 'charts-vendor';
           }
 
           if (id.includes('react-calendar') || id.includes('date-fns')) {
-            return 'calendar-vendor'
+            return 'calendar-vendor';
           }
 
           if (id.includes('@radix-ui') || id.includes('lucide-react') || id.includes('@emotion')) {
-            return 'ui-vendor'
+            return 'ui-vendor';
           }
 
-          return 'vendor'
+          return 'vendor';
         },
       },
     },
@@ -69,4 +68,4 @@ export default defineConfig({
 
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
-})
+});

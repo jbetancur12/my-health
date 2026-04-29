@@ -5,11 +5,12 @@ import path from 'node:path';
 import type { AddressInfo } from 'node:net';
 import type { Server } from 'node:http';
 import { createApp } from '../app/create-app.js';
-import type { AppointmentPayload, NotificationPreferencePayload } from '../../../shared/contracts/http.js';
+import type {
+  AppointmentPayload,
+  NotificationPreferencePayload,
+} from '../../../shared/contracts/http.js';
 
-async function withTestServer(
-  run: (baseUrl: string) => Promise<void>,
-) {
+async function withTestServer(run: (baseUrl: string) => Promise<void>) {
   const app = createApp({
     clientOrigin: 'http://localhost:5173',
     nodeEnv: 'test',

@@ -36,7 +36,10 @@ export function parseMedicationUpdateInput(input: unknown): Partial<MedicationIn
   }
 
   if (record.frequency !== undefined) {
-    output.frequency = parseNonEmptyString(record.frequency, 'Medication frequency cannot be empty');
+    output.frequency = parseNonEmptyString(
+      record.frequency,
+      'Medication frequency cannot be empty'
+    );
   }
 
   if (record.startDate !== undefined) {

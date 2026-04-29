@@ -74,29 +74,32 @@ export function ImportData({ onImport }: ImportDataProps) {
             fileUrl: document.fileUrl,
           })),
         })),
-        controls: data.controls?.map((control) => ({
-          id: control.id ?? crypto.randomUUID(),
-          date: new Date(control.date),
-          specialty: control.specialty,
-          doctor: control.doctor,
-          type: control.type,
-          relatedAppointmentId: control.relatedAppointmentId,
-        })) ?? [],
-        medications: data.medications?.map((medication) => ({
-          id: medication.id ?? crypto.randomUUID(),
-          name: medication.name,
-          dosage: medication.dosage,
-          frequency: medication.frequency,
-          startDate: new Date(medication.startDate),
-          endDate: medication.endDate ? new Date(medication.endDate) : undefined,
-          notes: medication.notes,
-          active: medication.active,
-        })) ?? [],
-        tags: data.tags?.map((tag) => ({
-          id: tag.id ?? crypto.randomUUID(),
-          name: tag.name,
-          color: tag.color,
-        })) ?? [],
+        controls:
+          data.controls?.map((control) => ({
+            id: control.id ?? crypto.randomUUID(),
+            date: new Date(control.date),
+            specialty: control.specialty,
+            doctor: control.doctor,
+            type: control.type,
+            relatedAppointmentId: control.relatedAppointmentId,
+          })) ?? [],
+        medications:
+          data.medications?.map((medication) => ({
+            id: medication.id ?? crypto.randomUUID(),
+            name: medication.name,
+            dosage: medication.dosage,
+            frequency: medication.frequency,
+            startDate: new Date(medication.startDate),
+            endDate: medication.endDate ? new Date(medication.endDate) : undefined,
+            notes: medication.notes,
+            active: medication.active,
+          })) ?? [],
+        tags:
+          data.tags?.map((tag) => ({
+            id: tag.id ?? crypto.randomUUID(),
+            name: tag.name,
+            color: tag.color,
+          })) ?? [],
         medicalProfile: data.medicalProfile
           ? {
               id: data.medicalProfile.id,
@@ -123,35 +126,37 @@ export function ImportData({ onImport }: ImportDataProps) {
               reminderDays: data.notificationPreferences.reminderDays,
             }
           : undefined,
-        vitalSigns: data.vitalSigns?.map((reading) => ({
-          id: reading.id ?? crypto.randomUUID(),
-          date: new Date(reading.date),
-          bloodPressureSystolic: reading.bloodPressureSystolic,
-          bloodPressureDiastolic: reading.bloodPressureDiastolic,
-          heartRate: reading.heartRate,
-          weight: reading.weight,
-          glucose: reading.glucose,
-          temperature: reading.temperature,
-          oxygenSaturation: reading.oxygenSaturation,
-          notes: reading.notes,
-        })) ?? [],
-        vaccines: data.vaccines?.map((vaccine) => ({
-          id: vaccine.id ?? crypto.randomUUID(),
-          name: vaccine.name,
-          date: new Date(vaccine.date),
-          nextDose: vaccine.nextDose ? new Date(vaccine.nextDose) : undefined,
-          doseNumber: vaccine.doseNumber,
-          totalDoses: vaccine.totalDoses,
-          location: vaccine.location,
-          lot: vaccine.lot,
-          notes: vaccine.notes,
-        })) ?? [],
+        vitalSigns:
+          data.vitalSigns?.map((reading) => ({
+            id: reading.id ?? crypto.randomUUID(),
+            date: new Date(reading.date),
+            bloodPressureSystolic: reading.bloodPressureSystolic,
+            bloodPressureDiastolic: reading.bloodPressureDiastolic,
+            heartRate: reading.heartRate,
+            weight: reading.weight,
+            glucose: reading.glucose,
+            temperature: reading.temperature,
+            oxygenSaturation: reading.oxygenSaturation,
+            notes: reading.notes,
+          })) ?? [],
+        vaccines:
+          data.vaccines?.map((vaccine) => ({
+            id: vaccine.id ?? crypto.randomUUID(),
+            name: vaccine.name,
+            date: new Date(vaccine.date),
+            nextDose: vaccine.nextDose ? new Date(vaccine.nextDose) : undefined,
+            doseNumber: vaccine.doseNumber,
+            totalDoses: vaccine.totalDoses,
+            location: vaccine.location,
+            lot: vaccine.lot,
+            notes: vaccine.notes,
+          })) ?? [],
       };
 
       await onImport(processedData);
       setStatus('success');
       setMessage(
-        `Datos importados exitosamente: ${processedData.appointments?.length ?? 0} citas, ${processedData.controls?.length ?? 0} controles, ${processedData.medications?.length ?? 0} medicamentos y ${processedData.vaccines?.length ?? 0} vacunas`,
+        `Datos importados exitosamente: ${processedData.appointments?.length ?? 0} citas, ${processedData.controls?.length ?? 0} controles, ${processedData.medications?.length ?? 0} medicamentos y ${processedData.vaccines?.length ?? 0} vacunas`
       );
     } catch (error) {
       setStatus('error');
@@ -169,7 +174,9 @@ export function ImportData({ onImport }: ImportDataProps) {
       {status !== 'idle' && (
         <div
           className={`rounded-lg p-4 ${
-            status === 'success' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+            status === 'success'
+              ? 'bg-green-50 border border-green-200'
+              : 'bg-red-50 border border-red-200'
           }`}
         >
           <div className="flex items-start gap-3">
@@ -179,10 +186,14 @@ export function ImportData({ onImport }: ImportDataProps) {
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             )}
             <div className="flex-1">
-              <p className={`font-medium ${status === 'success' ? 'text-green-900' : 'text-red-900'}`}>
+              <p
+                className={`font-medium ${status === 'success' ? 'text-green-900' : 'text-red-900'}`}
+              >
                 {status === 'success' ? 'Importación Exitosa' : 'Error de Importación'}
               </p>
-              <p className={`text-sm mt-1 ${status === 'success' ? 'text-green-700' : 'text-red-700'}`}>
+              <p
+                className={`text-sm mt-1 ${status === 'success' ? 'text-green-700' : 'text-red-700'}`}
+              >
                 {message}
               </p>
             </div>
@@ -215,7 +226,9 @@ export function ImportData({ onImport }: ImportDataProps) {
         <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-8 text-center opacity-50">
           <FileSpreadsheet className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="font-semibold text-gray-900 mb-2">Importar desde CSV</h3>
-          <p className="text-sm text-gray-600 mb-4">Próximamente - Importación desde archivos CSV</p>
+          <p className="text-sm text-gray-600 mb-4">
+            Próximamente - Importación desde archivos CSV
+          </p>
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed">
             <Upload className="w-4 h-4" />
             Próximamente
@@ -235,7 +248,9 @@ export function ImportData({ onImport }: ImportDataProps) {
           </li>
           <li className="flex gap-2">
             <span className="font-bold">2.</span>
-            <span>Los datos importados se <strong>combinarán</strong> con tus datos existentes</span>
+            <span>
+              Los datos importados se <strong>combinarán</strong> con tus datos existentes
+            </span>
           </li>
           <li className="flex gap-2">
             <span className="font-bold">3.</span>

@@ -36,7 +36,9 @@ export function ControlAlerts({ controls, onControlClick }: ControlAlertsProps) 
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <p className="font-medium text-gray-900">{control.specialty}</p>
-                      <p className="text-sm text-gray-600">{control.doctor} - {control.type}</p>
+                      <p className="text-sm text-gray-600">
+                        {control.doctor} - {control.type}
+                      </p>
                     </div>
                     <div className={`text-right ${urgencyColor}`}>
                       <div className="flex items-center gap-1 font-semibold">
@@ -44,7 +46,10 @@ export function ControlAlerts({ controls, onControlClick }: ControlAlertsProps) 
                         {daysUntil === 0 ? 'Hoy' : daysUntil === 1 ? 'Mañana' : `${daysUntil} días`}
                       </div>
                       <p className="text-xs mt-1">
-                        {new Date(control.date).toLocaleDateString('es', { day: 'numeric', month: 'short' })}
+                        {new Date(control.date).toLocaleDateString('es', {
+                          day: 'numeric',
+                          month: 'short',
+                        })}
                       </p>
                     </div>
                   </div>

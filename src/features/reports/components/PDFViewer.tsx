@@ -19,20 +19,35 @@ export function PDFViewer({ fileUrl, fileName, onClose }: PDFViewerProps) {
           <div className="flex items-center gap-2">
             {!isPDF && (
               <>
-                <button onClick={() => setScale((current) => Math.max(current - 0.2, 0.5))} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <button
+                  onClick={() => setScale((current) => Math.max(current - 0.2, 0.5))}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
                   <ZoomOut className="w-5 h-5" />
                 </button>
-                <span className="text-sm text-gray-600 min-w-16 text-center">{Math.round(scale * 100)}%</span>
-                <button onClick={() => setScale((current) => Math.min(current + 0.2, 3))} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <span className="text-sm text-gray-600 min-w-16 text-center">
+                  {Math.round(scale * 100)}%
+                </span>
+                <button
+                  onClick={() => setScale((current) => Math.min(current + 0.2, 3))}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
                   <ZoomIn className="w-5 h-5" />
                 </button>
               </>
             )}
 
-            <a href={fileUrl} download={fileName} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            <a
+              href={fileUrl}
+              download={fileName}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
               <Download className="w-5 h-5" />
             </a>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -44,8 +59,14 @@ export function PDFViewer({ fileUrl, fileName, onClose }: PDFViewerProps) {
               <div className="bg-white rounded-lg shadow-lg p-8 max-w-4xl text-center space-y-4">
                 <FileText className="w-16 h-16 mx-auto text-blue-600" />
                 <h3 className="text-xl font-semibold text-gray-900">Documento PDF</h3>
-                <p className="text-gray-600">Para ver este PDF, descárgalo usando el botón de arriba.</p>
-                <a href={fileUrl} download={fileName} className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <p className="text-gray-600">
+                  Para ver este PDF, descárgalo usando el botón de arriba.
+                </p>
+                <a
+                  href={fileUrl}
+                  download={fileName}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
                   <Download className="w-5 h-5" />
                   Descargar PDF
                 </a>

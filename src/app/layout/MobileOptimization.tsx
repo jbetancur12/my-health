@@ -8,7 +8,10 @@ export function MobileOptimization() {
     document.head.appendChild(manifestLink);
 
     const metaTags = [
-      { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' },
+      {
+        name: 'viewport',
+        content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
+      },
       { name: 'theme-color', content: '#3B82F6' },
       { name: 'apple-mobile-web-app-capable', content: 'yes' },
       { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },

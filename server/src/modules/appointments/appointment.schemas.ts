@@ -30,7 +30,10 @@ export function parseAppointmentUpdateInput(input: unknown): Partial<Appointment
   }
 
   if (record.specialty !== undefined) {
-    output.specialty = parseNonEmptyString(record.specialty, 'Appointment specialty cannot be empty');
+    output.specialty = parseNonEmptyString(
+      record.specialty,
+      'Appointment specialty cannot be empty'
+    );
   }
 
   if (record.doctor !== undefined) {
@@ -54,7 +57,7 @@ export function parseAppointmentUpdateInput(input: unknown): Partial<Appointment
 
 function parseAppointmentDocuments(input: unknown) {
   return parseArray(input, 'Appointment documents must be an array').map((item) =>
-    parseAppointmentDocument(item),
+    parseAppointmentDocument(item)
   );
 }
 
@@ -63,7 +66,10 @@ function parseAppointmentDocument(input: unknown): AppointmentDocumentInput {
 
   return {
     id: parseNonEmptyString(record.id, 'Appointment document id is required'),
-    type: parseNonEmptyString(record.type, 'Appointment document type is required') as AppointmentDocumentInput['type'],
+    type: parseNonEmptyString(
+      record.type,
+      'Appointment document type is required'
+    ) as AppointmentDocumentInput['type'],
     name: parseNonEmptyString(record.name, 'Appointment document name is required'),
     date: parseDateLike(record.date, 'Appointment document date is required'),
   };

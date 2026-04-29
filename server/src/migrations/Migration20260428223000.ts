@@ -96,8 +96,12 @@ export class Migration20260428223000 extends Migration {
   }
 
   override async down(): Promise<void> {
-    this.addSql('alter table if exists "documents" drop constraint if exists "documents_appointment_id_foreign";');
-    this.addSql('alter table if exists "controls" drop constraint if exists "controls_appointment_id_foreign";');
+    this.addSql(
+      'alter table if exists "documents" drop constraint if exists "documents_appointment_id_foreign";'
+    );
+    this.addSql(
+      'alter table if exists "controls" drop constraint if exists "controls_appointment_id_foreign";'
+    );
     this.addSql('drop table if exists "medications";');
     this.addSql('drop table if exists "documents";');
     this.addSql('drop table if exists "controls";');

@@ -2,7 +2,12 @@ import { X, Plus, Upload, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { TagManager } from './TagManager';
-import type { Appointment, AppointmentTag, Document, DocumentType } from '../../../shared/api/contracts';
+import type {
+  Appointment,
+  AppointmentTag,
+  Document,
+  DocumentType,
+} from '../../../shared/api/contracts';
 
 interface PendingControl {
   id: string;
@@ -68,13 +73,15 @@ export function AddAppointmentModal({
     setDoctor(editingAppointment.doctor);
     setNotes(editingAppointment.notes || '');
     setSelectedTags(editingAppointment.tags || []);
-    setDocuments(editingAppointment.documents.map((document) => ({
-      type: document.type,
-      name: document.name,
-      date: document.date instanceof Date ? document.date : new Date(document.date),
-      file: document.file,
-      fileUrl: document.fileUrl,
-    })));
+    setDocuments(
+      editingAppointment.documents.map((document) => ({
+        type: document.type,
+        name: document.name,
+        date: document.date instanceof Date ? document.date : new Date(document.date),
+        file: document.file,
+        fileUrl: document.fileUrl,
+      }))
+    );
   }, [editingAppointment]);
 
   const handleAddDocument = () => {
@@ -97,7 +104,11 @@ export function AddAppointmentModal({
     setControls(controls.filter((_, currentIndex) => currentIndex !== index));
   };
 
-  const handleDocumentChange = (index: number, field: keyof Omit<Document, 'id'>, value: unknown) => {
+  const handleDocumentChange = (
+    index: number,
+    field: keyof Omit<Document, 'id'>,
+    value: unknown
+  ) => {
     const next = [...documents];
     next[index] = { ...next[index], [field]: value };
     setDocuments(next);
@@ -114,7 +125,11 @@ export function AddAppointmentModal({
     setDocuments(next);
   };
 
-  const handleControlChange = (index: number, field: keyof Omit<PendingControl, 'id'>, value: unknown) => {
+  const handleControlChange = (
+    index: number,
+    field: keyof Omit<PendingControl, 'id'>,
+    value: unknown
+  ) => {
     const next = [...controls];
     next[index] = { ...next[index], [field]: value };
     setControls(next);
@@ -139,13 +154,14 @@ export function AddAppointmentModal({
         date: document.date instanceof Date ? document.date : new Date(document.date),
         id: editingAppointment?.documents[index]?.id || crypto.randomUUID(),
       })),
-      controls: controls.length > 0
-        ? controls.map((control) => ({
-            ...control,
-            date: control.date instanceof Date ? control.date : new Date(control.date),
-            id: crypto.randomUUID(),
-          }))
-        : undefined,
+      controls:
+        controls.length > 0
+          ? controls.map((control) => ({
+              ...control,
+              date: control.date instanceof Date ? control.date : new Date(control.date),
+              id: crypto.randomUUID(),
+            }))
+          : undefined,
     });
   };
 
@@ -163,7 +179,13 @@ export function AddAppointmentModal({
 
         <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-4 mb-6">
-            <InputField label="Fecha de la cita" type="date" value={date} onChange={setDate} required />
+            <InputField
+              label="Fecha de la cita"
+              type="date"
+              value={date}
+              onChange={setDate}
+              required
+            />
             <DatalistField
               label="Especialidad"
               value={specialty}
@@ -171,7 +193,11 @@ export function AddAppointmentModal({
               placeholder="Ej: Cardiología, Medicina General"
               listId="specialties-list"
               options={existingSpecialties}
-              helper={existingSpecialties.length > 0 ? 'Selecciona una especialidad existente o escribe una nueva' : undefined}
+              helper={
+                existingSpecialties.length > 0
+                  ? 'Selecciona una especialidad existente o escribe una nueva'
+                  : undefined
+              }
             />
             <DatalistField
               label="Médico"
@@ -180,11 +206,17 @@ export function AddAppointmentModal({
               placeholder="Nombre del médico"
               listId="doctors-list"
               options={existingDoctors}
-              helper={existingDoctors.length > 0 ? 'Selecciona un médico existente o escribe uno nuevo' : undefined}
+              helper={
+                existingDoctors.length > 0
+                  ? 'Selecciona un médico existente o escribe uno nuevo'
+                  : undefined
+              }
             />
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Notas (opcional)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Notas (opcional)
+              </label>
               <textarea
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
@@ -205,20 +237,28 @@ export function AddAppointmentModal({
             )}
           </div>
 
-          <SectionHeader title="Documentos" actionLabel="Agregar documento" onClick={handleAddDocument} />
+          <SectionHeader
+            title="Documentos"
+            actionLabel="Agregar documento"
+            onClick={handleAddDocument}
+          />
           <div className="space-y-3 mb-6">
             {documents.map((document, index) => (
               <div key={index} className="border border-gray-200 rounded-lg p-3">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Tipo de documento</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Tipo de documento
+                    </label>
                     <select
                       value={document.type}
                       onChange={(event) => handleDocumentChange(index, 'type', event.target.value)}
                       className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       {documentTypes.map((type) => (
-                        <option key={type.value} value={type.value}>{type.label}</option>
+                        <option key={type.value} value={type.value}>
+                          {type.label}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -243,7 +283,9 @@ export function AddAppointmentModal({
                   <label className="flex-1">
                     <div className="flex items-center justify-center gap-2 px-3 py-2 border-2 border-dashed border-gray-300 rounded text-sm cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
                       <Upload className="w-4 h-4" />
-                      <span>{document.file ? document.file.name : 'Subir archivo (PDF, imagen)'}</span>
+                      <span>
+                        {document.file ? document.file.name : 'Subir archivo (PDF, imagen)'}
+                      </span>
                     </div>
                     <input
                       type="file"
@@ -268,7 +310,12 @@ export function AddAppointmentModal({
             ))}
           </div>
 
-          <SectionHeader title="Controles Programados" actionLabel="Agregar control" onClick={handleAddControl} green />
+          <SectionHeader
+            title="Controles Programados"
+            actionLabel="Agregar control"
+            onClick={handleAddControl}
+            green
+          />
           <div className="space-y-3 mb-6">
             {controls.map((control, index) => (
               <div key={index} className="border border-gray-200 rounded-lg p-3 bg-green-50">
@@ -276,7 +323,9 @@ export function AddAppointmentModal({
                   <input
                     type="date"
                     value={toDateInputValue(control.date)}
-                    onChange={(event) => handleControlChange(index, 'date', new Date(event.target.value))}
+                    onChange={(event) =>
+                      handleControlChange(index, 'date', new Date(event.target.value))
+                    }
                     className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                   <button
@@ -364,7 +413,9 @@ function InputField({
 }) {
   return (
     <div>
-      <label className={`block ${compact ? 'text-xs' : 'text-sm'} font-medium text-gray-700 mb-1`}>{label}</label>
+      <label className={`block ${compact ? 'text-xs' : 'text-sm'} font-medium text-gray-700 mb-1`}>
+        {label}
+      </label>
       <input
         type={type}
         value={value}

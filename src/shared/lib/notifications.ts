@@ -1,4 +1,5 @@
 // Web Notifications API helper
+import type { Appointment, Control, Medication, Vaccine } from '../api/contracts';
 
 export async function requestNotificationPermission(): Promise<boolean> {
   if (!('Notification' in window)) {
@@ -23,7 +24,7 @@ export function showNotification(title: string, options?: NotificationOptions) {
     const notificationOptions: NotificationOptions & { vibrate?: number[] } = {
       icon: '/icon-192.png',
       vibrate: [200, 100, 200],
-      ...options
+      ...options,
     };
 
     new Notification(title, notificationOptions);
@@ -50,17 +51,17 @@ export interface NotificationReminder {
 }
 
 export function checkAndShowReminders(
-  appointments: any[],
-  medications: any[],
-  vaccines: any[],
-  controls: any[],
+  appointments: Appointment[],
+  medications: Medication[],
+  vaccines: Vaccine[],
+  controls: Control[],
   reminderDays: number[]
 ) {
   const now = new Date();
   const reminders: NotificationReminder[] = [];
 
   // Check appointments
-  appointments.forEach(apt => {
+  appointments.forEach((apt) => {
     const aptDate = new Date(apt.date);
     const daysUntil = Math.ceil((aptDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
@@ -70,13 +71,13 @@ export function checkAndShowReminders(
         title: `Cita Médica: ${apt.specialty}`,
         body: `Tienes una cita con ${apt.doctor} en ${daysUntil} día${daysUntil !== 1 ? 's' : ''}`,
         date: aptDate,
-        type: 'appointment'
+        type: 'appointment',
       });
     }
   });
 
   // Check vaccines next doses
-  vaccines.forEach(vac => {
+  vaccines.forEach((vac) => {
     if (vac.nextDose) {
       const doseDate = new Date(vac.nextDose);
       const daysUntil = Math.ceil((doseDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -87,14 +88,14 @@ export function checkAndShowReminders(
           title: `Próxima Dosis: ${vac.name}`,
           body: `Tienes una dosis programada en ${daysUntil} día${daysUntil !== 1 ? 's' : ''}`,
           date: doseDate,
-          type: 'vaccine'
+          type: 'vaccine',
         });
       }
     }
   });
 
   // Check controls
-  controls.forEach(ctrl => {
+  controls.forEach((ctrl) => {
     const ctrlDate = new Date(ctrl.date);
     const daysUntil = Math.ceil((ctrlDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
@@ -104,16 +105,16 @@ export function checkAndShowReminders(
         title: `Control Médico: ${ctrl.specialty}`,
         body: `${ctrl.type} con ${ctrl.doctor} en ${daysUntil} día${daysUntil !== 1 ? 's' : ''}`,
         date: ctrlDate,
-        type: 'control'
+        type: 'control',
       });
     }
   });
 
   // Show notifications
-  reminders.forEach(reminder => {
+  reminders.forEach((reminder) => {
     showNotification(reminder.title, {
       body: reminder.body,
-      tag: reminder.id // Prevents duplicate notifications
+      tag: reminder.id, // Prevents duplicate notifications
     });
   });
 
@@ -121,13 +122,13 @@ export function checkAndShowReminders(
 }
 
 // Check for active medications that need reminders
-export function checkMedicationReminders(medications: any[]) {
-  const activeMeds = medications.filter(m => m.active);
+export function checkMedicationReminders(medications: Medication[]) {
+  const activeMeds = medications.filter((m) => m.active);
 
   if (activeMeds.length > 0) {
     showNotification('Recordatorio de Medicamentos', {
       body: `Tienes ${activeMeds.length} medicamento${activeMeds.length !== 1 ? 's' : ''} activo${activeMeds.length !== 1 ? 's' : ''}. No olvides tomarlos según lo prescrito.`,
-      tag: 'medication-reminder'
+      tag: 'medication-reminder',
     });
   }
 }

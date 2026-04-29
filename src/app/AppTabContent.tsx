@@ -185,7 +185,13 @@ export function AppTabContent({
 }: AppTabContentProps) {
   if (activeTab === 'dashboard') {
     if (appointmentsLoading || medicationsLoading) {
-      return <FeatureStatePanel variant="loading" title="Cargando dashboard" message="Estamos preparando el resumen de tu información médica." />;
+      return (
+        <FeatureStatePanel
+          variant="loading"
+          title="Cargando dashboard"
+          message="Estamos preparando el resumen de tu información médica."
+        />
+      );
     }
 
     if (appointmentsError || medicationsError) {
@@ -217,7 +223,13 @@ export function AppTabContent({
 
   if (activeTab === 'medications') {
     if (medicationsLoading) {
-      return <FeatureStatePanel variant="loading" title="Cargando medicamentos" message="Estamos trayendo tu tratamiento actual." />;
+      return (
+        <FeatureStatePanel
+          variant="loading"
+          title="Cargando medicamentos"
+          message="Estamos trayendo tu tratamiento actual."
+        />
+      );
     }
 
     if (medicationsError) {
@@ -244,7 +256,13 @@ export function AppTabContent({
 
   if (activeTab === 'calendar') {
     if (appointmentsLoading || controlsLoading) {
-      return <FeatureStatePanel variant="loading" title="Cargando calendario" message="Estamos organizando tus citas y controles." />;
+      return (
+        <FeatureStatePanel
+          variant="loading"
+          title="Cargando calendario"
+          message="Estamos organizando tus citas y controles."
+        />
+      );
     }
 
     if (appointmentsError || controlsError) {
@@ -271,7 +289,13 @@ export function AppTabContent({
 
   if (activeTab === 'settings') {
     if (notificationPreferencesLoading) {
-      return <FeatureStatePanel variant="loading" title="Cargando configuración" message="Estamos trayendo tus preferencias de notificación." />;
+      return (
+        <FeatureStatePanel
+          variant="loading"
+          title="Cargando configuración"
+          message="Estamos trayendo tus preferencias de notificación."
+        />
+      );
     }
 
     if (notificationPreferencesError) {
@@ -310,7 +334,13 @@ export function AppTabContent({
 
   if (activeTab === 'profile') {
     if (medicalProfileLoading) {
-      return <FeatureStatePanel variant="loading" title="Cargando perfil médico" message="Estamos preparando tu información personal." />;
+      return (
+        <FeatureStatePanel
+          variant="loading"
+          title="Cargando perfil médico"
+          message="Estamos preparando tu información personal."
+        />
+      );
     }
 
     if (medicalProfileError) {
@@ -328,7 +358,13 @@ export function AppTabContent({
 
   if (activeTab === 'vitals') {
     if (vitalSignsLoading) {
-      return <FeatureStatePanel variant="loading" title="Cargando signos vitales" message="Estamos preparando tu historial de mediciones." />;
+      return (
+        <FeatureStatePanel
+          variant="loading"
+          title="Cargando signos vitales"
+          message="Estamos preparando tu historial de mediciones."
+        />
+      );
     }
 
     if (vitalSignsError) {
@@ -350,7 +386,13 @@ export function AppTabContent({
 
   if (activeTab === 'vaccines') {
     if (vaccinesLoading) {
-      return <FeatureStatePanel variant="loading" title="Cargando vacunas" message="Estamos preparando tu historial de inmunización." />;
+      return (
+        <FeatureStatePanel
+          variant="loading"
+          title="Cargando vacunas"
+          message="Estamos preparando tu historial de inmunización."
+        />
+      );
     }
 
     if (vaccinesError) {
@@ -372,7 +414,13 @@ export function AppTabContent({
 
   if (activeTab === 'timeline') {
     if (appointmentsLoading || medicationsLoading || vaccinesLoading || vitalSignsLoading) {
-      return <FeatureStatePanel variant="loading" title="Cargando timeline" message="Estamos construyendo tu línea de tiempo médica." />;
+      return (
+        <FeatureStatePanel
+          variant="loading"
+          title="Cargando timeline"
+          message="Estamos construyendo tu línea de tiempo médica."
+        />
+      );
     }
 
     if (appointmentsError || medicationsError || vaccinesError || vitalSignsError) {
@@ -391,7 +439,12 @@ export function AppTabContent({
       );
     }
 
-    if (appointments.length === 0 && medications.length === 0 && vaccines.length === 0 && vitalSigns.length === 0) {
+    if (
+      appointments.length === 0 &&
+      medications.length === 0 &&
+      vaccines.length === 0 &&
+      vitalSigns.length === 0
+    ) {
       return (
         <FeatureStatePanel
           variant="empty"
@@ -422,7 +475,13 @@ export function AppTabContent({
       vitalSignsLoading ||
       medicalProfileLoading
     ) {
-      return <FeatureStatePanel variant="loading" title="Cargando búsqueda global" message="Estamos indexando tu información para buscar mejor." />;
+      return (
+        <FeatureStatePanel
+          variant="loading"
+          title="Cargando búsqueda global"
+          message="Estamos indexando tu información para buscar mejor."
+        />
+      );
     }
 
     if (
@@ -448,7 +507,12 @@ export function AppTabContent({
       );
     }
 
-    if (appointments.length === 0 && medications.length === 0 && vaccines.length === 0 && vitalSigns.length === 0) {
+    if (
+      appointments.length === 0 &&
+      medications.length === 0 &&
+      vaccines.length === 0 &&
+      vitalSigns.length === 0
+    ) {
       return (
         <FeatureStatePanel
           variant="empty"
@@ -489,7 +553,13 @@ export function AppTabContent({
       vitalSignsLoading ||
       medicalProfileLoading
     ) {
-      return <FeatureStatePanel variant="loading" title="Preparando PDF" message="Estamos reuniendo toda tu información para el reporte." />;
+      return (
+        <FeatureStatePanel
+          variant="loading"
+          title="Preparando PDF"
+          message="Estamos reuniendo toda tu información para el reporte."
+        />
+      );
     }
 
     if (
@@ -554,7 +624,13 @@ export function AppTabContent({
   }
 
   if (controlsLoading) {
-    return <FeatureStatePanel variant="loading" title="Cargando controles" message="Estamos preparando tus próximos controles médicos." />;
+    return (
+      <FeatureStatePanel
+        variant="loading"
+        title="Cargando controles"
+        message="Estamos preparando tus próximos controles médicos."
+      />
+    );
   }
 
   if (controlsError) {

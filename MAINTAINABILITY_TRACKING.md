@@ -109,7 +109,7 @@ server/src/
   types.ts
   scripts/
   tests/
-  ```
+```
 
 Observed issues:
 
@@ -344,14 +344,14 @@ Goals:
 Tasks:
 
 - [x] review linting/formatting setup
-  Progress: ESLint and Prettier are now configured with repo-level scripts, frontend/backend/shared coverage, and a warning-only path for remaining `any` cleanup.
+      Progress: ESLint and Prettier are now configured with repo-level scripts, frontend/backend/shared coverage, and a warning-only path for remaining `any` cleanup.
 - [x] document naming conventions and folder rules
 - [x] add architecture notes for contributors
 - [~] add basic tests for services and critical endpoints
   Progress: backend integration smoke tests now cover app bootstrap, `/health`, and request validation failures through the real Express app.
 - [ ] add basic UI tests for key workflows
 - [x] decide whether backend repositories are required right now
-  Decision: no dedicated repository layer for now; current service-to-MikroORM boundaries stay in place until query complexity or testing pain justifies extraction.
+      Decision: no dedicated repository layer for now; current service-to-MikroORM boundaries stay in place until query complexity or testing pain justifies extraction.
 
 ## Risks to Manage
 

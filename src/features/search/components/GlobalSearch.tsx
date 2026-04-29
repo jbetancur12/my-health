@@ -3,6 +3,15 @@ import type { ReactNode } from 'react';
 import { Search, X, Stethoscope, Pill, Syringe, Activity, FileText, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import type {
+  Appointment,
+  MedicalProfile,
+  Medication,
+  Vaccine,
+  VitalSignReading,
+} from '../../../shared/api/contracts';
+
+type SearchResultData = Appointment | Medication | Vaccine | VitalSignReading | MedicalProfile;
 
 interface SearchResult {
   id: string;
@@ -13,19 +22,26 @@ interface SearchResult {
   icon: ReactNode;
   color: string;
   matchedField: string;
-  data: any;
+  data: SearchResultData;
 }
 
 interface GlobalSearchProps {
-  appointments: any[];
-  medications: any[];
-  vaccines: any[];
-  vitalSigns: any[];
-  medicalProfile: any;
+  appointments: Appointment[];
+  medications: Medication[];
+  vaccines: Vaccine[];
+  vitalSigns: VitalSignReading[];
+  medicalProfile: MedicalProfile;
   onResultClick?: (result: SearchResult) => void;
 }
 
-export function GlobalSearch({ appointments, medications, vaccines, vitalSigns, medicalProfile, onResultClick }: GlobalSearchProps) {
+export function GlobalSearch({
+  appointments,
+  medications,
+  vaccines,
+  vitalSigns,
+  medicalProfile,
+  onResultClick,
+}: GlobalSearchProps) {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
 
@@ -36,7 +52,7 @@ export function GlobalSearch({ appointments, medications, vaccines, vitalSigns, 
     const allResults: SearchResult[] = [];
 
     // Search in appointments
-    appointments.forEach(apt => {
+    appointments.forEach((apt) => {
       const matches = [];
 
       if (apt.specialty.toLowerCase().includes(searchTerm)) {
@@ -48,7 +64,7 @@ export function GlobalSearch({ appointments, medications, vaccines, vitalSigns, 
       if (apt.notes?.toLowerCase().includes(searchTerm)) {
         matches.push('notas');
       }
-      apt.documents.forEach((doc: any) => {
+      apt.documents.forEach((doc) => {
         if (doc.name.toLowerCase().includes(searchTerm)) {
           matches.push('documento');
         }
@@ -64,13 +80,13 @@ export function GlobalSearch({ appointments, medications, vaccines, vitalSigns, 
           icon: <Stethoscope className="w-5 h-5" />,
           color: 'blue',
           matchedField: `Coincide en: ${matches.join(', ')}`,
-          data: apt
+          data: apt,
         });
       }
     });
 
     // Search in medications
-    medications.forEach(med => {
+    medications.forEach((med) => {
       if (
         med.name.toLowerCase().includes(searchTerm) ||
         med.dosage?.toLowerCase().includes(searchTerm) ||
@@ -86,13 +102,13 @@ export function GlobalSearch({ appointments, medications, vaccines, vitalSigns, 
           icon: <Pill className="w-5 h-5" />,
           color: 'green',
           matchedField: med.active ? 'Activo' : 'Inactivo',
-          data: med
+          data: med,
         });
       }
     });
 
     // Search in vaccines
-    vaccines.forEach(vac => {
+    vaccines.forEach((vac) => {
       if (
         vac.name.toLowerCase().includes(searchTerm) ||
         vac.location?.toLowerCase().includes(searchTerm) ||
@@ -107,16 +123,17 @@ export function GlobalSearch({ appointments, medications, vaccines, vitalSigns, 
           icon: <Syringe className="w-5 h-5" />,
           color: 'purple',
           matchedField: vac.doseNumber ? `Dosis ${vac.doseNumber}/${vac.totalDoses}` : 'Vacuna',
-          data: vac
+          data: vac,
         });
       }
     });
 
     // Search in vital signs
-    vitalSigns.forEach(vs => {
+    vitalSigns.forEach((vs) => {
       if (vs.notes?.toLowerCase().includes(searchTerm)) {
         const vitals = [];
-        if (vs.bloodPressureSystolic) vitals.push(`${vs.bloodPressureSystolic}/${vs.bloodPressureDiastolic}`);
+        if (vs.bloodPressureSystolic)
+          vitals.push(`${vs.bloodPressureSystolic}/${vs.bloodPressureDiastolic}`);
         if (vs.weight) vitals.push(`${vs.weight}kg`);
 
         allResults.push({
@@ -128,7 +145,7 @@ export function GlobalSearch({ appointments, medications, vaccines, vitalSigns, 
           icon: <Activity className="w-5 h-5" />,
           color: 'orange',
           matchedField: 'Coincide en notas',
-          data: vs
+          data: vs,
         });
       }
     });
@@ -137,13 +154,13 @@ export function GlobalSearch({ appointments, medications, vaccines, vitalSigns, 
     if (medicalProfile) {
       const profileMatches = [];
 
-      medicalProfile.allergies?.forEach((allergy: string) => {
+      medicalProfile.allergies?.forEach((allergy) => {
         if (allergy.toLowerCase().includes(searchTerm)) {
           profileMatches.push(`Alergia: ${allergy}`);
         }
       });
 
-      medicalProfile.chronicConditions?.forEach((condition: string) => {
+      medicalProfile.chronicConditions?.forEach((condition) => {
         if (condition.toLowerCase().includes(searchTerm)) {
           profileMatches.push(`Condición: ${condition}`);
         }
@@ -162,7 +179,7 @@ export function GlobalSearch({ appointments, medications, vaccines, vitalSigns, 
           icon: <User className="w-5 h-5" />,
           color: 'gray',
           matchedField: `${profileMatches.length} coincidencia${profileMatches.length !== 1 ? 's' : ''}`,
-          data: medicalProfile
+          data: medicalProfile,
         });
       }
     }
@@ -181,7 +198,7 @@ export function GlobalSearch({ appointments, medications, vaccines, vitalSigns, 
     green: 'bg-green-100 text-green-700',
     purple: 'bg-purple-100 text-purple-700',
     orange: 'bg-orange-100 text-orange-700',
-    gray: 'bg-gray-100 text-gray-700'
+    gray: 'bg-gray-100 text-gray-700',
   };
 
   return (
@@ -254,7 +271,8 @@ export function GlobalSearch({ appointments, medications, vaccines, vitalSigns, 
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <span className="font-medium text-gray-900">
-                {results.length} resultado{results.length !== 1 ? 's' : ''} encontrado{results.length !== 1 ? 's' : ''}
+                {results.length} resultado{results.length !== 1 ? 's' : ''} encontrado
+                {results.length !== 1 ? 's' : ''}
               </span>
               {results.length > 0 && (
                 <span className="text-sm text-gray-500">Click para ver detalles</span>
@@ -266,9 +284,7 @@ export function GlobalSearch({ appointments, medications, vaccines, vitalSigns, 
             <div className="p-12 text-center">
               <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500">No se encontraron resultados para "{query}"</p>
-              <p className="text-sm text-gray-400 mt-2">
-                Intenta con otros términos de búsqueda
-              </p>
+              <p className="text-sm text-gray-400 mt-2">Intenta con otros términos de búsqueda</p>
             </div>
           ) : (
             <div className="max-h-[600px] overflow-y-auto">
@@ -283,7 +299,9 @@ export function GlobalSearch({ appointments, medications, vaccines, vitalSigns, 
                     className="w-full text-left p-4 hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-start gap-4">
-                      <div className={`p-2 rounded-lg ${colorClasses[result.color as keyof typeof colorClasses]}`}>
+                      <div
+                        className={`p-2 rounded-lg ${colorClasses[result.color as keyof typeof colorClasses]}`}
+                      >
                         {result.icon}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -295,7 +313,7 @@ export function GlobalSearch({ appointments, medications, vaccines, vitalSigns, 
                           </div>
                           {result.date && (
                             <span className="text-sm text-gray-500 whitespace-nowrap">
-                              {format(result.date, "d MMM yyyy", { locale: es })}
+                              {format(result.date, 'd MMM yyyy', { locale: es })}
                             </span>
                           )}
                         </div>

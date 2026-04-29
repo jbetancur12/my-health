@@ -159,7 +159,17 @@ export function AppointmentsScreen({
   );
 }
 
-function StatCard({ icon, bg, label, value }: { icon: ReactNode; bg: string; label: string; value: number }) {
+function StatCard({
+  icon,
+  bg,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  bg: string;
+  label: string;
+  value: number;
+}) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
       <div className="flex items-center gap-3">

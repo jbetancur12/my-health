@@ -10,11 +10,11 @@ interface UpcomingControlsProps {
 
 export function UpcomingControls({ controls, onControlClick }: UpcomingControlsProps) {
   const upcomingControls = controls
-    .filter(c => isFuture(c.date))
+    .filter((c) => isFuture(c.date))
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 
   const pastControls = controls
-    .filter(c => isPast(c.date))
+    .filter((c) => isPast(c.date))
     .sort((a, b) => b.date.getTime() - a.date.getTime());
 
   const getUrgencyColor = (date: Date) => {
@@ -37,7 +37,7 @@ export function UpcomingControls({ controls, onControlClick }: UpcomingControlsP
           </div>
 
           <div className="space-y-3">
-            {upcomingControls.map(control => {
+            {upcomingControls.map((control) => {
               const daysUntil = differenceInDays(control.date, new Date());
               return (
                 <div
@@ -51,7 +51,9 @@ export function UpcomingControls({ controls, onControlClick }: UpcomingControlsP
                       <div className="space-y-1 text-sm text-gray-600">
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4" />
-                          <span>{control.doctor} - {control.specialty}</span>
+                          <span>
+                            {control.doctor} - {control.specialty}
+                          </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4" />
@@ -62,7 +64,9 @@ export function UpcomingControls({ controls, onControlClick }: UpcomingControlsP
                     <div className="text-right">
                       <div className="flex items-center gap-1 text-sm font-medium text-gray-700">
                         <Clock className="w-4 h-4" />
-                        <span>{daysUntil} día{daysUntil !== 1 ? 's' : ''}</span>
+                        <span>
+                          {daysUntil} día{daysUntil !== 1 ? 's' : ''}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -77,7 +81,7 @@ export function UpcomingControls({ controls, onControlClick }: UpcomingControlsP
         <div>
           <h3 className="font-semibold text-gray-900 mb-4">Controles Vencidos</h3>
           <div className="space-y-3">
-            {pastControls.map(control => (
+            {pastControls.map((control) => (
               <div
                 key={control.id}
                 onClick={() => onControlClick(control)}
@@ -89,7 +93,9 @@ export function UpcomingControls({ controls, onControlClick }: UpcomingControlsP
                     <div className="space-y-1 text-sm text-gray-600">
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4" />
-                        <span>{control.doctor} - {control.specialty}</span>
+                        <span>
+                          {control.doctor} - {control.specialty}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4" />

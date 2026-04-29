@@ -26,7 +26,7 @@ const COMMON_VACCINES = [
   'Neumococo',
   'Fiebre Amarilla',
   'HPV (Papiloma Humano)',
-  'Otra'
+  'Otra',
 ];
 
 export function VaccineHistory({ vaccines, onAdd, onRemove }: VaccineHistoryProps) {
@@ -44,10 +44,10 @@ export function VaccineHistory({ vaccines, onAdd, onRemove }: VaccineHistoryProp
   const upcomingReminders = useMemo(() => {
     const today = new Date();
     return vaccines
-      .filter(v => v.nextDose && new Date(v.nextDose) > today)
-      .map(v => ({
+      .filter((v) => v.nextDose && new Date(v.nextDose) > today)
+      .map((v) => ({
         ...v,
-        daysUntil: differenceInDays(new Date(v.nextDose!), today)
+        daysUntil: differenceInDays(new Date(v.nextDose!), today),
       }))
       .sort((a, b) => a.daysUntil - b.daysUntil);
   }, [vaccines]);
@@ -55,10 +55,10 @@ export function VaccineHistory({ vaccines, onAdd, onRemove }: VaccineHistoryProp
   const overdueReminders = useMemo(() => {
     const today = new Date();
     return vaccines
-      .filter(v => v.nextDose && new Date(v.nextDose) < today)
-      .map(v => ({
+      .filter((v) => v.nextDose && new Date(v.nextDose) < today)
+      .map((v) => ({
         ...v,
-        daysOverdue: differenceInDays(today, new Date(v.nextDose!))
+        daysOverdue: differenceInDays(today, new Date(v.nextDose!)),
       }))
       .sort((a, b) => b.daysOverdue - a.daysOverdue);
   }, [vaccines]);
@@ -77,7 +77,7 @@ export function VaccineHistory({ vaccines, onAdd, onRemove }: VaccineHistoryProp
       totalDoses: totalDoses ? parseInt(totalDoses) : undefined,
       location: location.trim() || undefined,
       lot: lot.trim() || undefined,
-      notes: notes.trim() || undefined
+      notes: notes.trim() || undefined,
     };
 
     onAdd(vaccine);
@@ -124,7 +124,7 @@ export function VaccineHistory({ vaccines, onAdd, onRemove }: VaccineHistoryProp
             <div className="flex-1">
               <h3 className="font-semibold text-red-900 mb-2">Dosis Atrasadas</h3>
               <div className="space-y-2">
-                {overdueReminders.map(vaccine => (
+                {overdueReminders.map((vaccine) => (
                   <div key={vaccine.id} className="text-sm text-red-800">
                     <span className="font-medium">{vaccine.name}</span>
                     {' - '}
@@ -146,14 +146,13 @@ export function VaccineHistory({ vaccines, onAdd, onRemove }: VaccineHistoryProp
             <div className="flex-1">
               <h3 className="font-semibold text-blue-900 mb-2">Próximas Dosis</h3>
               <div className="space-y-2">
-                {upcomingReminders.slice(0, 3).map(vaccine => (
+                {upcomingReminders.slice(0, 3).map((vaccine) => (
                   <div key={vaccine.id} className="text-sm">
                     <span className="font-medium text-blue-900">{vaccine.name}</span>
                     {' - '}
                     <span className="text-blue-700">
                       en {vaccine.daysUntil} día{vaccine.daysUntil !== 1 ? 's' : ''}
-                    </span>
-                    {' '}
+                    </span>{' '}
                     <span className="text-blue-600">
                       ({format(new Date(vaccine.nextDose!), "d 'de' MMM", { locale: es })})
                     </span>
@@ -181,8 +180,10 @@ export function VaccineHistory({ vaccines, onAdd, onRemove }: VaccineHistoryProp
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Seleccionar vacuna</option>
-                {COMMON_VACCINES.map(vaccine => (
-                  <option key={vaccine} value={vaccine}>{vaccine}</option>
+                {COMMON_VACCINES.map((vaccine) => (
+                  <option key={vaccine} value={vaccine}>
+                    {vaccine}
+                  </option>
                 ))}
               </select>
             </div>
@@ -330,8 +331,11 @@ export function VaccineHistory({ vaccines, onAdd, onRemove }: VaccineHistoryProp
           <div className="space-y-3">
             {[...vaccines]
               .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-              .map(vaccine => (
-                <div key={vaccine.id} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+              .map((vaccine) => (
+                <div
+                  key={vaccine.id}
+                  className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors"
+                >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
@@ -365,16 +369,16 @@ export function VaccineHistory({ vaccines, onAdd, onRemove }: VaccineHistoryProp
                         <span className="text-gray-700">
                           Próxima dosis:{' '}
                           <span className="font-medium text-blue-600">
-                            {format(new Date(vaccine.nextDose), "d 'de' MMMM, yyyy", { locale: es })}
+                            {format(new Date(vaccine.nextDose), "d 'de' MMMM, yyyy", {
+                              locale: es,
+                            })}
                           </span>
                         </span>
                       </div>
                     </div>
                   )}
 
-                  {vaccine.lot && (
-                    <p className="text-xs text-gray-500 mt-2">Lote: {vaccine.lot}</p>
-                  )}
+                  {vaccine.lot && <p className="text-xs text-gray-500 mt-2">Lote: {vaccine.lot}</p>}
 
                   {vaccine.notes && (
                     <p className="text-sm text-gray-600 mt-2 italic">{vaccine.notes}</p>

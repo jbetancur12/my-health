@@ -1,8 +1,10 @@
+import type { EntityManager, EntityName, FilterQuery, FindOptions } from '@mikro-orm/core';
+
 export async function findFirst<T extends object>(
-  em: { find: (entityName: any, where: object, options?: object) => Promise<T[]> },
-  entity: any,
-  orderBy: object,
+  em: Pick<EntityManager, 'find'>,
+  entity: EntityName<T>,
+  orderBy: FindOptions<T>['orderBy']
 ) {
-  const [record] = await em.find(entity, {}, { limit: 1, orderBy });
+  const [record] = await em.find(entity, {} as FilterQuery<T>, { limit: 1, orderBy });
   return record ?? null;
 }

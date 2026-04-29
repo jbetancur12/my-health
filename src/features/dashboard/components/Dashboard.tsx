@@ -1,7 +1,17 @@
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { TrendingUp, Calendar as CalendarIcon, FileText, Activity, Pill } from 'lucide-react';
-import { BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from 'recharts';
 import type { Appointment, Medication } from '../../../shared/api/contracts';
 
 interface DashboardProps {
@@ -9,19 +19,32 @@ interface DashboardProps {
   medications: Medication[];
 }
 
-const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'];
+const COLORS = [
+  '#3B82F6',
+  '#10B981',
+  '#F59E0B',
+  '#EF4444',
+  '#8B5CF6',
+  '#EC4899',
+  '#14B8A6',
+  '#F97316',
+];
 
 export function Dashboard({ appointments, medications }: DashboardProps) {
   const stats = useMemo(() => {
     const last30Days = appointments.filter((appointment) => {
-      const daysAgo = (new Date().getTime() - new Date(appointment.date).getTime()) / (1000 * 60 * 60 * 24);
+      const daysAgo =
+        (new Date().getTime() - new Date(appointment.date).getTime()) / (1000 * 60 * 60 * 24);
       return daysAgo <= 30 && daysAgo >= 0;
     });
 
-    const specialtyCounts = appointments.reduce((acc, appointment) => {
-      acc[appointment.specialty] = (acc[appointment.specialty] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const specialtyCounts = appointments.reduce(
+      (acc, appointment) => {
+        acc[appointment.specialty] = (acc[appointment.specialty] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
     const specialtyData = Object.entries(specialtyCounts)
       .map(([name, value], index) => ({ name, value, id: `${name}-${index}` }))
@@ -64,10 +87,34 @@ export function Dashboard({ appointments, medications }: DashboardProps) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <GradientCard icon={<CalendarIcon className="w-8 h-8 opacity-80" />} value={stats.totalAppointments} label="Total de Citas" detail={`${stats.recentAppointments} en los últimos 30 días`} colors="from-blue-500 to-blue-600" />
-        <GradientCard icon={<FileText className="w-8 h-8 opacity-80" />} value={stats.totalDocs} label="Documentos" detail="Archivos médicos guardados" colors="from-green-500 to-green-600" />
-        <GradientCard icon={<Activity className="w-8 h-8 opacity-80" />} value={stats.totalSpecialties} label="Especialidades" detail="Áreas médicas atendidas" colors="from-purple-500 to-purple-600" />
-        <GradientCard icon={<Pill className="w-8 h-8 opacity-80" />} value={stats.activeMeds} label="Medicamentos" detail="Actualmente activos" colors="from-orange-500 to-orange-600" />
+        <GradientCard
+          icon={<CalendarIcon className="w-8 h-8 opacity-80" />}
+          value={stats.totalAppointments}
+          label="Total de Citas"
+          detail={`${stats.recentAppointments} en los últimos 30 días`}
+          colors="from-blue-500 to-blue-600"
+        />
+        <GradientCard
+          icon={<FileText className="w-8 h-8 opacity-80" />}
+          value={stats.totalDocs}
+          label="Documentos"
+          detail="Archivos médicos guardados"
+          colors="from-green-500 to-green-600"
+        />
+        <GradientCard
+          icon={<Activity className="w-8 h-8 opacity-80" />}
+          value={stats.totalSpecialties}
+          label="Especialidades"
+          detail="Áreas médicas atendidas"
+          colors="from-purple-500 to-purple-600"
+        />
+        <GradientCard
+          icon={<Pill className="w-8 h-8 opacity-80" />}
+          value={stats.activeMeds}
+          label="Medicamentos"
+          detail="Actualmente activos"
+          colors="from-orange-500 to-orange-600"
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -82,11 +129,18 @@ export function Dashboard({ appointments, medications }: DashboardProps) {
                 <XAxis dataKey="name" />
                 <YAxis allowDecimals={false} />
                 <Tooltip />
-                <Bar dataKey="citas" fill="#3B82F6" radius={[8, 8, 0, 0]} isAnimationActive={false} />
+                <Bar
+                  dataKey="citas"
+                  fill="#3B82F6"
+                  radius={[8, 8, 0, 0]}
+                  isAnimationActive={false}
+                />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-64 flex items-center justify-center text-gray-400">No hay datos suficientes</div>
+            <div className="h-64 flex items-center justify-center text-gray-400">
+              No hay datos suficientes
+            </div>
           )}
         </div>
 
@@ -99,7 +153,14 @@ export function Dashboard({ appointments, medications }: DashboardProps) {
             <div className="flex items-center gap-4">
               <ResponsiveContainer width="50%" height={250}>
                 <PieChart>
-                  <Pie data={stats.specialtyData} cx="50%" cy="50%" outerRadius={80} dataKey="value" isAnimationActive={false}>
+                  <Pie
+                    data={stats.specialtyData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    dataKey="value"
+                    isAnimationActive={false}
+                  >
                     {stats.specialtyData.map((entry, index) => (
                       <Cell key={entry.id} fill={COLORS[index % COLORS.length]} />
                     ))}
@@ -110,7 +171,10 @@ export function Dashboard({ appointments, medications }: DashboardProps) {
               <div className="flex-1 space-y-2">
                 {stats.specialtyData.slice(0, 6).map((item, index) => (
                   <div key={item.id} className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                    />
                     <span className="text-sm text-gray-700 flex-1">{item.name}</span>
                     <span className="text-sm font-semibold text-gray-900">{item.value}</span>
                   </div>
@@ -118,7 +182,9 @@ export function Dashboard({ appointments, medications }: DashboardProps) {
               </div>
             </div>
           ) : (
-            <div className="h-64 flex items-center justify-center text-gray-400">No hay datos suficientes</div>
+            <div className="h-64 flex items-center justify-center text-gray-400">
+              No hay datos suficientes
+            </div>
           )}
         </div>
       </div>

@@ -1,7 +1,9 @@
 import { NotificationPreference } from '../../entities/NotificationPreference.js';
 import type { NotificationPreferencesDto } from '../../../../shared/contracts/http.js';
 
-export function serializeNotificationPreference(preference: NotificationPreference | null): NotificationPreferencesDto {
+export function serializeNotificationPreference(
+  preference: NotificationPreference | null
+): NotificationPreferencesDto {
   if (!preference) {
     return {
       email: '',

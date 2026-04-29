@@ -21,7 +21,13 @@ interface PDFReportProps {
 
 type DateRange = 'all' | '6months' | '1year';
 
-export function PDFReport({ appointments, medications, vaccines, vitalSigns, medicalProfile }: PDFReportProps) {
+export function PDFReport({
+  appointments,
+  medications,
+  vaccines,
+  vitalSigns,
+  medicalProfile,
+}: PDFReportProps) {
   const [includeProfile, setIncludeProfile] = useState(true);
   const [includeAppointments, setIncludeAppointments] = useState(true);
   const [includeMedications, setIncludeMedications] = useState(true);
@@ -42,7 +48,7 @@ export function PDFReport({ appointments, medications, vaccines, vitalSigns, med
       cutoffDate.setFullYear(now.getFullYear() - 1);
     }
 
-    return items.filter(item => new Date(item.date) >= cutoffDate);
+    return items.filter((item) => new Date(item.date) >= cutoffDate);
   }
 
   function generatePDF() {
@@ -73,7 +79,11 @@ export function PDFReport({ appointments, medications, vaccines, vitalSigns, med
 
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.text(`Generado el ${format(new Date(), "d 'de' MMMM, yyyy", { locale: es })}`, margin, yPosition);
+      doc.text(
+        `Generado el ${format(new Date(), "d 'de' MMMM, yyyy", { locale: es })}`,
+        margin,
+        yPosition
+      );
       yPosition += 15;
 
       // Medical Profile
@@ -142,8 +152,8 @@ export function PDFReport({ appointments, medications, vaccines, vitalSigns, med
 
       // Appointments
       if (includeAppointments && appointments.length > 0) {
-        const filteredApts = filterByDate(appointments).sort((a, b) =>
-          new Date(b.date).getTime() - new Date(a.date).getTime()
+        const filteredApts = filterByDate(appointments).sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
         );
 
         if (filteredApts.length > 0) {
@@ -164,7 +174,11 @@ export function PDFReport({ appointments, medications, vaccines, vitalSigns, med
             yPosition += lineHeight;
 
             doc.setFont('helvetica', 'normal');
-            doc.text(`Fecha: ${format(new Date(apt.date), "d 'de' MMMM, yyyy", { locale: es })}`, margin + 5, yPosition);
+            doc.text(
+              `Fecha: ${format(new Date(apt.date), "d 'de' MMMM, yyyy", { locale: es })}`,
+              margin + 5,
+              yPosition
+            );
             yPosition += lineHeight;
             doc.text(`Médico: ${apt.doctor}`, margin + 5, yPosition);
             yPosition += lineHeight;
@@ -176,7 +190,8 @@ export function PDFReport({ appointments, medications, vaccines, vitalSigns, med
 
             if (apt.notes) {
               checkAddPage(15);
-              const notes = apt.notes.length > 100 ? apt.notes.substring(0, 100) + '...' : apt.notes;
+              const notes =
+                apt.notes.length > 100 ? apt.notes.substring(0, 100) + '...' : apt.notes;
               doc.text(`Notas: ${notes}`, margin + 5, yPosition);
               yPosition += lineHeight;
             }
@@ -190,7 +205,7 @@ export function PDFReport({ appointments, medications, vaccines, vitalSigns, med
       if (includeMedications && medications.length > 0) {
         checkAddPage(30);
 
-        const activeMeds = medications.filter(m => m.active);
+        const activeMeds = medications.filter((m) => m.active);
 
         doc.setFontSize(16);
         doc.setFont('helvetica', 'bold');
@@ -211,7 +226,11 @@ export function PDFReport({ appointments, medications, vaccines, vitalSigns, med
           yPosition += lineHeight;
           doc.text(`Frecuencia: ${med.frequency}`, margin + 5, yPosition);
           yPosition += lineHeight;
-          doc.text(`Inicio: ${format(new Date(med.startDate), "d 'de' MMM, yyyy", { locale: es })}`, margin + 5, yPosition);
+          doc.text(
+            `Inicio: ${format(new Date(med.startDate), "d 'de' MMM, yyyy", { locale: es })}`,
+            margin + 5,
+            yPosition
+          );
           yPosition += lineHeight;
 
           if (med.notes) {
@@ -236,8 +255,8 @@ export function PDFReport({ appointments, medications, vaccines, vitalSigns, med
 
         doc.setFontSize(11);
 
-        const sortedVaccines = [...vaccines].sort((a, b) =>
-          new Date(b.date).getTime() - new Date(a.date).getTime()
+        const sortedVaccines = [...vaccines].sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
         );
 
         sortedVaccines.forEach((vac, index) => {
@@ -248,7 +267,11 @@ export function PDFReport({ appointments, medications, vaccines, vitalSigns, med
           yPosition += lineHeight;
 
           doc.setFont('helvetica', 'normal');
-          doc.text(`Fecha: ${format(new Date(vac.date), "d 'de' MMMM, yyyy", { locale: es })}`, margin + 5, yPosition);
+          doc.text(
+            `Fecha: ${format(new Date(vac.date), "d 'de' MMMM, yyyy", { locale: es })}`,
+            margin + 5,
+            yPosition
+          );
           yPosition += lineHeight;
 
           if (vac.doseNumber && vac.totalDoses) {
@@ -263,7 +286,11 @@ export function PDFReport({ appointments, medications, vaccines, vitalSigns, med
 
           if (vac.nextDose) {
             checkAddPage(10);
-            doc.text(`Próxima dosis: ${format(new Date(vac.nextDose), "d 'de' MMM, yyyy", { locale: es })}`, margin + 5, yPosition);
+            doc.text(
+              `Próxima dosis: ${format(new Date(vac.nextDose), "d 'de' MMM, yyyy", { locale: es })}`,
+              margin + 5,
+              yPosition
+            );
             yPosition += lineHeight;
           }
 
@@ -273,8 +300,8 @@ export function PDFReport({ appointments, medications, vaccines, vitalSigns, med
 
       // Vital Signs
       if (includeVitals && vitalSigns.length > 0) {
-        const filteredVitals = filterByDate(vitalSigns).sort((a, b) =>
-          new Date(b.date).getTime() - new Date(a.date).getTime()
+        const filteredVitals = filterByDate(vitalSigns).sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
         );
 
         if (filteredVitals.length > 0) {
@@ -291,12 +318,17 @@ export function PDFReport({ appointments, medications, vaccines, vitalSigns, med
             checkAddPage(20);
 
             doc.setFont('helvetica', 'bold');
-            doc.text(`${format(new Date(vs.date), "d 'de' MMM, yyyy", { locale: es })}`, margin, yPosition);
+            doc.text(
+              `${format(new Date(vs.date), "d 'de' MMM, yyyy", { locale: es })}`,
+              margin,
+              yPosition
+            );
             yPosition += lineHeight;
 
             doc.setFont('helvetica', 'normal');
             const vitals = [];
-            if (vs.bloodPressureSystolic) vitals.push(`PA: ${vs.bloodPressureSystolic}/${vs.bloodPressureDiastolic}`);
+            if (vs.bloodPressureSystolic)
+              vitals.push(`PA: ${vs.bloodPressureSystolic}/${vs.bloodPressureDiastolic}`);
             if (vs.heartRate) vitals.push(`FC: ${vs.heartRate} bpm`);
             if (vs.weight) vitals.push(`Peso: ${vs.weight} kg`);
             if (vs.glucose) vitals.push(`Glucosa: ${vs.glucose} mg/dL`);
@@ -319,7 +351,12 @@ export function PDFReport({ appointments, medications, vaccines, vitalSigns, med
         doc.setFontSize(9);
         doc.setFont('helvetica', 'italic');
         doc.text(`Página ${i} de ${totalPages}`, margin, pageHeight - 10);
-        doc.text('Archivo Médico Personal - Uso exclusivo médico', doc.internal.pageSize.width / 2, pageHeight - 10, { align: 'center' });
+        doc.text(
+          'Archivo Médico Personal - Uso exclusivo médico',
+          doc.internal.pageSize.width / 2,
+          pageHeight - 10,
+          { align: 'center' }
+        );
       }
 
       // Save PDF
@@ -353,7 +390,8 @@ export function PDFReport({ appointments, medications, vaccines, vitalSigns, med
           <div className="flex-1">
             <h3 className="text-xl font-semibold mb-2">Reporte Médico Profesional</h3>
             <p className="text-blue-100 mb-4">
-              Genera un documento PDF completo con tu historial médico listo para imprimir o enviar por email a tu médico.
+              Genera un documento PDF completo con tu historial médico listo para imprimir o enviar
+              por email a tu médico.
             </p>
             <div className="flex flex-wrap gap-2">
               <div className="px-3 py-1 bg-white/20 rounded-full text-sm">Formato profesional</div>
@@ -378,7 +416,9 @@ export function PDFReport({ appointments, medications, vaccines, vitalSigns, med
             />
             <div className="flex-1">
               <p className="font-medium text-gray-900">Información Personal Médica</p>
-              <p className="text-sm text-gray-600">Tipo de sangre, alergias, condiciones crónicas, contactos</p>
+              <p className="text-sm text-gray-600">
+                Tipo de sangre, alergias, condiciones crónicas, contactos
+              </p>
             </div>
           </label>
 
@@ -430,7 +470,9 @@ export function PDFReport({ appointments, medications, vaccines, vitalSigns, med
             />
             <div className="flex-1">
               <p className="font-medium text-gray-900">Signos Vitales Recientes</p>
-              <p className="text-sm text-gray-600">Últimas mediciones (presión, peso, glucosa, etc.)</p>
+              <p className="text-sm text-gray-600">
+                Últimas mediciones (presión, peso, glucosa, etc.)
+              </p>
             </div>
           </label>
         </div>
@@ -480,7 +522,9 @@ export function PDFReport({ appointments, medications, vaccines, vitalSigns, med
         <ul className="space-y-2 text-sm text-blue-800">
           <li className="flex gap-2">
             <span className="font-bold">•</span>
-            <span>Imprime el PDF y llévalo a tus citas médicas para tener toda tu información a mano</span>
+            <span>
+              Imprime el PDF y llévalo a tus citas médicas para tener toda tu información a mano
+            </span>
           </li>
           <li className="flex gap-2">
             <span className="font-bold">•</span>

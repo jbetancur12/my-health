@@ -19,7 +19,11 @@ export function AppHeader({ activeTab, controlsCount, onTabChange }: AppHeaderPr
         </div>
       </div>
 
-      <DesktopTabNavigation activeTab={activeTab} controlsCount={controlsCount} onTabChange={onTabChange} />
+      <DesktopTabNavigation
+        activeTab={activeTab}
+        controlsCount={controlsCount}
+        onTabChange={onTabChange}
+      />
     </div>
   );
 }

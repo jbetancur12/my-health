@@ -8,11 +8,9 @@ import { findFirst } from '../shared/find-first.js';
 export async function getNotificationPreferences() {
   const orm = await getOrm();
   const em = orm.em.fork();
-  const preferences = (await findFirst(
-    em,
-    NotificationPreference,
-    { createdAt: 'asc' },
-  )) as NotificationPreference | null;
+  const preferences = (await findFirst(em, NotificationPreference, {
+    createdAt: 'asc',
+  })) as NotificationPreference | null;
 
   return serializeNotificationPreference(preferences);
 }
@@ -20,11 +18,9 @@ export async function getNotificationPreferences() {
 export async function upsertNotificationPreferences(input: NotificationPreferenceInput) {
   const orm = await getOrm();
   const em = orm.em.fork();
-  let preferences = (await findFirst(
-    em,
-    NotificationPreference,
-    { createdAt: 'asc' },
-  )) as NotificationPreference | null;
+  let preferences = (await findFirst(em, NotificationPreference, {
+    createdAt: 'asc',
+  })) as NotificationPreference | null;
 
   if (!preferences) {
     preferences = new NotificationPreference();

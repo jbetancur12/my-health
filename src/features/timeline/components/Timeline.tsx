@@ -3,6 +3,16 @@ import type { ReactNode } from 'react';
 import { Calendar, Stethoscope, Pill, Syringe, Activity, FileText, Filter } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import type {
+  Appointment,
+  Medication,
+  Vaccine,
+  VitalSignReading,
+} from '../../../shared/api/contracts';
+
+type TimelineEventData = Appointment | Medication | Vaccine | VitalSignReading;
+type TimelineFilterType = 'all' | 'appointment' | 'medication' | 'vaccine' | 'vital-sign';
+type TimelineDateRange = 'all' | '30days' | '6months' | '1year';
 
 interface TimelineEvent {
   id: string;
@@ -13,26 +23,32 @@ interface TimelineEvent {
   details?: string;
   icon: ReactNode;
   color: string;
-  data: any;
+  data: TimelineEventData;
 }
 
 interface TimelineProps {
-  appointments: any[];
-  medications: any[];
-  vaccines: any[];
-  vitalSigns: any[];
+  appointments: Appointment[];
+  medications: Medication[];
+  vaccines: Vaccine[];
+  vitalSigns: VitalSignReading[];
   onEventClick?: (event: TimelineEvent) => void;
 }
 
-export function Timeline({ appointments, medications, vaccines, vitalSigns, onEventClick }: TimelineProps) {
-  const [filterType, setFilterType] = useState<'all' | 'appointment' | 'medication' | 'vaccine' | 'vital-sign'>('all');
-  const [dateRange, setDateRange] = useState<'all' | '30days' | '6months' | '1year'>('all');
+export function Timeline({
+  appointments,
+  medications,
+  vaccines,
+  vitalSigns,
+  onEventClick,
+}: TimelineProps) {
+  const [filterType, setFilterType] = useState<TimelineFilterType>('all');
+  const [dateRange, setDateRange] = useState<TimelineDateRange>('all');
 
   const events = useMemo(() => {
     const allEvents: TimelineEvent[] = [];
 
     // Appointments
-    appointments.forEach(apt => {
+    appointments.forEach((apt) => {
       allEvents.push({
         id: `apt-${apt.id}`,
         type: 'appointment',
@@ -42,12 +58,12 @@ export function Timeline({ appointments, medications, vaccines, vitalSigns, onEv
         details: `${apt.documents.length} documento${apt.documents.length !== 1 ? 's' : ''}${apt.notes ? ' • ' + apt.notes.substring(0, 50) : ''}`,
         icon: <Stethoscope className="w-5 h-5" />,
         color: 'blue',
-        data: apt
+        data: apt,
       });
     });
 
     // Medications (start dates)
-    medications.forEach(med => {
+    medications.forEach((med) => {
       allEvents.push({
         id: `med-${med.id}`,
         type: 'medication',
@@ -57,29 +73,33 @@ export function Timeline({ appointments, medications, vaccines, vitalSigns, onEv
         details: med.active ? 'Activo' : 'Inactivo',
         icon: <Pill className="w-5 h-5" />,
         color: 'green',
-        data: med
+        data: med,
       });
     });
 
     // Vaccines
-    vaccines.forEach(vac => {
+    vaccines.forEach((vac) => {
       allEvents.push({
         id: `vac-${vac.id}`,
         type: 'vaccine',
         date: new Date(vac.date),
         title: vac.name,
-        subtitle: vac.doseNumber && vac.totalDoses ? `Dosis ${vac.doseNumber}/${vac.totalDoses}` : undefined,
+        subtitle:
+          vac.doseNumber && vac.totalDoses
+            ? `Dosis ${vac.doseNumber}/${vac.totalDoses}`
+            : undefined,
         details: vac.location,
         icon: <Syringe className="w-5 h-5" />,
         color: 'purple',
-        data: vac
+        data: vac,
       });
     });
 
     // Vital Signs
-    vitalSigns.forEach(vs => {
+    vitalSigns.forEach((vs) => {
       const vitals = [];
-      if (vs.bloodPressureSystolic) vitals.push(`PA: ${vs.bloodPressureSystolic}/${vs.bloodPressureDiastolic}`);
+      if (vs.bloodPressureSystolic)
+        vitals.push(`PA: ${vs.bloodPressureSystolic}/${vs.bloodPressureDiastolic}`);
       if (vs.weight) vitals.push(`Peso: ${vs.weight}kg`);
       if (vs.glucose) vitals.push(`Glucosa: ${vs.glucose}mg/dL`);
 
@@ -92,7 +112,7 @@ export function Timeline({ appointments, medications, vaccines, vitalSigns, onEv
         details: vs.notes,
         icon: <Activity className="w-5 h-5" />,
         color: 'orange',
-        data: vs
+        data: vs,
       });
     });
 
@@ -105,7 +125,7 @@ export function Timeline({ appointments, medications, vaccines, vitalSigns, onEv
 
     // Filter by type
     if (filterType !== 'all') {
-      filtered = filtered.filter(e => e.type === filterType);
+      filtered = filtered.filter((e) => e.type === filterType);
     }
 
     // Filter by date range
@@ -121,7 +141,7 @@ export function Timeline({ appointments, medications, vaccines, vitalSigns, onEv
         cutoffDate.setFullYear(now.getFullYear() - 1);
       }
 
-      filtered = filtered.filter(e => e.date >= cutoffDate);
+      filtered = filtered.filter((e) => e.date >= cutoffDate);
     }
 
     return filtered;
@@ -131,7 +151,7 @@ export function Timeline({ appointments, medications, vaccines, vitalSigns, onEv
   const groupedEvents = useMemo(() => {
     const groups: Record<string, TimelineEvent[]> = {};
 
-    filteredEvents.forEach(event => {
+    filteredEvents.forEach((event) => {
       const monthKey = format(event.date, 'MMMM yyyy', { locale: es });
       if (!groups[monthKey]) {
         groups[monthKey] = [];
@@ -146,7 +166,7 @@ export function Timeline({ appointments, medications, vaccines, vitalSigns, onEv
     blue: 'bg-blue-100 text-blue-700 border-blue-300',
     green: 'bg-green-100 text-green-700 border-green-300',
     purple: 'bg-purple-100 text-purple-700 border-purple-300',
-    orange: 'bg-orange-100 text-orange-700 border-orange-300'
+    orange: 'bg-orange-100 text-orange-700 border-orange-300',
   };
 
   return (
@@ -231,7 +251,7 @@ export function Timeline({ appointments, medications, vaccines, vitalSigns, onEv
             <label className="block text-sm font-medium text-gray-700 mb-2">Período</label>
             <select
               value={dateRange}
-              onChange={(e) => setDateRange(e.target.value as any)}
+              onChange={(e) => setDateRange(e.target.value as TimelineDateRange)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">Todo el historial</option>
@@ -272,7 +292,9 @@ export function Timeline({ appointments, medications, vaccines, vitalSigns, onEv
                     className="relative pl-16 cursor-pointer group"
                   >
                     {/* Icon */}
-                    <div className={`absolute left-2 w-8 h-8 rounded-full flex items-center justify-center ${colorClasses[event.color as keyof typeof colorClasses]} border-2`}>
+                    <div
+                      className={`absolute left-2 w-8 h-8 rounded-full flex items-center justify-center ${colorClasses[event.color as keyof typeof colorClasses]} border-2`}
+                    >
                       {event.icon}
                     </div>
 
@@ -289,9 +311,7 @@ export function Timeline({ appointments, medications, vaccines, vitalSigns, onEv
                           {format(event.date, "d 'de' MMM", { locale: es })}
                         </span>
                       </div>
-                      {event.details && (
-                        <p className="text-sm text-gray-500">{event.details}</p>
-                      )}
+                      {event.details && <p className="text-sm text-gray-500">{event.details}</p>}
                     </div>
                   </div>
                 ))}

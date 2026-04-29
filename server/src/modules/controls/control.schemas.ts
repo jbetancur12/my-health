@@ -11,7 +11,7 @@ export function parseControlInput(input: unknown): ControlInput {
     type: parseNonEmptyString(record.type, 'Control type is required'),
     relatedAppointmentId: parseNonEmptyString(
       record.relatedAppointmentId,
-      'Related appointment id is required',
+      'Related appointment id is required'
     ),
   };
 }

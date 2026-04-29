@@ -143,7 +143,10 @@ export async function saveAppointment(appointment: Omit<Appointment, 'id'>): Pro
   return parseAppointment((data as { appointment: AppointmentApiDto }).appointment);
 }
 
-export async function updateAppointment(id: string, appointment: Partial<Appointment>): Promise<Appointment> {
+export async function updateAppointment(
+  id: string,
+  appointment: Partial<Appointment>
+): Promise<Appointment> {
   const payload = serializeAppointmentUpdate(appointment);
   const data = await fetchAPI(`/appointments/${id}`, {
     method: 'PUT',
@@ -173,7 +176,11 @@ export async function saveControl(control: Omit<Control, 'id'>): Promise<Control
   return parseControl((data as { control: ControlApiDto }).control);
 }
 
-export async function uploadFile(file: File, appointmentId: string, documentId: string): Promise<string> {
+export async function uploadFile(
+  file: File,
+  appointmentId: string,
+  documentId: string
+): Promise<string> {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('appointmentId', appointmentId);
@@ -217,7 +224,10 @@ export async function saveMedication(medication: Omit<Medication, 'id'>): Promis
   return parseMedication((data as { medication: MedicationApiDto }).medication);
 }
 
-export async function updateMedication(id: string, medication: Partial<Medication>): Promise<Medication> {
+export async function updateMedication(
+  id: string,
+  medication: Partial<Medication>
+): Promise<Medication> {
   const payload = serializeMedicationUpdate(medication);
   const data = await fetchAPI(`/medications/${id}`, {
     method: 'PUT',
@@ -262,7 +272,7 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
 }
 
 export async function saveNotificationPreferences(
-  preferences: NotificationPreferences,
+  preferences: NotificationPreferences
 ): Promise<NotificationPreferences> {
   const payload: NotificationPreferencesApiPayload = {
     email: preferences.email,
@@ -275,7 +285,8 @@ export async function saveNotificationPreferences(
     method: 'PUT',
     body: JSON.stringify(payload),
   });
-  return (data as { notificationPreferences: NotificationPreferencesApiDto }).notificationPreferences;
+  return (data as { notificationPreferences: NotificationPreferencesApiDto })
+    .notificationPreferences;
 }
 
 export async function getTags(): Promise<AppointmentTag[]> {
@@ -296,7 +307,9 @@ export async function getVitalSigns(): Promise<VitalSignReading[]> {
   return data.vitalSigns.map(parseVitalSign);
 }
 
-export async function saveVitalSign(reading: Omit<VitalSignReading, 'id'>): Promise<VitalSignReading> {
+export async function saveVitalSign(
+  reading: Omit<VitalSignReading, 'id'>
+): Promise<VitalSignReading> {
   const payload: VitalSignApiPayload = {
     date: reading.date.toISOString(),
     bloodPressureSystolic: reading.bloodPressureSystolic,

@@ -1,4 +1,8 @@
-export type { DocumentType, AppointmentDocumentInput, AppointmentInput } from './modules/appointments/appointment.types.js';
+export type {
+  DocumentType,
+  AppointmentDocumentInput,
+  AppointmentInput,
+} from './modules/appointments/appointment.types.js';
 export type { ControlInput } from './modules/controls/control.types.js';
 export type { MedicationInput } from './modules/medications/medication.types.js';
 export type {

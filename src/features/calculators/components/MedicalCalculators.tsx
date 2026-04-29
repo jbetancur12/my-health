@@ -38,25 +38,25 @@ export function MedicalCalculators() {
       return {
         label: 'Bajo peso',
         color: 'text-blue-600',
-        recommendation: 'Consulta a un nutricionista para ganar peso de forma saludable.'
+        recommendation: 'Consulta a un nutricionista para ganar peso de forma saludable.',
       };
     } else if (imc < 25) {
       return {
         label: 'Peso normal',
         color: 'text-green-600',
-        recommendation: 'Tu peso es saludable. Mantén una dieta balanceada y ejercicio regular.'
+        recommendation: 'Tu peso es saludable. Mantén una dieta balanceada y ejercicio regular.',
       };
     } else if (imc < 30) {
       return {
         label: 'Sobrepeso',
         color: 'text-orange-600',
-        recommendation: 'Considera reducir peso con dieta y ejercicio. Consulta a tu médico.'
+        recommendation: 'Considera reducir peso con dieta y ejercicio. Consulta a tu médico.',
       };
     } else {
       return {
         label: 'Obesidad',
         color: 'text-red-600',
-        recommendation: 'Es importante consultar a un médico para un plan de pérdida de peso.'
+        recommendation: 'Es importante consultar a un médico para un plan de pérdida de peso.',
       };
     }
   }
@@ -159,7 +159,9 @@ export function MedicalCalculators() {
       {activeCalc === 'imc' && (
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h3 className="text-xl font-semibold text-gray-900 mb-4">Calculadora de IMC</h3>
-          <p className="text-gray-600 mb-6">Índice de Masa Corporal - Evalúa si tu peso es saludable</p>
+          <p className="text-gray-600 mb-6">
+            Índice de Masa Corporal - Evalúa si tu peso es saludable
+          </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
@@ -239,7 +241,9 @@ export function MedicalCalculators() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Sistólica (mmHg)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Sistólica (mmHg)
+              </label>
               <input
                 type="number"
                 value={systolic}
@@ -249,7 +253,9 @@ export function MedicalCalculators() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Diastólica (mmHg)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Diastólica (mmHg)
+              </label>
               <input
                 type="number"
                 value={diastolic}
@@ -282,7 +288,9 @@ export function MedicalCalculators() {
           <p className="text-gray-600 mb-6">Cuánta agua deberías tomar según tu peso</p>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Peso Corporal (kg)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Peso Corporal (kg)
+            </label>
             <input
               type="number"
               value={bodyWeight}
@@ -320,7 +328,9 @@ export function MedicalCalculators() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Peso del Paciente (kg)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Peso del Paciente (kg)
+              </label>
               <input
                 type="number"
                 value={patientWeight}

@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { User, Heart, AlertCircle, Phone, FileText, Save, Edit2 } from 'lucide-react';
-import type { MedicalProfile as MedicalProfileData } from '../../../shared/api/contracts';
+import type {
+  InsuranceInfo,
+  MedicalProfile as MedicalProfileData,
+} from '../../../shared/api/contracts';
 
 interface MedicalProfileProps {
   profile: MedicalProfileData;
@@ -25,7 +28,7 @@ export function MedicalProfile({ profile, onUpdate }: MedicalProfileProps) {
     if (newAllergy.trim()) {
       setEditedProfile({
         ...editedProfile,
-        allergies: [...editedProfile.allergies, newAllergy.trim()]
+        allergies: [...editedProfile.allergies, newAllergy.trim()],
       });
       setNewAllergy('');
     }
@@ -34,7 +37,7 @@ export function MedicalProfile({ profile, onUpdate }: MedicalProfileProps) {
   function removeAllergy(index: number) {
     setEditedProfile({
       ...editedProfile,
-      allergies: editedProfile.allergies.filter((_, i) => i !== index)
+      allergies: editedProfile.allergies.filter((_, i) => i !== index),
     });
   }
 
@@ -42,7 +45,7 @@ export function MedicalProfile({ profile, onUpdate }: MedicalProfileProps) {
     if (newCondition.trim()) {
       setEditedProfile({
         ...editedProfile,
-        chronicConditions: [...editedProfile.chronicConditions, newCondition.trim()]
+        chronicConditions: [...editedProfile.chronicConditions, newCondition.trim()],
       });
       setNewCondition('');
     }
@@ -51,7 +54,7 @@ export function MedicalProfile({ profile, onUpdate }: MedicalProfileProps) {
   function removeCondition(index: number) {
     setEditedProfile({
       ...editedProfile,
-      chronicConditions: editedProfile.chronicConditions.filter((_, i) => i !== index)
+      chronicConditions: editedProfile.chronicConditions.filter((_, i) => i !== index),
     });
   }
 
@@ -61,8 +64,8 @@ export function MedicalProfile({ profile, onUpdate }: MedicalProfileProps) {
         ...editedProfile,
         emergencyContacts: [
           ...editedProfile.emergencyContacts,
-          { id: crypto.randomUUID(), ...newContact }
-        ]
+          { id: crypto.randomUUID(), ...newContact },
+        ],
       });
       setNewContact({ name: '', relationship: '', phone: '' });
     }
@@ -71,7 +74,19 @@ export function MedicalProfile({ profile, onUpdate }: MedicalProfileProps) {
   function removeContact(id: string) {
     setEditedProfile({
       ...editedProfile,
-      emergencyContacts: editedProfile.emergencyContacts.filter(c => c.id !== id)
+      emergencyContacts: editedProfile.emergencyContacts.filter((c) => c.id !== id),
+    });
+  }
+
+  function updateInsurance(patch: Partial<InsuranceInfo>) {
+    setEditedProfile({
+      ...editedProfile,
+      insurance: {
+        provider: editedProfile.insurance?.provider ?? '',
+        policyNumber: editedProfile.insurance?.policyNumber ?? '',
+        groupNumber: editedProfile.insurance?.groupNumber,
+        ...patch,
+      },
     });
   }
 
@@ -128,8 +143,10 @@ export function MedicalProfile({ profile, onUpdate }: MedicalProfileProps) {
             className="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Seleccionar</option>
-            {BLOOD_TYPES.map(type => (
-              <option key={type} value={type}>{type}</option>
+            {BLOOD_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
             ))}
           </select>
         ) : (
@@ -168,7 +185,10 @@ export function MedicalProfile({ profile, onUpdate }: MedicalProfileProps) {
             <p className="text-gray-400 italic">No hay alergias registradas</p>
           ) : (
             (isEditing ? editedProfile : profile).allergies.map((allergy, index) => (
-              <div key={index} className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-lg px-4 py-2">
+              <div
+                key={index}
+                className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-lg px-4 py-2"
+              >
                 <span className="text-orange-900 font-medium">{allergy}</span>
                 {isEditing && (
                   <button
@@ -213,7 +233,10 @@ export function MedicalProfile({ profile, onUpdate }: MedicalProfileProps) {
             <p className="text-gray-400 italic">No hay condiciones registradas</p>
           ) : (
             (isEditing ? editedProfile : profile).chronicConditions.map((condition, index) => (
-              <div key={index} className="flex items-center justify-between bg-purple-50 border border-purple-200 rounded-lg px-4 py-2">
+              <div
+                key={index}
+                className="flex items-center justify-between bg-purple-50 border border-purple-200 rounded-lg px-4 py-2"
+              >
                 <span className="text-purple-900 font-medium">{condition}</span>
                 {isEditing && (
                   <button
@@ -273,7 +296,10 @@ export function MedicalProfile({ profile, onUpdate }: MedicalProfileProps) {
             <p className="text-gray-400 italic">No hay contactos de emergencia registrados</p>
           ) : (
             (isEditing ? editedProfile : profile).emergencyContacts.map((contact) => (
-              <div key={contact.id} className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+              <div
+                key={contact.id}
+                className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-4 py-3"
+              >
                 <div className="flex-1">
                   <p className="font-medium text-green-900">{contact.name}</p>
                   <p className="text-sm text-green-700">{contact.relationship}</p>
@@ -303,62 +329,55 @@ export function MedicalProfile({ profile, onUpdate }: MedicalProfileProps) {
               <input
                 type="text"
                 value={editedProfile.insurance?.provider || ''}
-                onChange={(e) => setEditedProfile({
-                  ...editedProfile,
-                  insurance: { ...editedProfile.insurance, provider: e.target.value } as any
-                })}
+                onChange={(e) => updateInsurance({ provider: e.target.value })}
                 placeholder="Nombre de la aseguradora"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Número de Póliza</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Número de Póliza
+              </label>
               <input
                 type="text"
                 value={editedProfile.insurance?.policyNumber || ''}
-                onChange={(e) => setEditedProfile({
-                  ...editedProfile,
-                  insurance: { ...editedProfile.insurance, policyNumber: e.target.value } as any
-                })}
+                onChange={(e) => updateInsurance({ policyNumber: e.target.value })}
                 placeholder="Número de póliza"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Número de Grupo (Opcional)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Número de Grupo (Opcional)
+              </label>
               <input
                 type="text"
                 value={editedProfile.insurance?.groupNumber || ''}
-                onChange={(e) => setEditedProfile({
-                  ...editedProfile,
-                  insurance: { ...editedProfile.insurance, groupNumber: e.target.value } as any
-                })}
+                onChange={(e) => updateInsurance({ groupNumber: e.target.value })}
                 placeholder="Número de grupo"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
-        ) : (
-          profile.insurance?.provider ? (
-            <div className="space-y-2">
-              <div>
-                <span className="text-sm text-gray-600">Aseguradora:</span>
-                <p className="font-medium text-gray-900">{profile.insurance.provider}</p>
-              </div>
-              <div>
-                <span className="text-sm text-gray-600">Póliza:</span>
-                <p className="font-medium text-gray-900">{profile.insurance.policyNumber}</p>
-              </div>
-              {profile.insurance.groupNumber && (
-                <div>
-                  <span className="text-sm text-gray-600">Grupo:</span>
-                  <p className="font-medium text-gray-900">{profile.insurance.groupNumber}</p>
-                </div>
-              )}
+        ) : profile.insurance?.provider ? (
+          <div className="space-y-2">
+            <div>
+              <span className="text-sm text-gray-600">Aseguradora:</span>
+              <p className="font-medium text-gray-900">{profile.insurance.provider}</p>
             </div>
-          ) : (
-            <p className="text-gray-400 italic">No hay información de seguro registrada</p>
-          )
+            <div>
+              <span className="text-sm text-gray-600">Póliza:</span>
+              <p className="font-medium text-gray-900">{profile.insurance.policyNumber}</p>
+            </div>
+            {profile.insurance.groupNumber && (
+              <div>
+                <span className="text-sm text-gray-600">Grupo:</span>
+                <p className="font-medium text-gray-900">{profile.insurance.groupNumber}</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-gray-400 italic">No hay información de seguro registrada</p>
         )}
       </div>
 

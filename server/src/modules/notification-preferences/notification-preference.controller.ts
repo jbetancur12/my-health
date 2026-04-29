@@ -5,7 +5,11 @@ import {
 } from './notification-preference.service.js';
 import { parseNotificationPreferenceInput } from './notification-preference.schemas.js';
 
-export async function fetchNotificationPreferences(_req: Request, res: Response, next: NextFunction) {
+export async function fetchNotificationPreferences(
+  _req: Request,
+  res: Response,
+  next: NextFunction
+) {
   try {
     const notificationPreferences = await getNotificationPreferences();
     res.json({ notificationPreferences });

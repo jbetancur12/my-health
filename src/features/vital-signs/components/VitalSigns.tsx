@@ -28,7 +28,7 @@ export function VitalSigns({ readings, onAdd, onRemove }: VitalSignsProps) {
     return readings
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .slice(-30)
-      .map(r => ({
+      .map((r) => ({
         date: format(new Date(r.date), 'dd/MM', { locale: es }),
         fullDate: format(new Date(r.date), "d 'de' MMM", { locale: es }),
         systolic: r.bloodPressureSystolic,
@@ -37,7 +37,7 @@ export function VitalSigns({ readings, onAdd, onRemove }: VitalSignsProps) {
         weight: r.weight,
         glucose: r.glucose,
         temperature: r.temperature,
-        oxygen: r.oxygenSaturation
+        oxygen: r.oxygenSaturation,
       }));
   }, [readings]);
 
@@ -58,7 +58,7 @@ export function VitalSigns({ readings, onAdd, onRemove }: VitalSignsProps) {
       glucose: glucose ? parseInt(glucose) : undefined,
       temperature: temperature ? parseFloat(temperature) : undefined,
       oxygenSaturation: oxygen ? parseInt(oxygen) : undefined,
-      notes: notes.trim() || undefined
+      notes: notes.trim() || undefined,
     };
 
     onAdd(reading);
@@ -193,9 +193,7 @@ export function VitalSigns({ readings, onAdd, onRemove }: VitalSignsProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Peso (kg)
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Peso (kg)</label>
                 <input
                   type="number"
                   step="0.1"
@@ -286,7 +284,7 @@ export function VitalSigns({ readings, onAdd, onRemove }: VitalSignsProps) {
       {chartData.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Presión Arterial */}
-          {chartData.some(d => d.systolic) && (
+          {chartData.some((d) => d.systolic) && (
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-red-600" />
@@ -303,15 +301,27 @@ export function VitalSigns({ readings, onAdd, onRemove }: VitalSignsProps) {
                     }}
                   />
                   <Legend />
-                  <Line type="monotone" dataKey="systolic" stroke="#EF4444" name="Sistólica" strokeWidth={2} />
-                  <Line type="monotone" dataKey="diastolic" stroke="#F59E0B" name="Diastólica" strokeWidth={2} />
+                  <Line
+                    type="monotone"
+                    dataKey="systolic"
+                    stroke="#EF4444"
+                    name="Sistólica"
+                    strokeWidth={2}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="diastolic"
+                    stroke="#F59E0B"
+                    name="Diastólica"
+                    strokeWidth={2}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           )}
 
           {/* Peso */}
-          {chartData.some(d => d.weight) && (
+          {chartData.some((d) => d.weight) && (
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-purple-600" />
@@ -327,14 +337,20 @@ export function VitalSigns({ readings, onAdd, onRemove }: VitalSignsProps) {
                       return item ? item.payload.fullDate : value;
                     }}
                   />
-                  <Line type="monotone" dataKey="weight" stroke="#8B5CF6" name="Peso (kg)" strokeWidth={2} />
+                  <Line
+                    type="monotone"
+                    dataKey="weight"
+                    stroke="#8B5CF6"
+                    name="Peso (kg)"
+                    strokeWidth={2}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           )}
 
           {/* Glucosa */}
-          {chartData.some(d => d.glucose) && (
+          {chartData.some((d) => d.glucose) && (
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-green-600" />
@@ -350,14 +366,20 @@ export function VitalSigns({ readings, onAdd, onRemove }: VitalSignsProps) {
                       return item ? item.payload.fullDate : value;
                     }}
                   />
-                  <Line type="monotone" dataKey="glucose" stroke="#10B981" name="Glucosa (mg/dL)" strokeWidth={2} />
+                  <Line
+                    type="monotone"
+                    dataKey="glucose"
+                    stroke="#10B981"
+                    name="Glucosa (mg/dL)"
+                    strokeWidth={2}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           )}
 
           {/* Frecuencia Cardíaca */}
-          {chartData.some(d => d.heartRate) && (
+          {chartData.some((d) => d.heartRate) && (
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-blue-600" />
@@ -373,7 +395,13 @@ export function VitalSigns({ readings, onAdd, onRemove }: VitalSignsProps) {
                       return item ? item.payload.fullDate : value;
                     }}
                   />
-                  <Line type="monotone" dataKey="heartRate" stroke="#3B82F6" name="FC (bpm)" strokeWidth={2} />
+                  <Line
+                    type="monotone"
+                    dataKey="heartRate"
+                    stroke="#3B82F6"
+                    name="FC (bpm)"
+                    strokeWidth={2}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -392,7 +420,7 @@ export function VitalSigns({ readings, onAdd, onRemove }: VitalSignsProps) {
           <div className="space-y-3 max-h-96 overflow-y-auto">
             {[...readings]
               .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-              .map(reading => (
+              .map((reading) => (
                 <div key={reading.id} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex items-start justify-between mb-2">
                     <div>

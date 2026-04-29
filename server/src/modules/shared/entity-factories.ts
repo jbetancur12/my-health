@@ -44,7 +44,7 @@ export function createAppointmentEntity(input: AppointmentInput) {
 export function updateAppointmentEntity(
   appointment: Appointment,
   input: Partial<AppointmentInput>,
-  em: Awaited<ReturnType<typeof getOrm>>['em'],
+  em: Awaited<ReturnType<typeof getOrm>>['em']
 ) {
   if (input.date) appointment.date = new Date(input.date);
   if (input.specialty) appointment.specialty = input.specialty.trim();
@@ -120,7 +120,9 @@ export function updateMedicationEntity(medication: Medication, input: Partial<Me
 export function updateMedicalProfileEntity(profile: MedicalProfile, input: MedicalProfileInput) {
   profile.bloodType = input.bloodType?.trim() || undefined;
   profile.allergies = (input.allergies ?? []).map((item) => item.trim()).filter(Boolean);
-  profile.chronicConditions = (input.chronicConditions ?? []).map((item) => item.trim()).filter(Boolean);
+  profile.chronicConditions = (input.chronicConditions ?? [])
+    .map((item) => item.trim())
+    .filter(Boolean);
   profile.emergencyContacts = (input.emergencyContacts ?? [])
     .map((contact) => ({
       id: contact.id || crypto.randomUUID(),
@@ -141,13 +143,15 @@ export function updateMedicalProfileEntity(profile: MedicalProfile, input: Medic
 
 export function updateNotificationPreferenceEntity(
   preferences: NotificationPreference,
-  input: NotificationPreferenceInput,
+  input: NotificationPreferenceInput
 ) {
   preferences.email = input.email?.trim() || undefined;
   preferences.phone = input.phone?.trim() || undefined;
   preferences.emailEnabled = Boolean(input.emailEnabled);
   preferences.smsEnabled = Boolean(input.smsEnabled);
-  preferences.reminderDays = (input.reminderDays ?? [7, 3, 1]).filter((day) => Number.isFinite(day));
+  preferences.reminderDays = (input.reminderDays ?? [7, 3, 1]).filter((day) =>
+    Number.isFinite(day)
+  );
 }
 
 export function createTagDefinitionEntity(input: TagDefinitionInput) {
@@ -197,13 +201,13 @@ export function hasAppDataContent(input: AppDataImportInput | undefined) {
 
   return Boolean(
     (input.appointments?.length ?? 0) ||
-      (input.controls?.length ?? 0) ||
-      (input.medications?.length ?? 0) ||
-      (input.tags?.length ?? 0) ||
-      input.medicalProfile ||
-      input.notificationPreferences ||
-      (input.vitalSigns?.length ?? 0) ||
-      (input.vaccines?.length ?? 0),
+    (input.controls?.length ?? 0) ||
+    (input.medications?.length ?? 0) ||
+    (input.tags?.length ?? 0) ||
+    input.medicalProfile ||
+    input.notificationPreferences ||
+    (input.vitalSigns?.length ?? 0) ||
+    (input.vaccines?.length ?? 0)
   );
 }
 

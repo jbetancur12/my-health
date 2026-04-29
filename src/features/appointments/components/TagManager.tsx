@@ -11,27 +11,70 @@ interface TagManagerProps {
 }
 
 const TAG_COLORS = [
-  { name: 'Azul', value: '#3B82F6', bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300' },
-  { name: 'Verde', value: '#10B981', bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300' },
-  { name: 'Rojo', value: '#EF4444', bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-300' },
-  { name: 'Naranja', value: '#F59E0B', bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-300' },
-  { name: 'Morado', value: '#8B5CF6', bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-300' },
-  { name: 'Rosa', value: '#EC4899', bg: 'bg-pink-100', text: 'text-pink-700', border: 'border-pink-300' },
+  {
+    name: 'Azul',
+    value: '#3B82F6',
+    bg: 'bg-blue-100',
+    text: 'text-blue-700',
+    border: 'border-blue-300',
+  },
+  {
+    name: 'Verde',
+    value: '#10B981',
+    bg: 'bg-green-100',
+    text: 'text-green-700',
+    border: 'border-green-300',
+  },
+  {
+    name: 'Rojo',
+    value: '#EF4444',
+    bg: 'bg-red-100',
+    text: 'text-red-700',
+    border: 'border-red-300',
+  },
+  {
+    name: 'Naranja',
+    value: '#F59E0B',
+    bg: 'bg-orange-100',
+    text: 'text-orange-700',
+    border: 'border-orange-300',
+  },
+  {
+    name: 'Morado',
+    value: '#8B5CF6',
+    bg: 'bg-purple-100',
+    text: 'text-purple-700',
+    border: 'border-purple-300',
+  },
+  {
+    name: 'Rosa',
+    value: '#EC4899',
+    bg: 'bg-pink-100',
+    text: 'text-pink-700',
+    border: 'border-pink-300',
+  },
 ];
 
-export function TagManager({ tags, selectedTags, onTagsChange, onCreateTag, availableTags }: TagManagerProps) {
+export function TagManager({
+  tags,
+  selectedTags,
+  onTagsChange,
+  onCreateTag,
+  availableTags,
+}: TagManagerProps) {
   const [showCreateTag, setShowCreateTag] = useState(false);
   const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState(TAG_COLORS[0].value);
 
   const allAvailableTags = availableTags || tags;
-  const colorInfo = (color: string) => TAG_COLORS.find((item) => item.value === color) || TAG_COLORS[0];
+  const colorInfo = (color: string) =>
+    TAG_COLORS.find((item) => item.value === color) || TAG_COLORS[0];
 
   const handleToggleTag = (tagId: string) => {
     onTagsChange(
       selectedTags.includes(tagId)
         ? selectedTags.filter((id) => id !== tagId)
-        : [...selectedTags, tagId],
+        : [...selectedTags, tagId]
     );
   };
 
@@ -70,7 +113,11 @@ export function TagManager({ tags, selectedTags, onTagsChange, onCreateTag, avai
         })}
 
         {onCreateTag && (
-          <button type="button" onClick={() => setShowCreateTag(!showCreateTag)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+          <button
+            type="button"
+            onClick={() => setShowCreateTag(!showCreateTag)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+          >
             <Plus className="w-3.5 h-3.5" />
             Nueva etiqueta
           </button>
@@ -100,10 +147,18 @@ export function TagManager({ tags, selectedTags, onTagsChange, onCreateTag, avai
               ))}
             </div>
             <div className="flex gap-2">
-              <button type="button" onClick={handleCreateTag} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+              <button
+                type="button"
+                onClick={handleCreateTag}
+                className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+              >
                 Crear
               </button>
-              <button type="button" onClick={() => setShowCreateTag(false)} className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+              <button
+                type="button"
+                onClick={() => setShowCreateTag(false)}
+                className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+              >
                 Cancelar
               </button>
             </div>
@@ -114,7 +169,13 @@ export function TagManager({ tags, selectedTags, onTagsChange, onCreateTag, avai
   );
 }
 
-export function TagDisplay({ tags, appointmentTags }: { tags: AppointmentTag[]; appointmentTags: string[] }) {
+export function TagDisplay({
+  tags,
+  appointmentTags,
+}: {
+  tags: AppointmentTag[];
+  appointmentTags: string[];
+}) {
   const displayTags = tags.filter((tag) => appointmentTags.includes(tag.id));
   if (displayTags.length === 0) return null;
 
@@ -123,7 +184,10 @@ export function TagDisplay({ tags, appointmentTags }: { tags: AppointmentTag[]; 
       {displayTags.map((tag) => {
         const color = TAG_COLORS.find((item) => item.value === tag.color) || TAG_COLORS[0];
         return (
-          <span key={tag.id} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${color.bg} ${color.text}`}>
+          <span
+            key={tag.id}
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${color.bg} ${color.text}`}
+          >
             <Tag className="w-3 h-3" />
             {tag.name}
           </span>

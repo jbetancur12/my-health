@@ -27,7 +27,12 @@ const documentTypeColors: Record<Document['type'], string> = {
   laboratorio: 'bg-pink-100 text-pink-700',
 };
 
-export function AppointmentDetail({ appointment, onClose, tags = [], onViewFile }: AppointmentDetailProps) {
+export function AppointmentDetail({
+  appointment,
+  onClose,
+  tags = [],
+  onViewFile,
+}: AppointmentDetailProps) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -76,11 +81,16 @@ export function AppointmentDetail({ appointment, onClose, tags = [], onViewFile 
 
             <div className="space-y-2">
               {appointment.documents.map((document) => (
-                <div key={document.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                <div
+                  key={document.id}
+                  className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${documentTypeColors[document.type]}`}>
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-medium ${documentTypeColors[document.type]}`}
+                        >
                           {documentTypeLabels[document.type]}
                         </span>
                       </div>

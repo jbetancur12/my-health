@@ -1,11 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 import { getRouteId } from '../shared/http.js';
 import { parseAppointmentInput, parseAppointmentUpdateInput } from './appointment.schemas.js';
-import {
-  createAppointment,
-  listAppointments,
-  updateAppointment,
-} from './appointment.service.js';
+import { createAppointment, listAppointments, updateAppointment } from './appointment.service.js';
 
 export async function getAppointments(_req: Request, res: Response, next: NextFunction) {
   try {

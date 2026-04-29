@@ -12,7 +12,7 @@ const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
 
 export function useNotificationPreferencesData() {
   const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreferences>(
-    DEFAULT_NOTIFICATION_PREFERENCES,
+    DEFAULT_NOTIFICATION_PREFERENCES
   );
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);

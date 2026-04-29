@@ -3,12 +3,14 @@ import os from 'node:os';
 import path from 'node:path';
 import type { AddressInfo } from 'node:net';
 import type { Server } from 'node:http';
-import type { AppointmentPayload, NotificationPreferencePayload } from '../../../shared/contracts/http.js';
+import type {
+  AppointmentPayload,
+  NotificationPreferencePayload,
+} from '../../../shared/contracts/http.js';
 
-async function withTestServer(
-  run: (baseUrl: string) => Promise<void>,
-) {
-  process.env.DATABASE_URL = process.env.DATABASE_URL ?? 'postgresql://test:test@localhost:5432/test';
+async function withTestServer(run: (baseUrl: string) => Promise<void>) {
+  process.env.DATABASE_URL =
+    process.env.DATABASE_URL ?? 'postgresql://test:test@localhost:5432/test';
   const { createApp } = await import('../app/create-app.js');
   const app = createApp({
     clientOrigin: 'http://localhost:5173',

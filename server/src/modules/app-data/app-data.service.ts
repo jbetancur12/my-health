@@ -45,8 +45,12 @@ export async function importAppData(input: AppDataImportInput): Promise<AppDataB
     await tx.nativeDelete(MedicalProfile, {});
     await tx.nativeDelete(NotificationPreference, {});
 
-    const appointments = (input.appointments ?? []).map((appointment) => createAppointmentEntity(appointment));
-    const appointmentMap = new Map(appointments.map((appointment) => [appointment.id, appointment]));
+    const appointments = (input.appointments ?? []).map((appointment) =>
+      createAppointmentEntity(appointment)
+    );
+    const appointmentMap = new Map(
+      appointments.map((appointment) => [appointment.id, appointment])
+    );
     appointments.forEach((appointment) => tx.persist(appointment));
 
     for (const controlInput of input.controls ?? []) {
@@ -106,7 +110,9 @@ export async function importAppData(input: AppDataImportInput): Promise<AppDataB
     freshEm.find(Medication, {}, { orderBy: { createdAt: 'desc' } }),
     freshEm.find(TagDefinition, {}, { orderBy: { createdAt: 'asc' } }),
     findFirst(freshEm, MedicalProfile, { createdAt: 'asc' }) as Promise<MedicalProfile | null>,
-    findFirst(freshEm, NotificationPreference, { createdAt: 'asc' }) as Promise<NotificationPreference | null>,
+    findFirst(freshEm, NotificationPreference, {
+      createdAt: 'asc',
+    }) as Promise<NotificationPreference | null>,
     freshEm.find(VitalSign, {}, { orderBy: { date: 'desc' } }),
     freshEm.find(Vaccine, {}, { orderBy: { date: 'desc' } }),
   ]);

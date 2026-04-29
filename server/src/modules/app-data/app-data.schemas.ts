@@ -13,11 +13,16 @@ export function parseAppDataImportInput(input: unknown): AppDataImportInput {
   const record = parseObject(input, 'Invalid app data payload');
 
   return {
-    appointments: parseOptionalArray(record.appointments)?.map((item) => parseAppointmentInput(item)),
+    appointments: parseOptionalArray(record.appointments)?.map((item) =>
+      parseAppointmentInput(item)
+    ),
     controls: parseOptionalArray(record.controls)?.map((item) => parseControlInput(item)),
     medications: parseOptionalArray(record.medications)?.map((item) => parseMedicationInput(item)),
     tags: parseOptionalArray(record.tags)?.map((item) => parseTagInput(item)),
-    medicalProfile: record.medicalProfile === undefined ? undefined : parseMedicalProfileInput(record.medicalProfile),
+    medicalProfile:
+      record.medicalProfile === undefined
+        ? undefined
+        : parseMedicalProfileInput(record.medicalProfile),
     notificationPreferences:
       record.notificationPreferences === undefined
         ? undefined

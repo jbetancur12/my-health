@@ -1,4 +1,3 @@
-
 # Citas medicas app
 
 Frontend en React/Vite con backend local en Express + TypeScript + MikroORM + PostgreSQL.
@@ -77,4 +76,3 @@ ESLint cubre frontend, backend y contratos compartidos. Prettier se usa para man
 - `PUT /api/medications/:id`
 - `DELETE /api/medications/:id`
 - `POST /api/upload`
-  

@@ -12,17 +12,29 @@ interface CalendarViewProps {
   onControlClick: (control: Control) => void;
 }
 
-export function CalendarView({ appointments, controls, onAppointmentClick, onControlClick }: CalendarViewProps) {
+export function CalendarView({
+  appointments,
+  controls,
+  onAppointmentClick,
+  onControlClick,
+}: CalendarViewProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [value, setValue] = useState<Date>(new Date());
 
-  const eventsOnDate = useMemo(() => ({
-    appointments: appointments.filter((appointment) => isSameDay(new Date(appointment.date), selectedDate)),
-    controls: controls.filter((control) => isSameDay(new Date(control.date), selectedDate)),
-  }), [selectedDate, appointments, controls]);
+  const eventsOnDate = useMemo(
+    () => ({
+      appointments: appointments.filter((appointment) =>
+        isSameDay(new Date(appointment.date), selectedDate)
+      ),
+      controls: controls.filter((control) => isSameDay(new Date(control.date), selectedDate)),
+    }),
+    [selectedDate, appointments, controls]
+  );
 
   const tileContent = ({ date }: { date: Date }) => {
-    const hasAppointment = appointments.some((appointment) => isSameDay(new Date(appointment.date), date));
+    const hasAppointment = appointments.some((appointment) =>
+      isSameDay(new Date(appointment.date), date)
+    );
     const hasControl = controls.some((control) => isSameDay(new Date(control.date), date));
 
     if (!hasAppointment && !hasControl) return null;
@@ -95,7 +107,8 @@ export function CalendarView({ appointments, controls, onAppointmentClick, onCon
                       <p className="font-medium text-blue-900">{appointment.specialty}</p>
                       <p className="text-sm text-blue-700">{appointment.doctor}</p>
                       <p className="text-xs text-blue-600 mt-1">
-                        {appointment.documents.length} documento{appointment.documents.length !== 1 ? 's' : ''}
+                        {appointment.documents.length} documento
+                        {appointment.documents.length !== 1 ? 's' : ''}
                       </p>
                     </div>
                   </div>

@@ -73,7 +73,9 @@ export function NotificationSettings({ preferences, onUpdate }: NotificationSett
         </div>
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Configuracion de Notificaciones</h2>
-          <p className="text-sm text-gray-600">Configura recordatorios para tus controles medicos</p>
+          <p className="text-sm text-gray-600">
+            Configura recordatorios para tus controles medicos
+          </p>
         </div>
       </div>
 
@@ -103,7 +105,9 @@ export function NotificationSettings({ preferences, onUpdate }: NotificationSett
               </button>
               <div className="mt-3 flex items-start gap-2 rounded bg-white p-3 text-sm text-gray-600">
                 <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600" />
-                <p>Solo funciona si mantienes la app abierta en el navegador o instalada como PWA.</p>
+                <p>
+                  Solo funciona si mantienes la app abierta en el navegador o instalada como PWA.
+                </p>
               </div>
             </>
           )}
@@ -157,7 +161,9 @@ export function NotificationSettings({ preferences, onUpdate }: NotificationSett
           </div>
 
           {reminderDays.length === 0 && (
-            <p className="mt-2 text-xs text-orange-600">Selecciona al menos un intervalo para ver recordatorios.</p>
+            <p className="mt-2 text-xs text-orange-600">
+              Selecciona al menos un intervalo para ver recordatorios.
+            </p>
           )}
         </div>
 

@@ -19,11 +19,7 @@ import { useVaccinesData } from '../features/vaccines/hooks/useVaccinesData';
 import { useVitalSignsData } from '../features/vital-signs/hooks/useVitalSignsData';
 import { importAppData } from '../shared/api/api';
 import { checkAndShowReminders } from '../shared/lib/notifications';
-import type {
-  AppDataBundle,
-  Appointment,
-  Control,
-} from '../shared/api/contracts';
+import type { AppDataBundle, Appointment, Control } from '../shared/api/contracts';
 
 const AddAppointmentModal = lazy(async () => {
   const module = await import('../features/appointments/components/AddAppointmentModal');
@@ -112,7 +108,13 @@ export default function App() {
     }
 
     const checkReminders = () => {
-      checkAndShowReminders(appointments, medications, vaccines, controls, notificationPreferences.reminderDays);
+      checkAndShowReminders(
+        appointments,
+        medications,
+        vaccines,
+        controls,
+        notificationPreferences.reminderDays
+      );
     };
 
     checkReminders();
@@ -130,18 +132,24 @@ export default function App() {
           appointment.specialty.toLowerCase().includes(textQuery.toLowerCase()) ||
           appointment.doctor.toLowerCase().includes(textQuery.toLowerCase()) ||
           appointment.notes?.toLowerCase().includes(textQuery.toLowerCase()) ||
-          appointment.documents.some((document) => document.name.toLowerCase().includes(textQuery.toLowerCase()));
+          appointment.documents.some((document) =>
+            document.name.toLowerCase().includes(textQuery.toLowerCase())
+          );
 
-        const matchesDateFrom = !searchFilters.dateFrom || new Date(appointment.date) >= searchFilters.dateFrom;
-        const matchesDateTo = !searchFilters.dateTo || new Date(appointment.date) <= searchFilters.dateTo;
+        const matchesDateFrom =
+          !searchFilters.dateFrom || new Date(appointment.date) >= searchFilters.dateFrom;
+        const matchesDateTo =
+          !searchFilters.dateTo || new Date(appointment.date) <= searchFilters.dateTo;
         const matchesTags =
           searchFilters.tags.length === 0 ||
           (appointment.tags && searchFilters.tags.some((tag) => appointment.tags?.includes(tag)));
 
-        const matchesSpecialty = filterSpecialty === 'all' || appointment.specialty === filterSpecialty;
+        const matchesSpecialty =
+          filterSpecialty === 'all' || appointment.specialty === filterSpecialty;
         const matchesDoctor = filterDoctor === 'all' || appointment.doctor === filterDoctor;
         const matchesDocType =
-          filterDocType === 'all' || appointment.documents.some((document) => document.type === filterDocType);
+          filterDocType === 'all' ||
+          appointment.documents.some((document) => document.type === filterDocType);
 
         return (
           matchesSearch &&
@@ -160,7 +168,7 @@ export default function App() {
     newAppointment: Omit<Appointment, 'id'> & {
       id?: string;
       controls?: Omit<Control, 'id' | 'specialty' | 'doctor' | 'relatedAppointmentId'>[];
-    },
+    }
   ) => {
     try {
       await saveAppointment(newAppointment);
@@ -191,7 +199,9 @@ export default function App() {
   };
 
   const handleControlClick = (control: Control) => {
-    const relatedAppointment = appointments.find((appointment) => appointment.id === control.relatedAppointmentId);
+    const relatedAppointment = appointments.find(
+      (appointment) => appointment.id === control.relatedAppointmentId
+    );
     if (relatedAppointment) {
       setSelectedAppointment(relatedAppointment);
       setActiveTab('appointments');
@@ -250,10 +260,13 @@ export default function App() {
   const stats = useMemo(
     () => ({
       totalAppointments: appointments.length,
-      totalDocuments: appointments.reduce((sum, appointment) => sum + appointment.documents.length, 0),
+      totalDocuments: appointments.reduce(
+        (sum, appointment) => sum + appointment.documents.length,
+        0
+      ),
       totalSpecialties: specialties.length,
     }),
-    [appointments, specialties],
+    [appointments, specialties]
   );
 
   const exportPayload = useMemo(
@@ -267,7 +280,16 @@ export default function App() {
       vitalSigns,
       vaccines,
     }),
-    [appointments, controls, medications, medicalProfile, notificationPreferences, tags, vaccines, vitalSigns],
+    [
+      appointments,
+      controls,
+      medications,
+      medicalProfile,
+      notificationPreferences,
+      tags,
+      vaccines,
+      vitalSigns,
+    ]
   );
 
   return (
@@ -276,7 +298,11 @@ export default function App() {
 
       <div className="min-h-screen bg-gray-50 pb-20 md:pb-8">
         <div className="mx-auto max-w-7xl px-3 py-4 md:px-4 md:py-8">
-          <AppHeader activeTab={activeTab} controlsCount={controls.length} onTabChange={setActiveTab} />
+          <AppHeader
+            activeTab={activeTab}
+            controlsCount={controls.length}
+            onTabChange={setActiveTab}
+          />
 
           <ControlAlerts controls={controls} onControlClick={handleControlClick} />
 
@@ -365,7 +391,11 @@ export default function App() {
 
         {pdfViewer && (
           <LazyOverlay>
-            <PDFViewer fileUrl={pdfViewer.url} fileName={pdfViewer.name} onClose={() => setPdfViewer(null)} />
+            <PDFViewer
+              fileUrl={pdfViewer.url}
+              fileName={pdfViewer.name}
+              onClose={() => setPdfViewer(null)}
+            />
           </LazyOverlay>
         )}
 
@@ -386,11 +416,7 @@ export default function App() {
 }
 
 function LazyOverlay({ children }: { children: ReactNode }) {
-  return (
-    <Suspense fallback={<OverlayLoader />}>
-      {children}
-    </Suspense>
-  );
+  return <Suspense fallback={<OverlayLoader />}>{children}</Suspense>;
 }
 
 function OverlayLoader() {

@@ -2,10 +2,7 @@ import { Appointment } from '../../entities/Appointment.js';
 import { getOrm } from '../../orm.js';
 import { serializeAppointment } from './appointment.serializer.js';
 import type { AppointmentInput } from './appointment.types.js';
-import {
-  createAppointmentEntity,
-  updateAppointmentEntity,
-} from '../shared/entity-factories.js';
+import { createAppointmentEntity, updateAppointmentEntity } from '../shared/entity-factories.js';
 
 export async function listAppointments() {
   const orm = await getOrm();
@@ -16,7 +13,7 @@ export async function listAppointments() {
     {
       populate: ['documents'],
       orderBy: { date: 'desc' },
-    },
+    }
   );
 
   return appointments.map(serializeAppointment);

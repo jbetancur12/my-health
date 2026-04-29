@@ -80,10 +80,7 @@ export function InstallPrompt() {
             </button>
           </div>
         </div>
-        <button
-          onClick={handleDismiss}
-          className="p-1 hover:bg-white/20 rounded transition-colors"
-        >
+        <button onClick={handleDismiss} className="p-1 hover:bg-white/20 rounded transition-colors">
           <X className="w-5 h-5" />
         </button>
       </div>

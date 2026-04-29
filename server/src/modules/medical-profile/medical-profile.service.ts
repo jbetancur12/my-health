@@ -8,7 +8,9 @@ import { findFirst } from '../shared/find-first.js';
 export async function getMedicalProfile() {
   const orm = await getOrm();
   const em = orm.em.fork();
-  const profile = (await findFirst(em, MedicalProfile, { createdAt: 'asc' })) as MedicalProfile | null;
+  const profile = (await findFirst(em, MedicalProfile, {
+    createdAt: 'asc',
+  })) as MedicalProfile | null;
 
   return serializeMedicalProfile(profile);
 }
@@ -16,7 +18,9 @@ export async function getMedicalProfile() {
 export async function upsertMedicalProfile(input: MedicalProfileInput) {
   const orm = await getOrm();
   const em = orm.em.fork();
-  let profile = (await findFirst(em, MedicalProfile, { createdAt: 'asc' })) as MedicalProfile | null;
+  let profile = (await findFirst(em, MedicalProfile, {
+    createdAt: 'asc',
+  })) as MedicalProfile | null;
 
   if (!profile) {
     profile = new MedicalProfile();

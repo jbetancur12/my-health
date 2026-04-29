@@ -1,5 +1,10 @@
 import type { EmergencyContactInput, MedicalProfileInput } from './medical-profile.types.js';
-import { parseNonEmptyString, parseObject, parseOptionalString, parseOptionalArray } from '../shared/validation.js';
+import {
+  parseNonEmptyString,
+  parseObject,
+  parseOptionalString,
+  parseOptionalArray,
+} from '../shared/validation.js';
 
 export function parseMedicalProfileInput(input: unknown): MedicalProfileInput {
   const record = parseObject(input, 'Invalid medical profile payload');
@@ -24,7 +29,10 @@ function parseEmergencyContact(input: unknown): EmergencyContactInput {
   return {
     id: typeof record.id === 'string' ? record.id : undefined,
     name: parseNonEmptyString(record.name, 'Emergency contact name is required'),
-    relationship: parseNonEmptyString(record.relationship, 'Emergency contact relationship is required'),
+    relationship: parseNonEmptyString(
+      record.relationship,
+      'Emergency contact relationship is required'
+    ),
     phone: parseNonEmptyString(record.phone, 'Emergency contact phone is required'),
   };
 }

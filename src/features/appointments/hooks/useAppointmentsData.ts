@@ -60,7 +60,7 @@ export function useAppointmentsData() {
     appointment: Omit<Appointment, 'id'> & {
       id?: string;
       controls?: Omit<Control, 'id' | 'specialty' | 'doctor' | 'relatedAppointmentId'>[];
-    },
+    }
   ) {
     const documentsWithoutFiles = appointment.documents.map((document) => ({
       id: document.id,
@@ -93,8 +93,8 @@ export function useAppointmentsData() {
 
       setAppointments((current) =>
         current.map((currentAppointment) =>
-          currentAppointment.id === savedAppointment.id ? savedAppointment : currentAppointment,
-        ),
+          currentAppointment.id === savedAppointment.id ? savedAppointment : currentAppointment
+        )
       );
     } else {
       savedAppointment = await api.saveAppointment({
