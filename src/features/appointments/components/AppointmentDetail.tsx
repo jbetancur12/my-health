@@ -273,9 +273,19 @@ export function AppointmentDetail({
                     )}
 
                     {expandedSummaries[document.id] && document.aiSummaryStatus === 'idle' && (
-                      <p className="mt-3 text-sm text-gray-500">
-                        Este documento aún no tiene un resumen automático disponible.
-                      </p>
+                      <div className="mt-3 space-y-3">
+                        <p className="text-sm text-gray-500">
+                          Este documento aún no tiene un resumen automático disponible.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => onRetryDocumentSummary?.(document.id)}
+                          className="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-3 py-2 text-sm text-blue-700 transition-colors hover:bg-blue-50"
+                        >
+                          <Sparkles className="h-4 w-4" />
+                          Generar resumen
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
