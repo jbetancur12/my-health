@@ -12,6 +12,7 @@ import { useAppointmentFilters } from '../features/appointments/hooks/useAppoint
 import { useAppointmentsData } from '../features/appointments/hooks/useAppointmentsData';
 import { useMedicalProfileData } from '../features/medical-profile/hooks/useMedicalProfileData';
 import { ControlAlerts } from '../features/controls/components/ControlAlerts';
+import { DeleteAppointmentDialog } from '../features/appointments/components/DeleteAppointmentDialog';
 import { InstallPrompt } from '../features/settings/components/InstallPrompt';
 import { useMedicationsData } from '../features/medications/hooks/useMedicationsData';
 import { useNotificationPreferencesData } from '../features/settings/hooks/useNotificationPreferencesData';
@@ -92,6 +93,7 @@ export default function App() {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+  const [appointmentToDelete, setAppointmentToDelete] = useState<Appointment | null>(null);
   const [activeTab, setActiveTab] = useState<AppTab>('dashboard');
   const [pdfViewer, setPdfViewer] = useState<{ url: string; name: string } | null>(null);
   const {
@@ -155,17 +157,20 @@ export default function App() {
   };
 
   const handleDeleteAppointment = async (appointment: Appointment) => {
-    const confirmed = window.confirm(
-      `¿Eliminar la cita de ${appointment.specialty} con ${appointment.doctor}?`
-    );
+    setAppointmentToDelete(appointment);
+  };
 
-    if (!confirmed) {
+  const confirmDeleteAppointment = async () => {
+    if (!appointmentToDelete) {
       return;
     }
 
     try {
-      await removeAppointment(appointment.id);
-      setSelectedAppointment((current) => (current?.id === appointment.id ? null : current));
+      await removeAppointment(appointmentToDelete.id);
+      setSelectedAppointment((current) =>
+        current?.id === appointmentToDelete.id ? null : current
+      );
+      setAppointmentToDelete(null);
     } catch (error) {
       console.error('Error deleting appointment:', error);
     }
@@ -382,6 +387,17 @@ export default function App() {
             />
           </LazyOverlay>
         )}
+
+        <DeleteAppointmentDialog
+          appointment={appointmentToDelete}
+          open={Boolean(appointmentToDelete)}
+          onConfirm={confirmDeleteAppointment}
+          onOpenChange={(open) => {
+            if (!open) {
+              setAppointmentToDelete(null);
+            }
+          }}
+        />
 
         <MobileBottomNav activeTab={activeTab} onTabChange={setActiveTab} />
         <MobileDrawer activeTab={activeTab} onTabChange={setActiveTab} />
