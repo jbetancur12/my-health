@@ -12,24 +12,80 @@ import { serializeAppointmentDocument } from './document.serializer.js';
 
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
 const DEFAULT_OPENAI_SUMMARY_MODEL = 'gpt-4.1-mini';
+const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
+const DEFAULT_GEMINI_SUMMARY_MODEL = 'gemini-2.5-flash';
 const DEFAULT_MAX_SUMMARY_FILE_BYTES = 12 * 1024 * 1024;
 const supportedImageMimeTypes = new Set(['image/jpeg', 'image/png']);
 const activeSummaryJobs = new Set<string>();
 
-function getOpenAiSummaryConfig() {
+type SummaryProvider = 'openai' | 'gemini';
+
+interface SummaryConfig {
+  provider: SummaryProvider;
+  apiKey: string;
+  model: string;
+  maxFileBytes: number;
+}
+
+function getSummaryProviderPreference() {
+  const provider = process.env.AI_SUMMARY_PROVIDER?.trim().toLowerCase();
+  if (provider === 'openai' || provider === 'gemini' || provider === 'disabled') {
+    return provider;
+  }
+
+  return undefined;
+}
+
+function getSharedSummaryMaxFileBytes() {
+  const maxFileBytes = Number(process.env.AI_SUMMARY_MAX_FILE_BYTES ?? DEFAULT_MAX_SUMMARY_FILE_BYTES);
+  return Number.isFinite(maxFileBytes) ? maxFileBytes : DEFAULT_MAX_SUMMARY_FILE_BYTES;
+}
+
+function getOpenAiSummaryConfig(): SummaryConfig | null {
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) {
     return null;
   }
 
   const model = process.env.OPENAI_SUMMARY_MODEL?.trim() || DEFAULT_OPENAI_SUMMARY_MODEL;
-  const maxFileBytes = Number(process.env.OPENAI_SUMMARY_MAX_FILE_BYTES ?? DEFAULT_MAX_SUMMARY_FILE_BYTES);
-
   return {
+    provider: 'openai',
     apiKey,
     model,
-    maxFileBytes: Number.isFinite(maxFileBytes) ? maxFileBytes : DEFAULT_MAX_SUMMARY_FILE_BYTES,
+    maxFileBytes: getSharedSummaryMaxFileBytes(),
   };
+}
+
+function getGeminiSummaryConfig(): SummaryConfig | null {
+  const apiKey = process.env.GEMINI_API_KEY?.trim() || process.env.GOOGLE_API_KEY?.trim();
+  if (!apiKey) {
+    return null;
+  }
+
+  return {
+    provider: 'gemini',
+    apiKey,
+    model: process.env.GEMINI_SUMMARY_MODEL?.trim() || DEFAULT_GEMINI_SUMMARY_MODEL,
+    maxFileBytes: getSharedSummaryMaxFileBytes(),
+  };
+}
+
+function getSummaryConfig(): SummaryConfig | null {
+  const providerPreference = getSummaryProviderPreference();
+
+  if (providerPreference === 'disabled') {
+    return null;
+  }
+
+  if (providerPreference === 'openai') {
+    return getOpenAiSummaryConfig();
+  }
+
+  if (providerPreference === 'gemini') {
+    return getGeminiSummaryConfig();
+  }
+
+  return getOpenAiSummaryConfig() ?? getGeminiSummaryConfig();
 }
 
 function isSupportedSummaryMimeType(contentType: string) {
@@ -55,6 +111,14 @@ function summarizeOpenAiError(error: unknown) {
   }
 
   return String(error).slice(0, 500);
+}
+
+function getSummaryPrompt(contentType: string) {
+  if (contentType === 'application/pdf') {
+    return 'Resume este documento médico en español. Devuelve solo texto plano, breve y útil para una persona que luego consultará su historial. Incluye: 1) motivo o tipo de documento, 2) hallazgos o indicaciones principales, 3) medicamentos, exámenes o controles mencionados si aparecen, 4) próximos pasos importantes. Si falta información, dilo con cautela. Máximo 8 líneas.';
+  }
+
+  return 'Observa esta imagen de un documento médico y genera un resumen en español. Devuelve solo texto plano, breve y útil para consultar luego el historial. Incluye hallazgos, indicaciones, medicamentos, exámenes o próximos pasos si se alcanzan a leer. Si la imagen no permite verlo con claridad, dilo con cautela. Máximo 8 líneas.';
 }
 
 function trimSummary(summary: string) {
@@ -112,9 +176,9 @@ function getContentTypeFromFilename(filePath: string) {
 }
 
 async function generateSummary(document: Document) {
-  const config = getOpenAiSummaryConfig();
+  const config = getSummaryConfig();
   if (!config) {
-    throw new Error('OPENAI_API_KEY no está configurado.');
+    throw new Error('No hay un proveedor de resumen IA configurado.');
   }
 
   const { buffer, contentType } = await getDocumentBinary(document);
@@ -130,18 +194,48 @@ async function generateSummary(document: Document) {
   }
 
   const base64 = buffer.toString('base64');
+  const summary =
+    config.provider === 'openai'
+      ? await generateOpenAiSummary({
+          apiKey: config.apiKey,
+          model: config.model,
+          base64,
+          contentType,
+          fileName: document.name,
+        })
+      : await generateGeminiSummary({
+          apiKey: config.apiKey,
+          model: config.model,
+          base64,
+          contentType,
+        });
+
+  if (!summary) {
+    throw new Error('La IA no devolvió un resumen utilizable para este documento.');
+  }
+
+  return summary;
+}
+
+async function generateOpenAiSummary(input: {
+  apiKey: string;
+  model: string;
+  base64: string;
+  contentType: string;
+  fileName: string;
+}) {
+  const { apiKey, model, base64, contentType, fileName } = input;
   const content =
     contentType === 'application/pdf'
       ? [
           {
             type: 'input_file',
-            filename: document.name,
+            filename: fileName,
             file_data: `data:${contentType};base64,${base64}`,
           },
           {
             type: 'input_text',
-            text:
-              'Resume este documento médico en español. Devuelve solo texto plano, breve y útil para una persona que luego consultará su historial. Incluye: 1) motivo o tipo de documento, 2) hallazgos o indicaciones principales, 3) medicamentos, exámenes o controles mencionados si aparecen, 4) próximos pasos importantes. Si falta información, dilo con cautela. Máximo 8 líneas.',
+            text: getSummaryPrompt(contentType),
           },
         ]
       : [
@@ -152,19 +246,18 @@ async function generateSummary(document: Document) {
           },
           {
             type: 'input_text',
-            text:
-              'Observa esta imagen de un documento médico y genera un resumen en español. Devuelve solo texto plano, breve y útil para consultar luego el historial. Incluye hallazgos, indicaciones, medicamentos, exámenes o próximos pasos si se alcanzan a leer. Si la imagen no permite verlo con claridad, dilo con cautela. Máximo 8 líneas.',
+            text: getSummaryPrompt(contentType),
           },
         ];
 
   const response = await fetch(OPENAI_RESPONSES_URL, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${config.apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: config.model,
+      model,
       input: [
         {
           role: 'user',
@@ -180,11 +273,63 @@ async function generateSummary(document: Document) {
   }
 
   const data = (await response.json()) as { output_text?: string };
-  const summary = trimSummary(data.output_text ?? '');
+  return trimSummary(data.output_text ?? '');
+}
 
-  if (!summary) {
-    throw new Error('La IA no devolvió un resumen utilizable para este documento.');
+async function generateGeminiSummary(input: {
+  apiKey: string;
+  model: string;
+  base64: string;
+  contentType: string;
+}) {
+  const { apiKey, model, base64, contentType } = input;
+  const response = await fetch(
+    `${GEMINI_API_BASE_URL}/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                inline_data: {
+                  mime_type: contentType,
+                  data: base64,
+                },
+              },
+              {
+                text: getSummaryPrompt(contentType),
+              },
+            ],
+          },
+        ],
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Gemini respondió ${response.status}: ${errorText}`);
   }
+
+  const data = (await response.json()) as {
+    candidates?: Array<{
+      content?: {
+        parts?: Array<{ text?: string }>;
+      };
+    }>;
+  };
+
+  const summary = trimSummary(
+    data.candidates
+      ?.flatMap((candidate) => candidate.content?.parts ?? [])
+      .map((part) => part.text?.trim())
+      .filter((text): text is string => Boolean(text))
+      .join('\n') ?? ''
+  );
 
   return summary;
 }
@@ -238,11 +383,11 @@ function startSummaryJob(documentId: string) {
 }
 
 export function isDocumentSummaryEnabled() {
-  return getOpenAiSummaryConfig() !== null;
+  return getSummaryConfig() !== null;
 }
 
 export async function queueDocumentSummary(documentId: string, force = false) {
-  const config = getOpenAiSummaryConfig();
+  const config = getSummaryConfig();
   const orm = await getOrm();
   const em = orm.em.fork();
   const document = await em.findOne(Document, { id: documentId });
