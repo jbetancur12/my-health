@@ -3,6 +3,7 @@ import { getOrm } from '../../orm.js';
 import { serializeMedication } from './medication.serializer.js';
 import type { MedicationInput } from './medication.types.js';
 import { createMedicationEntity, updateMedicationEntity } from '../shared/entity-factories.js';
+import { rebuildClinicalSuggestions } from '../clinical-suggestions/clinical-suggestion.service.js';
 
 export async function listMedications() {
   const orm = await getOrm();
@@ -19,6 +20,7 @@ export async function createMedication(input: MedicationInput) {
 
   em.persist(medication);
   await em.flush();
+  await rebuildClinicalSuggestions();
 
   return serializeMedication(medication);
 }
@@ -34,6 +36,7 @@ export async function updateMedication(id: string, input: Partial<MedicationInpu
 
   updateMedicationEntity(medication, input);
   await em.flush();
+  await rebuildClinicalSuggestions();
 
   return serializeMedication(medication);
 }
@@ -48,5 +51,6 @@ export async function deleteMedication(id: string) {
   }
 
   await em.removeAndFlush(medication);
+  await rebuildClinicalSuggestions();
   return true;
 }

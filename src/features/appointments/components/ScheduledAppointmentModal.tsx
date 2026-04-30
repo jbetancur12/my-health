@@ -9,6 +9,7 @@ import type {
 
 interface ScheduledAppointmentModalProps {
   doctors: string[];
+  initialDraft?: Partial<ScheduledAppointmentApiPayload>;
   open: boolean;
   scheduledAppointment?: ScheduledAppointment;
   specialties: string[];
@@ -55,6 +56,7 @@ function toDateInputValue(date: Date | string | undefined) {
 
 export function ScheduledAppointmentModal({
   doctors,
+  initialDraft,
   open,
   scheduledAppointment,
   specialties,
@@ -77,12 +79,20 @@ export function ScheduledAppointmentModal({
     }
 
     if (!scheduledAppointment) {
-      setScheduledAt('');
-      setSpecialty('');
-      setDoctor('');
-      setLocation('');
-      setNotes('');
-      setExpectedDocuments([]);
+      setScheduledAt(
+        initialDraft?.scheduledAt ? toDateTimeLocalValue(new Date(initialDraft.scheduledAt)) : ''
+      );
+      setSpecialty(initialDraft?.specialty ?? '');
+      setDoctor(initialDraft?.doctor ?? '');
+      setLocation(initialDraft?.location ?? '');
+      setNotes(initialDraft?.notes ?? '');
+      setExpectedDocuments(
+        (initialDraft?.expectedDocuments ?? []).map((document) => ({
+          ...document,
+          date: new Date(document.date),
+          aiSummaryStatus: 'idle',
+        }))
+      );
       return;
     }
 
@@ -92,7 +102,7 @@ export function ScheduledAppointmentModal({
     setLocation(scheduledAppointment.location ?? '');
     setNotes(scheduledAppointment.notes ?? '');
     setExpectedDocuments(scheduledAppointment.expectedDocuments);
-  }, [open, scheduledAppointment]);
+  }, [initialDraft, open, scheduledAppointment]);
 
   if (!open) {
     return null;

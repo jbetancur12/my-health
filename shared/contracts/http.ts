@@ -72,6 +72,38 @@ export interface ClinicalMemoryDto {
   updatedAt?: string;
 }
 
+export type ClinicalSuggestionType =
+  | 'medication'
+  | 'condition'
+  | 'follow_up'
+  | 'pending_study';
+
+export type ClinicalSuggestionStatus =
+  | 'pending'
+  | 'accepted'
+  | 'dismissed'
+  | 'postponed';
+
+export type ClinicalSuggestionConfidence = 'low' | 'medium' | 'high';
+
+export interface ClinicalSuggestionDto {
+  id: string;
+  fingerprint: string;
+  type: ClinicalSuggestionType;
+  status: ClinicalSuggestionStatus;
+  confidence: ClinicalSuggestionConfidence;
+  title: string;
+  description: string;
+  sourceDocumentId: string;
+  sourceAppointmentId: string;
+  relatedDocumentIds: string[];
+  relatedAppointmentIds: string[];
+  payload: Record<string, unknown>;
+  reviewedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AppointmentPayload {
   date: string;
   specialty: string;

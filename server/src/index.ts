@@ -6,6 +6,7 @@ import { createApp } from './app/create-app.js';
 import { resumePendingDocumentSummaries } from './modules/uploads/document-summary.service.js';
 import { warmMinioDocumentBuckets } from './modules/uploads/minio-storage.js';
 import { startScheduledAppointmentReminderWorker } from './modules/scheduled-appointments/whatsapp-meta.service.js';
+import { rebuildClinicalSuggestions } from './modules/clinical-suggestions/clinical-suggestion.service.js';
 import { getOrm } from './orm.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -27,6 +28,7 @@ async function bootstrap() {
   await fs.mkdir(uploadsRoot, { recursive: true });
   await warmMinioDocumentBuckets();
   await resumePendingDocumentSummaries();
+  await rebuildClinicalSuggestions();
   startScheduledAppointmentReminderWorker();
 
   const app = createApp({ clientOrigin, nodeEnv, uploadsRoot });

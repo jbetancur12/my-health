@@ -12,6 +12,7 @@ import { useAppointmentFilters } from '../features/appointments/hooks/useAppoint
 import { useAppointmentsData } from '../features/appointments/hooks/useAppointmentsData';
 import { useScheduledAppointmentsData } from '../features/appointments/hooks/useScheduledAppointmentsData';
 import { useClinicalMemoryData } from '../features/medical-profile/hooks/useClinicalMemoryData';
+import { useClinicalSuggestionsData } from '../features/medical-profile/hooks/useClinicalSuggestionsData';
 import { useMedicalProfileData } from '../features/medical-profile/hooks/useMedicalProfileData';
 import { ControlAlerts } from '../features/controls/components/ControlAlerts';
 import { DeleteAppointmentDialog } from '../features/appointments/components/DeleteAppointmentDialog';
@@ -25,6 +26,7 @@ import { checkAndShowReminders } from '../shared/lib/notifications';
 import type {
   AppDataBundle,
   Appointment,
+  ClinicalSuggestion,
   Control,
   Document,
   ScheduledAppointment,
@@ -90,6 +92,12 @@ export default function App() {
     isLoading: clinicalMemoryLoading,
   } = useClinicalMemoryData();
   const {
+    clinicalSuggestions,
+    error: clinicalSuggestionsError,
+    isLoading: clinicalSuggestionsLoading,
+    updateSuggestionStatus,
+  } = useClinicalSuggestionsData();
+  const {
     medicalProfile,
     error: medicalProfileError,
     isLoading: medicalProfileLoading,
@@ -126,6 +134,8 @@ export default function App() {
   const [showScheduledAppointmentModal, setShowScheduledAppointmentModal] = useState(false);
   const [editingScheduledAppointment, setEditingScheduledAppointment] =
     useState<ScheduledAppointment | null>(null);
+  const [clinicalSuggestionToSchedule, setClinicalSuggestionToSchedule] =
+    useState<ClinicalSuggestion | null>(null);
   const [scheduledAppointmentToConvert, setScheduledAppointmentToConvert] =
     useState<ScheduledAppointment | null>(null);
   const [activeTab, setActiveTab] = useState<AppTab>('dashboard');
@@ -254,11 +264,21 @@ export default function App() {
     }
   ) => {
     await saveScheduledAppointment(scheduledAppointment);
+    if (clinicalSuggestionToSchedule) {
+      try {
+        await updateSuggestionStatus(clinicalSuggestionToSchedule.id, 'accepted');
+      } catch (error) {
+        console.error('Error accepting clinical suggestion after scheduling:', error);
+      } finally {
+        setClinicalSuggestionToSchedule(null);
+      }
+    }
     setShowScheduledAppointmentModal(false);
     setEditingScheduledAppointment(null);
   };
 
   const handleEditScheduledAppointment = (scheduledAppointment: ScheduledAppointment) => {
+    setClinicalSuggestionToSchedule(null);
     setEditingScheduledAppointment(scheduledAppointment);
     setShowScheduledAppointmentModal(true);
   };
@@ -274,11 +294,19 @@ export default function App() {
   };
 
   const handleConvertScheduledAppointment = (scheduledAppointment: ScheduledAppointment) => {
+    setClinicalSuggestionToSchedule(null);
     setScheduledAppointmentToConvert(scheduledAppointment);
     setEditingScheduledAppointment(null);
     setShowScheduledAppointmentModal(false);
     setShowAddModal(true);
     setActiveTab('appointments');
+  };
+
+  const handleScheduleClinicalSuggestion = (suggestion: ClinicalSuggestion) => {
+    setClinicalSuggestionToSchedule(suggestion);
+    setEditingScheduledAppointment(null);
+    setShowScheduledAppointmentModal(true);
+    setActiveTab('profile');
   };
 
   const handleSendScheduledAppointmentReminder = async (
@@ -437,10 +465,13 @@ export default function App() {
             filterSpecialty={filterSpecialty}
             medicalProfile={medicalProfile}
             clinicalMemory={clinicalMemory}
+            clinicalSuggestions={clinicalSuggestions}
             appointmentsLoading={appointmentsLoading}
             controlsLoading={appointmentsLoading}
             clinicalMemoryError={clinicalMemoryError}
             clinicalMemoryLoading={clinicalMemoryLoading}
+            clinicalSuggestionsError={clinicalSuggestionsError}
+            clinicalSuggestionsLoading={clinicalSuggestionsLoading}
             medicalProfileError={medicalProfileError}
             medications={medications}
             medicationsLoading={medicationsLoading}
@@ -473,6 +504,8 @@ export default function App() {
             onGlobalSearchResultClick={handleGlobalSearchResultClick}
             onImportData={handleImportData}
             onProfileUpdate={updateMedicalProfile}
+            onScheduleClinicalSuggestion={handleScheduleClinicalSuggestion}
+            onClinicalSuggestionStatusChange={updateSuggestionStatus}
             onRemoveMedication={removeMedication}
             onRemoveVaccine={removeVaccine}
             onRemoveVitalSign={removeVitalSign}
@@ -558,12 +591,18 @@ export default function App() {
           <LazyOverlay>
             <ScheduledAppointmentModal
               doctors={doctors}
+              initialDraft={
+                clinicalSuggestionToSchedule
+                  ? buildScheduledAppointmentDraftFromSuggestion(clinicalSuggestionToSchedule)
+                  : undefined
+              }
               open={showScheduledAppointmentModal}
               scheduledAppointment={editingScheduledAppointment || undefined}
               specialties={specialties}
               onClose={() => {
                 setShowScheduledAppointmentModal(false);
                 setEditingScheduledAppointment(null);
+                setClinicalSuggestionToSchedule(null);
               }}
               onDelete={handleDeleteScheduledAppointment}
               onConvert={handleConvertScheduledAppointment}
@@ -631,4 +670,45 @@ function OverlayLoader() {
       </div>
     </div>
   );
+}
+
+function getStringPayloadValue(payload: Record<string, unknown>, key: string) {
+  const value = payload[key];
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
+function buildScheduledAppointmentDraftFromSuggestion(
+  suggestion: ClinicalSuggestion
+): Partial<{
+  scheduledAt: string;
+  specialty: string;
+  doctor: string;
+  location: string;
+  notes: string;
+  expectedDocuments: Array<{
+    id: string;
+    type: Document['type'];
+    name: string;
+    date: string;
+  }>;
+}> {
+  const suggestedDate =
+    getStringPayloadValue(suggestion.payload, 'suggestedDate') ?? new Date().toISOString();
+  const specialty =
+    getStringPayloadValue(suggestion.payload, 'suggestedSpecialty') ??
+    getStringPayloadValue(suggestion.payload, 'sourceSpecialty') ??
+    '';
+  const doctor = getStringPayloadValue(suggestion.payload, 'suggestedDoctor') ?? '';
+  const description = getStringPayloadValue(suggestion.payload, 'description') ?? suggestion.title;
+  const interval = getStringPayloadValue(suggestion.payload, 'interval');
+
+  return {
+    scheduledAt: suggestedDate,
+    specialty,
+    doctor,
+    notes: interval
+      ? `${description}\n\nIntervalo sugerido: ${interval}`
+      : description,
+    expectedDocuments: [],
+  };
 }

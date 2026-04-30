@@ -6,6 +6,9 @@ import type {
   AppointmentApiPayload,
   AppointmentTag,
   AppointmentTagApiDto,
+  ClinicalSuggestion,
+  ClinicalSuggestionApiDto,
+  ClinicalSuggestionStatus,
   ClinicalMemory,
   ClinicalMemoryApiDto,
   Control,
@@ -40,6 +43,8 @@ export type {
   AppDataBundle,
   Appointment,
   AppointmentTag,
+  ClinicalSuggestion,
+  ClinicalSuggestionStatus,
   ClinicalMemory,
   Control,
   Document,
@@ -165,6 +170,15 @@ function parseClinicalMemory(memory: ClinicalMemoryApiDto): ClinicalMemory {
     lastUpdatedAt: memory.lastUpdatedAt ? new Date(memory.lastUpdatedAt) : undefined,
     createdAt: memory.createdAt ? new Date(memory.createdAt) : undefined,
     updatedAt: memory.updatedAt ? new Date(memory.updatedAt) : undefined,
+  };
+}
+
+function parseClinicalSuggestion(suggestion: ClinicalSuggestionApiDto): ClinicalSuggestion {
+  return {
+    ...suggestion,
+    reviewedAt: suggestion.reviewedAt ? new Date(suggestion.reviewedAt) : undefined,
+    createdAt: new Date(suggestion.createdAt),
+    updatedAt: new Date(suggestion.updatedAt),
   };
 }
 
@@ -398,6 +412,25 @@ export async function getMedicalProfile(): Promise<MedicalProfile> {
 export async function getClinicalMemory(): Promise<ClinicalMemory> {
   const data = (await fetchAPI('/clinical-memory')) as { clinicalMemory: ClinicalMemoryApiDto };
   return parseClinicalMemory(data.clinicalMemory);
+}
+
+export async function getClinicalSuggestions(): Promise<ClinicalSuggestion[]> {
+  const data = (await fetchAPI('/clinical-suggestions')) as {
+    clinicalSuggestions: ClinicalSuggestionApiDto[];
+  };
+  return data.clinicalSuggestions.map(parseClinicalSuggestion);
+}
+
+export async function updateClinicalSuggestionStatus(
+  id: string,
+  status: ClinicalSuggestionStatus
+): Promise<ClinicalSuggestion> {
+  const data = (await fetchAPI(`/clinical-suggestions/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  })) as { clinicalSuggestion: ClinicalSuggestionApiDto };
+
+  return parseClinicalSuggestion(data.clinicalSuggestion);
 }
 
 export async function saveMedicalProfile(profile: MedicalProfile): Promise<MedicalProfile> {

@@ -6,6 +6,7 @@ import type {
   DocumentStructuredMedicationDto,
   DocumentStructuredMedicationStatus,
   ClinicalMemoryDto,
+  ClinicalSuggestionDto,
   AppointmentDto,
   AppointmentPayload,
   AppointmentTagDto,
@@ -70,6 +71,38 @@ export interface ClinicalMemory {
   lastUpdatedAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+export type ClinicalSuggestionType =
+  | 'medication'
+  | 'condition'
+  | 'follow_up'
+  | 'pending_study';
+
+export type ClinicalSuggestionStatus =
+  | 'pending'
+  | 'accepted'
+  | 'dismissed'
+  | 'postponed';
+
+export type ClinicalSuggestionConfidence = 'low' | 'medium' | 'high';
+
+export interface ClinicalSuggestion {
+  id: string;
+  fingerprint: string;
+  type: ClinicalSuggestionType;
+  status: ClinicalSuggestionStatus;
+  confidence: ClinicalSuggestionConfidence;
+  title: string;
+  description: string;
+  sourceDocumentId: string;
+  sourceAppointmentId: string;
+  relatedDocumentIds: string[];
+  relatedAppointmentIds: string[];
+  payload: Record<string, unknown>;
+  reviewedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface Document {
@@ -240,4 +273,5 @@ export type VaccineApiDto = VaccineDto;
 export type AppDataBundleApiDto = AppDataBundleDto;
 export type AppointmentDocumentApiPayload = AppointmentDocumentPayload;
 export type ClinicalMemoryApiDto = ClinicalMemoryDto;
+export type ClinicalSuggestionApiDto = ClinicalSuggestionDto;
 export type { ReportDateRange, ScheduledAppointmentStatus };

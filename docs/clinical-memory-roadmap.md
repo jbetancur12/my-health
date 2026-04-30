@@ -247,7 +247,7 @@ Resultado esperado:
 
 ### Fase 4: Sugerencias revisables
 
-Estado: `planned`
+Estado: `done`
 
 Objetivos:
 
@@ -256,17 +256,30 @@ Objetivos:
 
 Tareas:
 
-- [ ] crear bandeja de sugerencias clínicas
-- [ ] soportar sugerencias de:
+- [x] crear bandeja de sugerencias clínicas
+- [x] soportar sugerencias de:
   - medicamentos
   - patologías
   - controles
   - estudios pendientes
-- [ ] permitir:
+- [x] permitir:
   - aceptar
   - descartar
   - posponer
-- [ ] guardar trazabilidad de qué documento originó la sugerencia
+- [x] guardar trazabilidad de qué documento originó la sugerencia
+
+Notas de implementación:
+
+- existe la entidad `ClinicalSuggestion`
+- se reconstruye automáticamente a partir de:
+  - documentos con `aiStructuredData`
+  - perfil médico
+  - módulo de medicamentos
+- ya hay endpoint y panel frontend para:
+  - listar sugerencias
+  - aceptar
+  - posponer
+  - descartar
 
 Resultado esperado:
 
@@ -274,7 +287,7 @@ Resultado esperado:
 
 ### Fase 5: Controles sugeridos automáticos
 
-Estado: `planned`
+Estado: `done`
 
 Objetivos:
 
@@ -283,10 +296,19 @@ Objetivos:
 
 Tareas:
 
-- [ ] detectar intervalos de seguimiento en el pipeline estructurado
-- [ ] calcular fecha sugerida
-- [ ] crear `scheduled appointment suggestion` o control sugerido
-- [ ] permitir confirmarlo antes de convertirlo en cita programada real
+- [x] detectar intervalos de seguimiento en el pipeline estructurado
+- [x] calcular fecha sugerida
+- [x] crear `scheduled appointment suggestion` o control sugerido
+- [x] permitir confirmarlo antes de convertirlo en cita programada real
+
+Notas de implementación:
+
+- las sugerencias de tipo `follow_up` ahora calculan `suggestedDate` cuando el intervalo es interpretable
+- desde el panel de sugerencias ya existe `Programar sugerencia`
+- esa acción no crea una cita silenciosamente:
+  - abre el modal de cita programada prellenado
+  - permite confirmarla o cancelarla
+  - y al guardarla marca la sugerencia como aceptada
 
 Regla:
 

@@ -18,6 +18,7 @@ import {
 } from './minio-storage.js';
 import { serializeAppointmentDocument } from './document.serializer.js';
 import { rebuildClinicalMemory } from '../clinical-memory/clinical-memory.service.js';
+import { rebuildClinicalSuggestions } from '../clinical-suggestions/clinical-suggestion.service.js';
 
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
 const DEFAULT_OPENAI_SUMMARY_MODEL = 'gpt-4.1-mini';
@@ -622,6 +623,12 @@ async function processDocumentSummary(documentId: string, trigger: SummaryTrigge
       await rebuildClinicalMemory();
     } catch (error) {
       console.error('Failed to rebuild clinical memory after document summary', error);
+    }
+
+    try {
+      await rebuildClinicalSuggestions();
+    } catch (error) {
+      console.error('Failed to rebuild clinical suggestions after document summary', error);
     }
   } catch (error) {
     const orm = await getOrm();

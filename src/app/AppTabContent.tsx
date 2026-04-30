@@ -12,6 +12,8 @@ import type {
   Appointment,
   AppDataBundle,
   ClinicalMemory,
+  ClinicalSuggestion,
+  ClinicalSuggestionStatus,
   Control,
   MedicalProfile,
   Medication,
@@ -89,10 +91,13 @@ interface AppTabContentProps {
   filterSpecialty: string;
   medicalProfile: MedicalProfile;
   clinicalMemory: ClinicalMemory;
+  clinicalSuggestions: ClinicalSuggestion[];
   medicalProfileError: string | null;
   medicalProfileLoading: boolean;
   clinicalMemoryError: string | null;
   clinicalMemoryLoading: boolean;
+  clinicalSuggestionsError: string | null;
+  clinicalSuggestionsLoading: boolean;
   medications: Medication[];
   medicationsError: string | null;
   medicationsLoading: boolean;
@@ -123,6 +128,11 @@ interface AppTabContentProps {
   onGlobalSearchResultClick: (result: { type: string; data: unknown }) => void;
   onImportData: (data: Partial<AppDataBundle>) => void | Promise<void>;
   onProfileUpdate: (profile: MedicalProfile) => void | Promise<unknown>;
+  onScheduleClinicalSuggestion: (suggestion: ClinicalSuggestion) => void | Promise<unknown>;
+  onClinicalSuggestionStatusChange: (
+    id: string,
+    status: ClinicalSuggestionStatus
+  ) => void | Promise<unknown>;
   onRemoveMedication: (id: string) => void | Promise<unknown>;
   onRemoveVaccine: (id: string) => void | Promise<unknown>;
   onRemoveVitalSign: (id: string) => void | Promise<unknown>;
@@ -151,10 +161,13 @@ export function AppTabContent({
   filterSpecialty,
   medicalProfile,
   clinicalMemory,
+  clinicalSuggestions,
   medicalProfileError,
   medicalProfileLoading,
   clinicalMemoryError,
   clinicalMemoryLoading,
+  clinicalSuggestionsError,
+  clinicalSuggestionsLoading,
   medications,
   medicationsError,
   medicationsLoading,
@@ -185,6 +198,8 @@ export function AppTabContent({
   onGlobalSearchResultClick,
   onImportData,
   onProfileUpdate,
+  onScheduleClinicalSuggestion,
+  onClinicalSuggestionStatusChange,
   onRemoveMedication,
   onRemoveVaccine,
   onRemoveVitalSign,
@@ -354,22 +369,27 @@ export function AppTabContent({
   }
 
   if (activeTab === 'profile') {
-    if (medicalProfileLoading || clinicalMemoryLoading) {
+    if (medicalProfileLoading || clinicalMemoryLoading || clinicalSuggestionsLoading) {
       return (
         <FeatureStatePanel
           variant="loading"
-          title="Cargando perfil médico"
-          message="Estamos preparando tu información personal y la memoria clínica consolidada."
+          title="Cargando perfil médico ampliado"
+          message="Estamos preparando tu información personal, la memoria clínica consolidada y las sugerencias revisables."
         />
       );
     }
 
-    if (medicalProfileError || clinicalMemoryError) {
+    if (medicalProfileError || clinicalMemoryError || clinicalSuggestionsError) {
       return (
         <FeatureStatePanel
           variant="error"
           title="No pudimos cargar el perfil médico"
-          message={medicalProfileError ?? clinicalMemoryError ?? 'Intenta nuevamente en unos segundos.'}
+          message={
+            medicalProfileError ??
+            clinicalMemoryError ??
+            clinicalSuggestionsError ??
+            'Intenta nuevamente en unos segundos.'
+          }
         />
       );
     }
@@ -378,7 +398,10 @@ export function AppTabContent({
       <MedicalProfileScreen
         profile={medicalProfile}
         clinicalMemory={clinicalMemory}
+        clinicalSuggestions={clinicalSuggestions}
         onUpdate={onProfileUpdate}
+        onScheduleSuggestion={onScheduleClinicalSuggestion}
+        onSuggestionStatusChange={onClinicalSuggestionStatusChange}
       />
     );
   }
