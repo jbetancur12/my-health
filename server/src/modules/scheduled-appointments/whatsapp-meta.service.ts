@@ -95,7 +95,7 @@ async function sendMetaTemplateReminder(
   }
 }
 
-function pickDueReminderOffset(
+function pickDueReminderOffsets(
   reminderDays: number[],
   reminderSentOffsets: number[],
   scheduledAt: Date,
@@ -104,15 +104,12 @@ function pickDueReminderOffset(
   const hoursUntilAppointment = (scheduledAt.getTime() - now.getTime()) / (1000 * 60 * 60);
 
   if (hoursUntilAppointment <= 0) {
-    return null;
+    return [];
   }
 
   const sortedOffsets = [...new Set(reminderDays)].sort((left, right) => left - right);
-  return (
-    sortedOffsets.find(
-      (offset) =>
-        !reminderSentOffsets.includes(offset) && hoursUntilAppointment <= offset * 24
-    ) ?? null
+  return sortedOffsets.filter(
+    (offset) => !reminderSentOffsets.includes(offset) && hoursUntilAppointment <= offset * 24
   );
 }
 
@@ -146,28 +143,32 @@ export async function runScheduledAppointmentReminderCycle() {
   const now = new Date();
 
   for (const scheduledAppointment of scheduledAppointments) {
-    const dueOffset = pickDueReminderOffset(
+    const dueOffsets = pickDueReminderOffsets(
       preferences.reminderDays ?? [7, 3, 1],
       scheduledAppointment.reminderSentOffsets,
       scheduledAppointment.scheduledAt,
       now
     );
 
-    if (dueOffset === null) {
+    if (dueOffsets.length === 0) {
       continue;
     }
+
+    const mostSpecificOffset = dueOffsets[0];
 
     try {
       await sendMetaTemplateReminder(to, scheduledAppointment, config);
       scheduledAppointment.reminderSentOffsets = [
-        ...new Set([...scheduledAppointment.reminderSentOffsets, dueOffset]),
+        ...new Set([...scheduledAppointment.reminderSentOffsets, ...dueOffsets]),
       ].sort((left, right) => left - right);
       scheduledAppointment.lastWhatsappReminderAt = new Date();
       scheduledAppointment.lastWhatsappReminderError = undefined;
       await em.flush();
     } catch (error) {
       scheduledAppointment.lastWhatsappReminderError =
-        error instanceof Error ? error.message.slice(0, 500) : String(error).slice(0, 500);
+        `${
+          error instanceof Error ? error.message.slice(0, 450) : String(error).slice(0, 450)
+        } (ventana ${mostSpecificOffset}d)`;
       await em.flush();
     }
   }
