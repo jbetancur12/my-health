@@ -145,7 +145,7 @@ Cada sugerencia debería tener:
 
 ### Fase 1: Fortalecer resúmenes por documento
 
-Estado: `planned`
+Estado: `done`
 
 Objetivos:
 
@@ -154,16 +154,22 @@ Objetivos:
 
 Tareas:
 
-- [ ] exponer botón claro de `Regenerar resumen` para documentos ya procesados
-- [ ] permitir re-ejecutar resumen incluso si el estado es `completed`
-- [ ] guardar metadatos mínimos de regeneración:
+- [x] exponer botón claro de `Regenerar resumen` para documentos ya procesados
+- [x] permitir re-ejecutar resumen incluso si el estado es `completed`
+- [x] guardar metadatos mínimos de regeneración:
   - proveedor usado
   - modelo usado
   - fecha de regeneración
-- [ ] diferenciar en UI:
+- [x] diferenciar en UI:
   - `Generar`
   - `Reintentar`
   - `Regenerar`
+
+Notas de implementación:
+
+- endpoints separados para `generate`, `retry` y `regenerate`
+- `Document` ya conserva `aiSummaryProvider`, `aiSummaryModel` y `aiSummaryLastAction`
+- la UI del detalle de cita muestra el origen del último resumen
 
 Resultado esperado:
 
@@ -171,7 +177,7 @@ Resultado esperado:
 
 ### Fase 2: Extracción estructurada por documento
 
-Estado: `planned`
+Estado: `done`
 
 Objetivos:
 
@@ -180,14 +186,26 @@ Objetivos:
 
 Tareas:
 
-- [ ] ampliar el pipeline de IA para devolver JSON estructurado
-- [ ] guardar esa extracción por documento
-- [ ] normalizar categorías mínimas:
+- [x] ampliar el pipeline de IA para devolver JSON estructurado
+- [x] guardar esa extracción por documento
+- [x] normalizar categorías mínimas:
   - medicamentos
   - patologías
   - controles
   - estudios
-- [ ] guardar referencias al documento origen
+- [x] guardar referencias al documento origen
+
+Notas de implementación:
+
+- el resumen por documento ahora genera también `aiStructuredData`
+- se consolidaron campos mínimos:
+  - `detectedDiagnoses`
+  - `detectedConditions`
+  - `detectedMedications`
+  - `detectedPendingStudies`
+  - `detectedControls`
+  - `confidenceNotes`
+- la UI ya expone esta capa como `Datos estructurados detectados`
 
 Resultado esperado:
 
@@ -195,7 +213,7 @@ Resultado esperado:
 
 ### Fase 3: Memoria clínica general
 
-Estado: `planned`
+Estado: `done`
 
 Objetivos:
 
@@ -204,16 +222,24 @@ Objetivos:
 
 Tareas:
 
-- [ ] crear entidad o agregado de memoria clínica general
-- [ ] definir secciones mínimas:
+- [x] crear entidad o agregado de memoria clínica general
+- [x] definir secciones mínimas:
   - patologías activas
   - patologías históricas
   - medicamentos activos
   - hallazgos importantes
   - estudios pendientes
   - controles sugeridos
-- [ ] construir lógica de actualización incremental
-- [ ] evitar duplicación cuando el documento reafirma algo ya conocido
+- [x] construir lógica de actualización incremental
+- [x] evitar duplicación cuando el documento reafirma algo ya conocido
+
+Notas de implementación:
+
+- existe la entidad `ClinicalMemory`
+- se reconstruye automáticamente cuando:
+  - termina un resumen estructurado
+  - se actualiza el perfil médico
+- el perfil médico ya muestra una sección `Memoria Clínica General`
 
 Resultado esperado:
 
