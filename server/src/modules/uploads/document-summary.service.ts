@@ -5,6 +5,10 @@ import {
   Document,
   DocumentAiSummaryAction,
   DocumentAiSummaryStatus,
+  type DocumentStructuredControl,
+  type DocumentStructuredData,
+  type DocumentStructuredMedication,
+  type DocumentStructuredMedicationStatus,
 } from '../../entities/Document.js';
 import { getOrm } from '../../orm.js';
 import {
@@ -32,6 +36,11 @@ interface SummaryConfig {
 }
 
 type SummaryTrigger = 'generated' | 'retried' | 'regenerated';
+
+interface ParsedStructuredSummary {
+  summary: string;
+  structuredData: DocumentStructuredData;
+}
 
 function getSummaryProviderPreference() {
   const provider = process.env.AI_SUMMARY_PROVIDER?.trim().toLowerCase();
@@ -120,11 +129,54 @@ function summarizeOpenAiError(error: unknown) {
 }
 
 function getSummaryPrompt(contentType: string) {
-  if (contentType === 'application/pdf') {
-    return 'Resume este documento médico en español. Devuelve solo texto plano, sin markdown, sin asteriscos y sin títulos decorativos. Usa una línea por ítem con este formato exacto cuando aplique: Documento: ..., Motivo: ..., Hallazgos: ..., Diagnóstico: ..., Tratamiento: ..., Exámenes: ..., Próximos pasos: ..., Estado: ... Si un dato no aparece, omítelo. Sé breve, claro y útil para consultar luego el historial.';
-  }
+  const documentInstruction =
+    contentType === 'application/pdf'
+      ? 'Resume este documento médico en español.'
+      : 'Observa esta imagen de un documento médico y resume su contenido en español.';
 
-  return 'Observa esta imagen de un documento médico y genera un resumen en español. Devuelve solo texto plano, sin markdown, sin asteriscos y sin títulos decorativos. Usa una línea por ítem con este formato exacto cuando aplique: Documento: ..., Motivo: ..., Hallazgos: ..., Diagnóstico: ..., Tratamiento: ..., Exámenes: ..., Próximos pasos: ..., Estado: ... Si algo no se alcanza a leer, dilo con cautela. Omite campos que no aparezcan.';
+  return `${documentInstruction} Devuelve SOLO JSON válido, sin markdown, sin comentarios y sin bloques de código. Usa exactamente esta forma:
+{
+  "summary": "texto plano con saltos de línea",
+  "detectedDiagnoses": ["..."],
+  "detectedConditions": ["..."],
+  "detectedMedications": [
+    {
+      "name": "...",
+      "dosage": "...",
+      "frequency": "...",
+      "status": "active | suspended | mentioned",
+      "notes": "..."
+    }
+  ],
+  "detectedPendingStudies": ["..."],
+  "detectedControls": [
+    {
+      "description": "...",
+      "interval": "...",
+      "suggestedSpecialty": "..."
+    }
+  ],
+  "confidenceNotes": ["..."]
+}
+
+Reglas:
+- "summary" debe ser texto plano, sin markdown, con una línea por ítem cuando aplique:
+  Documento: ...
+  Motivo: ...
+  Hallazgos: ...
+  Diagnóstico: ...
+  Tratamiento: ...
+  Exámenes: ...
+  Próximos pasos: ...
+  Estado: ...
+- Si un dato no aparece, usa arreglo vacío o cadena vacía en campos opcionales.
+- "detectedDiagnoses" es para diagnósticos concretos.
+- "detectedConditions" es para patologías, antecedentes o condiciones persistentes.
+- "detectedMedications" solo incluye medicamentos mencionados explícitamente.
+- "detectedPendingStudies" incluye laboratorios, imágenes o estudios ordenados o pendientes.
+- "detectedControls" incluye controles o seguimientos sugeridos, con intervalo si aparece.
+- "confidenceNotes" debe contener cautelas útiles si el documento es ambiguo, borroso o incompleto.
+- No inventes datos.`;
 }
 
 function trimSummary(summary: string) {
@@ -132,6 +184,195 @@ function trimSummary(summary: string) {
     .trim()
     .replace(/\r\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n');
+}
+
+function sanitizeJsonLikeResponse(raw: string) {
+  const trimmed = raw.trim();
+  const withoutFence = trimmed
+    .replace(/^```json\s*/i, '')
+    .replace(/^```\s*/i, '')
+    .replace(/\s*```$/i, '')
+    .trim();
+  const firstBrace = withoutFence.indexOf('{');
+  const lastBrace = withoutFence.lastIndexOf('}');
+
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    return withoutFence.slice(firstBrace, lastBrace + 1);
+  }
+
+  return withoutFence;
+}
+
+function normalizeStringArray(value: unknown) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const seen = new Set<string>();
+  const values: string[] = [];
+
+  for (const item of value) {
+    if (typeof item !== 'string') {
+      continue;
+    }
+
+    const normalized = item.trim().replace(/\s+/g, ' ');
+    if (!normalized) {
+      continue;
+    }
+
+    const dedupeKey = normalized.toLowerCase();
+    if (seen.has(dedupeKey)) {
+      continue;
+    }
+
+    seen.add(dedupeKey);
+    values.push(normalized);
+  }
+
+  return values;
+}
+
+function normalizeMedicationStatus(value: unknown): DocumentStructuredMedicationStatus {
+  if (value === 'active' || value === 'suspended' || value === 'mentioned') {
+    return value;
+  }
+
+  return 'mentioned';
+}
+
+function normalizeStructuredMedications(value: unknown): DocumentStructuredMedication[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const seen = new Set<string>();
+  const medications: DocumentStructuredMedication[] = [];
+
+  for (const item of value) {
+    if (!item || typeof item !== 'object') {
+      continue;
+    }
+
+    const candidate = item as Record<string, unknown>;
+    const name = typeof candidate.name === 'string' ? candidate.name.trim() : '';
+    if (!name) {
+      continue;
+    }
+
+    const medication: DocumentStructuredMedication = {
+      name,
+      status: normalizeMedicationStatus(candidate.status),
+    };
+
+    if (typeof candidate.dosage === 'string' && candidate.dosage.trim()) {
+      medication.dosage = candidate.dosage.trim();
+    }
+
+    if (typeof candidate.frequency === 'string' && candidate.frequency.trim()) {
+      medication.frequency = candidate.frequency.trim();
+    }
+
+    if (typeof candidate.notes === 'string' && candidate.notes.trim()) {
+      medication.notes = candidate.notes.trim();
+    }
+
+    const dedupeKey = [
+      medication.name.toLowerCase(),
+      medication.dosage?.toLowerCase() ?? '',
+      medication.frequency?.toLowerCase() ?? '',
+      medication.status,
+    ].join('|');
+
+    if (seen.has(dedupeKey)) {
+      continue;
+    }
+
+    seen.add(dedupeKey);
+    medications.push(medication);
+  }
+
+  return medications;
+}
+
+function normalizeStructuredControls(value: unknown): DocumentStructuredControl[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const seen = new Set<string>();
+  const controls: DocumentStructuredControl[] = [];
+
+  for (const item of value) {
+    if (!item || typeof item !== 'object') {
+      continue;
+    }
+
+    const candidate = item as Record<string, unknown>;
+    const description =
+      typeof candidate.description === 'string' ? candidate.description.trim() : '';
+    if (!description) {
+      continue;
+    }
+
+    const control: DocumentStructuredControl = { description };
+
+    if (typeof candidate.interval === 'string' && candidate.interval.trim()) {
+      control.interval = candidate.interval.trim();
+    }
+
+    if (
+      typeof candidate.suggestedSpecialty === 'string' &&
+      candidate.suggestedSpecialty.trim()
+    ) {
+      control.suggestedSpecialty = candidate.suggestedSpecialty.trim();
+    }
+
+    const dedupeKey = [
+      control.description.toLowerCase(),
+      control.interval?.toLowerCase() ?? '',
+      control.suggestedSpecialty?.toLowerCase() ?? '',
+    ].join('|');
+
+    if (seen.has(dedupeKey)) {
+      continue;
+    }
+
+    seen.add(dedupeKey);
+    controls.push(control);
+  }
+
+  return controls;
+}
+
+function parseStructuredSummary(rawText: string): ParsedStructuredSummary {
+  let parsed: Record<string, unknown>;
+
+  try {
+    parsed = JSON.parse(sanitizeJsonLikeResponse(rawText)) as Record<string, unknown>;
+  } catch (error) {
+    throw new Error(
+      `La IA devolvió una respuesta estructurada inválida: ${summarizeOpenAiError(error)}`,
+      { cause: error }
+    );
+  }
+
+  const summary = typeof parsed.summary === 'string' ? trimSummary(parsed.summary) : '';
+  if (!summary) {
+    throw new Error('La IA no devolvió un resumen legible para este documento.');
+  }
+
+  return {
+    summary,
+    structuredData: {
+      detectedDiagnoses: normalizeStringArray(parsed.detectedDiagnoses),
+      detectedConditions: normalizeStringArray(parsed.detectedConditions),
+      detectedMedications: normalizeStructuredMedications(parsed.detectedMedications),
+      detectedPendingStudies: normalizeStringArray(parsed.detectedPendingStudies),
+      detectedControls: normalizeStructuredControls(parsed.detectedControls),
+      confidenceNotes: normalizeStringArray(parsed.confidenceNotes),
+    },
+  };
 }
 
 async function streamToBuffer(stream: Readable) {
@@ -200,7 +441,7 @@ async function generateSummary(document: Document) {
   }
 
   const base64 = buffer.toString('base64');
-  const summary =
+  const result =
     config.provider === 'openai'
       ? await generateOpenAiSummary({
           apiKey: config.apiKey,
@@ -216,14 +457,11 @@ async function generateSummary(document: Document) {
           contentType,
         });
 
-  if (!summary) {
-    throw new Error('La IA no devolvió un resumen utilizable para este documento.');
-  }
-
   return {
-    summary,
+    summary: result.summary,
     provider: config.provider,
     model: config.model,
+    structuredData: result.structuredData,
   };
 }
 
@@ -283,7 +521,7 @@ async function generateOpenAiSummary(input: {
   }
 
   const data = (await response.json()) as { output_text?: string };
-  return trimSummary(data.output_text ?? '');
+  return parseStructuredSummary(data.output_text ?? '');
 }
 
 async function generateGeminiSummary(input: {
@@ -333,15 +571,14 @@ async function generateGeminiSummary(input: {
     }>;
   };
 
-  const summary = trimSummary(
+  const rawText =
     data.candidates
       ?.flatMap((candidate) => candidate.content?.parts ?? [])
       .map((part) => part.text?.trim())
       .filter((text): text is string => Boolean(text))
-      .join('\n') ?? ''
-  );
+      .join('\n') ?? '';
 
-  return summary;
+  return parseStructuredSummary(rawText);
 }
 
 async function processDocumentSummary(documentId: string, trigger: SummaryTrigger) {
@@ -371,6 +608,7 @@ async function processDocumentSummary(documentId: string, trigger: SummaryTrigge
     document.aiSummaryUpdatedAt = new Date();
     document.aiSummaryProvider = generated.provider;
     document.aiSummaryModel = generated.model;
+    document.aiStructuredData = generated.structuredData;
     document.aiSummaryLastAction =
       trigger === 'generated'
         ? DocumentAiSummaryAction.GENERATED
@@ -442,6 +680,7 @@ export async function queueDocumentSummaryByTrigger(
 
   if (trigger === 'regenerated') {
     document.aiSummary = undefined;
+    document.aiStructuredData = undefined;
   }
   document.aiSummaryStatus = DocumentAiSummaryStatus.PENDING;
   document.aiSummaryError = undefined;

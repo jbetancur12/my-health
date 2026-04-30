@@ -1,6 +1,10 @@
 import type {
   AppDataBundleDto,
   AppointmentDocumentPayload,
+  DocumentStructuredControlDto,
+  DocumentStructuredDataDto,
+  DocumentStructuredMedicationDto,
+  DocumentStructuredMedicationStatus,
   AppointmentDto,
   AppointmentPayload,
   AppointmentTagDto,
@@ -26,6 +30,13 @@ import type {
 } from '../../../shared/contracts/http';
 
 export type { DocumentType };
+export type { DocumentStructuredMedicationStatus };
+
+export type DocumentStructuredMedication = DocumentStructuredMedicationDto;
+
+export type DocumentStructuredControl = DocumentStructuredControlDto;
+
+export type DocumentStructuredData = DocumentStructuredDataDto;
 
 export interface Document {
   id: string;
@@ -41,6 +52,7 @@ export interface Document {
   aiSummaryProvider?: 'openai' | 'gemini';
   aiSummaryModel?: string;
   aiSummaryLastAction?: 'generated' | 'retried' | 'regenerated';
+  aiStructuredData?: DocumentStructuredData;
 }
 
 export interface Appointment {

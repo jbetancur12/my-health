@@ -85,6 +85,34 @@ function getSummaryMetaLine(document: Document) {
   return metaParts.join(' · ');
 }
 
+function hasStructuredContent(document: Document) {
+  const data = document.aiStructuredData;
+  if (!data) {
+    return false;
+  }
+
+  return (
+    data.detectedDiagnoses.length > 0 ||
+    data.detectedConditions.length > 0 ||
+    data.detectedMedications.length > 0 ||
+    data.detectedPendingStudies.length > 0 ||
+    data.detectedControls.length > 0 ||
+    data.confidenceNotes.length > 0
+  );
+}
+
+function renderStructuredStringList(items: string[], colorClass: string) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {items.map((item) => (
+        <span key={item} className={`rounded-full px-3 py-1 text-xs font-medium ${colorClass}`}>
+          {item}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export function AppointmentDetail({
   appointment,
   onClose,
@@ -277,6 +305,107 @@ export function AppointmentDetail({
                             );
                           })}
                         </div>
+                        {hasStructuredContent(document) && document.aiStructuredData && (
+                          <div className="space-y-3 rounded-md border border-gray-200 bg-white p-3">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                              Datos estructurados detectados
+                            </p>
+
+                            {document.aiStructuredData.detectedDiagnoses.length > 0 && (
+                              <div className="space-y-2">
+                                <p className="text-xs font-medium text-gray-700">Diagnósticos</p>
+                                {renderStructuredStringList(
+                                  document.aiStructuredData.detectedDiagnoses,
+                                  'bg-red-50 text-red-700'
+                                )}
+                              </div>
+                            )}
+
+                            {document.aiStructuredData.detectedConditions.length > 0 && (
+                              <div className="space-y-2">
+                                <p className="text-xs font-medium text-gray-700">Patologías o antecedentes</p>
+                                {renderStructuredStringList(
+                                  document.aiStructuredData.detectedConditions,
+                                  'bg-purple-50 text-purple-700'
+                                )}
+                              </div>
+                            )}
+
+                            {document.aiStructuredData.detectedMedications.length > 0 && (
+                              <div className="space-y-2">
+                                <p className="text-xs font-medium text-gray-700">Medicamentos</p>
+                                <div className="space-y-2">
+                                  {document.aiStructuredData.detectedMedications.map((medication) => (
+                                    <div
+                                      key={`${medication.name}-${medication.dosage ?? ''}-${medication.frequency ?? ''}-${medication.status}`}
+                                      className="rounded-md border border-green-100 bg-green-50 px-3 py-2 text-sm text-green-900"
+                                    >
+                                      <p className="font-medium">{medication.name}</p>
+                                      <p className="text-xs text-green-800">
+                                        {[
+                                          medication.dosage,
+                                          medication.frequency,
+                                          medication.status === 'active'
+                                            ? 'Activo'
+                                            : medication.status === 'suspended'
+                                              ? 'Suspendido'
+                                              : 'Mencionado',
+                                        ]
+                                          .filter(Boolean)
+                                          .join(' · ')}
+                                      </p>
+                                      {medication.notes && (
+                                        <p className="mt-1 text-xs text-green-800">{medication.notes}</p>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {document.aiStructuredData.detectedPendingStudies.length > 0 && (
+                              <div className="space-y-2">
+                                <p className="text-xs font-medium text-gray-700">Estudios pendientes</p>
+                                {renderStructuredStringList(
+                                  document.aiStructuredData.detectedPendingStudies,
+                                  'bg-amber-50 text-amber-700'
+                                )}
+                              </div>
+                            )}
+
+                            {document.aiStructuredData.detectedControls.length > 0 && (
+                              <div className="space-y-2">
+                                <p className="text-xs font-medium text-gray-700">Controles sugeridos</p>
+                                <div className="space-y-2">
+                                  {document.aiStructuredData.detectedControls.map((control) => (
+                                    <div
+                                      key={`${control.description}-${control.interval ?? ''}-${control.suggestedSpecialty ?? ''}`}
+                                      className="rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-900"
+                                    >
+                                      <p className="font-medium">{control.description}</p>
+                                      <p className="text-xs text-blue-800">
+                                        {[control.interval, control.suggestedSpecialty]
+                                          .filter(Boolean)
+                                          .join(' · ')}
+                                      </p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {document.aiStructuredData.confidenceNotes.length > 0 && (
+                              <div className="space-y-2">
+                                <p className="text-xs font-medium text-gray-700">Notas de confianza</p>
+                                <ul className="list-disc space-y-1 pl-5 text-xs text-gray-600">
+                                  {document.aiStructuredData.confidenceNotes.map((note) => (
+                                    <li key={note}>{note}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        )}
                         {document.aiSummaryUpdatedAt && (
                           <p className="text-xs text-gray-500">
                             Actualizado el{' '}

@@ -12,6 +12,33 @@ export interface AppointmentDocumentPayload {
   date: string;
 }
 
+export type DocumentStructuredMedicationStatus = 'active' | 'suspended' | 'mentioned';
+
+export interface DocumentStructuredMedicationDto {
+  name: string;
+  dosage?: string;
+  frequency?: string;
+  status: DocumentStructuredMedicationStatus;
+  notes?: string;
+}
+
+export interface DocumentStructuredControlDto {
+  description: string;
+  interval?: string;
+  suggestedSpecialty?: string;
+}
+
+export interface DocumentStructuredDataDto {
+  sourceDocumentId: string;
+  sourceAppointmentId: string;
+  detectedDiagnoses: string[];
+  detectedConditions: string[];
+  detectedMedications: DocumentStructuredMedicationDto[];
+  detectedPendingStudies: string[];
+  detectedControls: DocumentStructuredControlDto[];
+  confidenceNotes: string[];
+}
+
 export interface AppointmentPayload {
   date: string;
   specialty: string;
@@ -119,6 +146,7 @@ export interface AppointmentDocumentDto extends AppointmentDocumentPayload {
   aiSummaryProvider?: 'openai' | 'gemini';
   aiSummaryModel?: string;
   aiSummaryLastAction?: 'generated' | 'retried' | 'regenerated';
+  aiStructuredData?: DocumentStructuredDataDto;
 }
 
 export interface AppointmentDto {

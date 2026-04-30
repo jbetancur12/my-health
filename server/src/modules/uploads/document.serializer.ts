@@ -18,5 +18,12 @@ export function serializeAppointmentDocument(document: Document): AppointmentDoc
     aiSummaryProvider: document.aiSummaryProvider,
     aiSummaryModel: document.aiSummaryModel,
     aiSummaryLastAction: document.aiSummaryLastAction,
+    aiStructuredData: document.aiStructuredData
+      ? {
+          sourceDocumentId: document.id,
+          sourceAppointmentId: document.appointment.id,
+          ...document.aiStructuredData,
+        }
+      : undefined,
   };
 }

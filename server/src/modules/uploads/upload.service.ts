@@ -68,9 +68,8 @@ export async function uploadDocumentFile({ appointmentId, documentId, file }: Up
   document.aiSummaryProvider = undefined;
   document.aiSummaryModel = undefined;
   document.aiSummaryLastAction = undefined;
-  document.aiSummaryStatus = isDocumentSummaryEnabled()
-    ? DocumentAiSummaryStatus.PENDING
-    : DocumentAiSummaryStatus.IDLE;
+  document.aiStructuredData = undefined;
+  document.aiSummaryStatus = DocumentAiSummaryStatus.IDLE;
   await em.flush();
 
   if (isDocumentSummaryEnabled()) {

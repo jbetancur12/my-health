@@ -23,6 +23,31 @@ export enum DocumentAiSummaryAction {
   REGENERATED = 'regenerated',
 }
 
+export type DocumentStructuredMedicationStatus = 'active' | 'suspended' | 'mentioned';
+
+export interface DocumentStructuredMedication {
+  name: string;
+  dosage?: string;
+  frequency?: string;
+  status: DocumentStructuredMedicationStatus;
+  notes?: string;
+}
+
+export interface DocumentStructuredControl {
+  description: string;
+  interval?: string;
+  suggestedSpecialty?: string;
+}
+
+export interface DocumentStructuredData {
+  detectedDiagnoses: string[];
+  detectedConditions: string[];
+  detectedMedications: DocumentStructuredMedication[];
+  detectedPendingStudies: string[];
+  detectedControls: DocumentStructuredControl[];
+  confidenceNotes: string[];
+}
+
 @Entity({ tableName: 'documents' })
 export class Document {
   @PrimaryKey({ type: 'uuid' })
@@ -69,6 +94,9 @@ export class Document {
 
   @Enum({ items: () => DocumentAiSummaryAction, nullable: true })
   aiSummaryLastAction?: DocumentAiSummaryAction;
+
+  @Property({ type: 'json', nullable: true })
+  aiStructuredData?: DocumentStructuredData;
 
   @ManyToOne(() => Appointment)
   appointment!: Appointment;
