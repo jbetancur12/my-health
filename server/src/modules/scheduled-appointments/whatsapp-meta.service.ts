@@ -4,6 +4,7 @@ import { NotificationPreference } from '../../entities/NotificationPreference.js
 import { ScheduledAppointment } from '../../entities/ScheduledAppointment.js';
 import { getOrm } from '../../orm.js';
 import { findFirst } from '../shared/find-first.js';
+import { ValidationError } from '../shared/validation.js';
 
 const DEFAULT_META_GRAPH_API_VERSION = 'v23.0';
 const DEFAULT_REMINDER_INTERVAL_MS = 15 * 60 * 1000;
@@ -91,14 +92,17 @@ async function sendMetaTemplateReminder(
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Meta WhatsApp respondió ${response.status}: ${errorText}`);
+    throw new ValidationError(
+      `Meta WhatsApp respondió ${response.status}: ${errorText}`,
+      response.status >= 500 ? 502 : 400
+    );
   }
 }
 
 async function getReminderContext() {
   const config = getMetaWhatsappConfig();
   if (!config) {
-    throw new Error('WhatsApp no está configurado en este entorno.');
+    throw new ValidationError('WhatsApp no está configurado en este entorno.');
   }
 
   const orm = await getOrm();
@@ -106,20 +110,22 @@ async function getReminderContext() {
   const preferences = await findFirst(em, NotificationPreference, { createdAt: 'asc' });
 
   if (!preferences?.whatsappEnabled) {
-    throw new Error('Activa WhatsApp en configuración antes de enviar recordatorios.');
+    throw new ValidationError('Activa WhatsApp en configuración antes de enviar recordatorios.');
   }
 
   if (!preferences.whatsappOptIn) {
-    throw new Error('Debes marcar el consentimiento de WhatsApp antes de enviar recordatorios.');
+    throw new ValidationError(
+      'Debes marcar el consentimiento de WhatsApp antes de enviar recordatorios.'
+    );
   }
 
   if (!preferences.phone) {
-    throw new Error('Configura un número de WhatsApp antes de enviar recordatorios.');
+    throw new ValidationError('Configura un número de WhatsApp antes de enviar recordatorios.');
   }
 
   const to = normalizeWhatsappPhone(preferences.phone);
   if (!to) {
-    throw new Error('El número de WhatsApp no tiene un formato válido.');
+    throw new ValidationError('El número de WhatsApp no tiene un formato válido.');
   }
 
   return { config, em, preferences, to };
