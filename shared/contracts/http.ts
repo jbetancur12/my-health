@@ -66,6 +66,8 @@ export interface NotificationPreferencePayload {
   phone?: string;
   emailEnabled?: boolean;
   smsEnabled?: boolean;
+  whatsappEnabled?: boolean;
+  whatsappOptIn?: boolean;
   reminderDays?: number[];
 }
 
@@ -174,9 +176,46 @@ export interface NotificationPreferencesDto {
   phone: string;
   emailEnabled: boolean;
   smsEnabled: boolean;
+  whatsappEnabled: boolean;
+  whatsappOptIn: boolean;
   reminderDays: number[];
   createdAt?: string;
   updatedAt?: string;
+}
+
+export type ScheduledAppointmentStatus =
+  | 'scheduled'
+  | 'confirmed'
+  | 'completed'
+  | 'canceled'
+  | 'no_show'
+  | 'converted';
+
+export interface ScheduledAppointmentPayload {
+  scheduledAt: string;
+  specialty: string;
+  doctor: string;
+  location?: string;
+  notes?: string;
+  expectedDocuments?: AppointmentDocumentPayload[];
+  status?: ScheduledAppointmentStatus;
+}
+
+export interface ScheduledAppointmentDto {
+  id: string;
+  scheduledAt: string;
+  specialty: string;
+  doctor: string;
+  location?: string;
+  notes?: string;
+  expectedDocuments: AppointmentDocumentDto[];
+  status: ScheduledAppointmentStatus;
+  reminderSentOffsets: number[];
+  lastWhatsappReminderAt?: string;
+  lastWhatsappReminderError?: string;
+  convertedAppointmentId?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface VitalSignDto {

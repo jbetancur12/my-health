@@ -8,6 +8,7 @@ import { Document } from './entities/Document.js';
 import { Medication } from './entities/Medication.js';
 import { MedicalProfile } from './entities/MedicalProfile.js';
 import { NotificationPreference } from './entities/NotificationPreference.js';
+import { ScheduledAppointment } from './entities/ScheduledAppointment.js';
 import { TagDefinition } from './entities/TagDefinition.js';
 import { Vaccine } from './entities/Vaccine.js';
 import { VitalSign } from './entities/VitalSign.js';
@@ -30,6 +31,7 @@ export default defineConfig({
     Medication,
     MedicalProfile,
     NotificationPreference,
+    ScheduledAppointment,
     TagDefinition,
     Vaccine,
     VitalSign,

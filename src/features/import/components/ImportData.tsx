@@ -130,6 +130,8 @@ export function ImportData({ onImport }: ImportDataProps) {
               phone: data.notificationPreferences.phone,
               emailEnabled: data.notificationPreferences.emailEnabled,
               smsEnabled: data.notificationPreferences.smsEnabled,
+              whatsappEnabled: data.notificationPreferences.whatsappEnabled ?? false,
+              whatsappOptIn: data.notificationPreferences.whatsappOptIn ?? false,
               reminderDays: data.notificationPreferences.reminderDays,
             }
           : undefined,

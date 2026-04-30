@@ -17,6 +17,12 @@ export class NotificationPreference {
   @Property({ type: 'boolean' })
   smsEnabled = false;
 
+  @Property({ type: 'boolean' })
+  whatsappEnabled = false;
+
+  @Property({ type: 'boolean' })
+  whatsappOptIn = false;
+
   @Property({ type: 'json' })
   reminderDays: number[] = [7, 3, 1];
 

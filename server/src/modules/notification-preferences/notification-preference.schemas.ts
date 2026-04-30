@@ -15,6 +15,14 @@ export function parseNotificationPreferenceInput(input: unknown): NotificationPr
     phone: parseOptionalString(record.phone),
     emailEnabled: parseBoolean(record.emailEnabled, 'Notification emailEnabled flag is required'),
     smsEnabled: parseBoolean(record.smsEnabled, 'Notification smsEnabled flag is required'),
+    whatsappEnabled: parseBoolean(
+      record.whatsappEnabled,
+      'Notification whatsappEnabled flag is required'
+    ),
+    whatsappOptIn: parseBoolean(
+      record.whatsappOptIn,
+      'Notification whatsappOptIn flag is required'
+    ),
     reminderDays: parseReminderDays(record.reminderDays),
   };
 }

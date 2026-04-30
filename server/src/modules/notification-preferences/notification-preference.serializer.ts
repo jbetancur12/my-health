@@ -10,6 +10,8 @@ export function serializeNotificationPreference(
       phone: '',
       emailEnabled: false,
       smsEnabled: false,
+      whatsappEnabled: false,
+      whatsappOptIn: false,
       reminderDays: [7, 3, 1],
     };
   }
@@ -20,6 +22,8 @@ export function serializeNotificationPreference(
     phone: preference.phone ?? '',
     emailEnabled: preference.emailEnabled,
     smsEnabled: preference.smsEnabled,
+    whatsappEnabled: preference.whatsappEnabled,
+    whatsappOptIn: preference.whatsappOptIn,
     reminderDays: preference.reminderDays,
     createdAt: preference.createdAt.toISOString(),
     updatedAt: preference.updatedAt.toISOString(),

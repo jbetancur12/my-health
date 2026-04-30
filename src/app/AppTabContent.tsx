@@ -15,6 +15,7 @@ import type {
   MedicalProfile,
   Medication,
   NotificationPreferences,
+  ScheduledAppointment,
   Vaccine,
   VitalSignReading,
 } from '../shared/api/contracts';
@@ -96,6 +97,9 @@ interface AppTabContentProps {
   notificationPreferencesLoading: boolean;
   specialties: string[];
   stats: AppointmentStats;
+  scheduledAppointments: ScheduledAppointment[];
+  scheduledAppointmentsError: string | null;
+  scheduledAppointmentsLoading: boolean;
   tags: UiAppointmentTag[];
   vaccines: Vaccine[];
   vaccinesError: string | null;
@@ -119,6 +123,8 @@ interface AppTabContentProps {
   onRemoveVaccine: (id: string) => void | Promise<unknown>;
   onRemoveVitalSign: (id: string) => void | Promise<unknown>;
   onSearch: (filters: SearchFilters) => void;
+  onScheduleAppointment: () => void;
+  onScheduledAppointmentClick: (scheduledAppointment: ScheduledAppointment) => void;
   onSettingsUpdate: (preferences: NotificationPreferences) => void | Promise<unknown>;
   onSpecialtyFilterChange: (value: string) => void;
   onTimelineEventClick: (event: { type: string; data: unknown }) => void;
@@ -150,6 +156,9 @@ export function AppTabContent({
   notificationPreferencesLoading,
   specialties,
   stats,
+  scheduledAppointments,
+  scheduledAppointmentsError,
+  scheduledAppointmentsLoading,
   tags,
   vaccines,
   vaccinesError,
@@ -173,6 +182,8 @@ export function AppTabContent({
   onRemoveVaccine,
   onRemoveVitalSign,
   onSearch,
+  onScheduleAppointment,
+  onScheduledAppointmentClick,
   onSettingsUpdate,
   onSpecialtyFilterChange,
   onTimelineEventClick,
@@ -250,7 +261,7 @@ export function AppTabContent({
   }
 
   if (activeTab === 'calendar') {
-    if (appointmentsLoading || controlsLoading) {
+    if (appointmentsLoading || controlsLoading || scheduledAppointmentsLoading) {
       return (
         <FeatureStatePanel
           variant="loading"
@@ -260,12 +271,17 @@ export function AppTabContent({
       );
     }
 
-    if (appointmentsError || controlsError) {
+    if (appointmentsError || controlsError || scheduledAppointmentsError) {
       return (
         <FeatureStatePanel
           variant="error"
           title="No pudimos cargar el calendario"
-          message={appointmentsError ?? controlsError ?? 'Intenta nuevamente en unos segundos.'}
+          message={
+            appointmentsError ??
+            controlsError ??
+            scheduledAppointmentsError ??
+            'Intenta nuevamente en unos segundos.'
+          }
         />
       );
     }
@@ -275,8 +291,11 @@ export function AppTabContent({
         <CalendarView
           appointments={appointments}
           controls={controls}
+          scheduledAppointments={scheduledAppointments}
           onAppointmentClick={onAppointmentClick}
           onControlClick={onControlClick}
+          onScheduledAppointmentClick={onScheduledAppointmentClick}
+          onScheduleAppointment={onScheduleAppointment}
         />
       </LazySection>
     );

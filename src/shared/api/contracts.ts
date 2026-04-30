@@ -15,6 +15,9 @@ import type {
   MedicalProfilePayload,
   NotificationPreferencesDto,
   NotificationPreferencePayload,
+  ScheduledAppointmentDto,
+  ScheduledAppointmentPayload,
+  ScheduledAppointmentStatus,
   ReportDateRange,
   VaccineDto,
   VaccinePayload,
@@ -102,7 +105,26 @@ export interface NotificationPreferences {
   phone: string;
   emailEnabled: boolean;
   smsEnabled: boolean;
+  whatsappEnabled: boolean;
+  whatsappOptIn: boolean;
   reminderDays: number[];
+}
+
+export interface ScheduledAppointment {
+  id: string;
+  scheduledAt: Date;
+  specialty: string;
+  doctor: string;
+  location?: string;
+  notes?: string;
+  expectedDocuments: Document[];
+  status: ScheduledAppointmentStatus;
+  reminderSentOffsets: number[];
+  lastWhatsappReminderAt?: Date;
+  lastWhatsappReminderError?: string;
+  convertedAppointmentId?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface VitalSignReading {
@@ -154,6 +176,7 @@ export type ExecutiveReportApiPayload = ExecutiveReportPayload;
 export type MedicationApiPayload = MedicationPayload;
 export type MedicalProfileApiPayload = MedicalProfilePayload;
 export type NotificationPreferencesApiPayload = NotificationPreferencePayload;
+export type ScheduledAppointmentApiPayload = ScheduledAppointmentPayload;
 export type VitalSignApiPayload = VitalSignPayload;
 export type VaccineApiPayload = VaccinePayload;
 export type AppointmentApiDto = AppointmentDto;
@@ -162,8 +185,9 @@ export type MedicationApiDto = MedicationDto;
 export type AppointmentTagApiDto = AppointmentTagDto;
 export type MedicalProfileApiDto = MedicalProfileDto;
 export type NotificationPreferencesApiDto = NotificationPreferencesDto;
+export type ScheduledAppointmentApiDto = ScheduledAppointmentDto;
 export type VitalSignApiDto = VitalSignDto;
 export type VaccineApiDto = VaccineDto;
 export type AppDataBundleApiDto = AppDataBundleDto;
 export type AppointmentDocumentApiPayload = AppointmentDocumentPayload;
-export type { ReportDateRange };
+export type { ReportDateRange, ScheduledAppointmentStatus };

@@ -4,6 +4,7 @@ import { Document, DocumentType } from '../../entities/Document.js';
 import { Medication } from '../../entities/Medication.js';
 import { MedicalProfile } from '../../entities/MedicalProfile.js';
 import { NotificationPreference } from '../../entities/NotificationPreference.js';
+import { ScheduledAppointment } from '../../entities/ScheduledAppointment.js';
 import { TagDefinition } from '../../entities/TagDefinition.js';
 import { Vaccine } from '../../entities/Vaccine.js';
 import { VitalSign } from '../../entities/VitalSign.js';
@@ -14,6 +15,7 @@ import type { AppDataImportInput } from '../app-data/app-data.types.js';
 import type { MedicalProfileInput } from '../medical-profile/medical-profile.types.js';
 import type { MedicationInput } from '../medications/medication.types.js';
 import type { NotificationPreferenceInput } from '../notification-preferences/notification-preference.types.js';
+import type { ScheduledAppointmentInput } from '../scheduled-appointments/scheduled-appointment.types.js';
 import type { TagDefinitionInput } from '../tags/tag.types.js';
 import type { VaccineInput } from '../vaccines/vaccine.types.js';
 import type { VitalSignInput } from '../vital-signs/vital-sign.types.js';
@@ -149,9 +151,67 @@ export function updateNotificationPreferenceEntity(
   preferences.phone = input.phone?.trim() || undefined;
   preferences.emailEnabled = Boolean(input.emailEnabled);
   preferences.smsEnabled = Boolean(input.smsEnabled);
+  preferences.whatsappEnabled = Boolean(input.whatsappEnabled);
+  preferences.whatsappOptIn = Boolean(input.whatsappOptIn);
   preferences.reminderDays = (input.reminderDays ?? [7, 3, 1]).filter((day) =>
     Number.isFinite(day)
   );
+}
+
+export function createScheduledAppointmentEntity(input: ScheduledAppointmentInput) {
+  const maybeInput = input as ScheduledAppointmentInput & { id?: string };
+  const scheduledAppointment = new ScheduledAppointment();
+  scheduledAppointment.id = maybeInput.id || crypto.randomUUID();
+  scheduledAppointment.scheduledAt = new Date(input.scheduledAt);
+  scheduledAppointment.specialty = input.specialty.trim();
+  scheduledAppointment.doctor = input.doctor.trim();
+  scheduledAppointment.location = input.location?.trim() || undefined;
+  scheduledAppointment.notes = input.notes?.trim() || undefined;
+  scheduledAppointment.expectedDocuments = (input.expectedDocuments ?? []).map((document) => ({
+    id: document.id || crypto.randomUUID(),
+    type: document.type,
+    name: document.name?.trim() || 'Documento esperado',
+    date: document.date,
+    aiSummaryStatus: 'idle',
+  }));
+  scheduledAppointment.status = input.status ?? 'scheduled';
+  scheduledAppointment.reminderSentOffsets = [];
+  scheduledAppointment.lastWhatsappReminderAt = undefined;
+  scheduledAppointment.lastWhatsappReminderError = undefined;
+  scheduledAppointment.convertedAppointmentId = undefined;
+  return scheduledAppointment;
+}
+
+export function updateScheduledAppointmentEntity(
+  scheduledAppointment: ScheduledAppointment,
+  input: Partial<ScheduledAppointmentInput>
+) {
+  if (input.scheduledAt) {
+    scheduledAppointment.scheduledAt = new Date(input.scheduledAt);
+    scheduledAppointment.reminderSentOffsets = [];
+    scheduledAppointment.lastWhatsappReminderAt = undefined;
+    scheduledAppointment.lastWhatsappReminderError = undefined;
+  }
+  if (input.specialty) scheduledAppointment.specialty = input.specialty.trim();
+  if (input.doctor) scheduledAppointment.doctor = input.doctor.trim();
+  if (input.location !== undefined) {
+    scheduledAppointment.location = input.location?.trim() || undefined;
+  }
+  if (input.notes !== undefined) {
+    scheduledAppointment.notes = input.notes?.trim() || undefined;
+  }
+  if (Array.isArray(input.expectedDocuments)) {
+    scheduledAppointment.expectedDocuments = input.expectedDocuments.map((document) => ({
+      id: document.id || crypto.randomUUID(),
+      type: document.type,
+      name: document.name?.trim() || 'Documento esperado',
+      date: document.date,
+      aiSummaryStatus: 'idle',
+    }));
+  }
+  if (input.status) {
+    scheduledAppointment.status = input.status;
+  }
 }
 
 export function createTagDefinitionEntity(input: TagDefinitionInput) {

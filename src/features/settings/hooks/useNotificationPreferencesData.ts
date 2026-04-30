@@ -7,6 +7,8 @@ const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   phone: '',
   emailEnabled: false,
   smsEnabled: false,
+  whatsappEnabled: false,
+  whatsappOptIn: false,
   reminderDays: [7, 3, 1],
 };
 

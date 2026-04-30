@@ -116,6 +116,38 @@ Ejemplos:
 - `AI_SUMMARY_PROVIDER=gemini` para usar Google AI Studio / Gemini
 - `AI_SUMMARY_PROVIDER=disabled` para desactivar los resumenes sin tocar el resto del flujo de archivos
 
+## Citas programadas y recordatorios por WhatsApp
+
+La app ahora puede manejar citas programadas por separado de las citas ya realizadas.
+
+- una cita programada aparece en el calendario
+- puede registrar documentos esperados antes de la atencion
+- luego puedes convertirla en una cita real ya prellenada con especialidad, medico, fecha y documentos esperados
+
+Recordatorios por WhatsApp:
+
+- usan Meta Cloud API
+- toman el telefono guardado en configuracion de notificaciones
+- requieren `whatsappEnabled=true` y `whatsappOptIn=true`
+- usan el template indicado en `WHATSAPP_TEMPLATE_APPOINTMENT_REMINDER`
+
+Variables relevantes:
+
+- `WHATSAPP_ACCESS_TOKEN`
+- `WHATSAPP_PHONE_NUMBER_ID`
+- `WHATSAPP_BUSINESS_ACCOUNT_ID`
+- `WHATSAPP_WEBHOOK_VERIFY_TOKEN`
+- `WHATSAPP_TEMPLATE_APPOINTMENT_REMINDER`
+- `WHATSAPP_LANGUAGE_CODE`
+- `META_GRAPH_API_VERSION`
+
+El template actual espera 4 variables en el body:
+
+1. especialidad
+2. medico
+3. fecha y hora de la cita
+4. ubicacion
+
 ## Migraciones
 
 El proyecto usa migraciones reales de MikroORM.

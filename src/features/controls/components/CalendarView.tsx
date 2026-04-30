@@ -2,21 +2,27 @@ import { useState, useMemo } from 'react';
 import Calendar from 'react-calendar';
 import { format, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Calendar as CalendarIcon, Clock, Stethoscope } from 'lucide-react';
-import type { Appointment, Control } from '../../../shared/api/contracts';
+import { Calendar as CalendarIcon, CalendarPlus2, Clock, Stethoscope } from 'lucide-react';
+import type { Appointment, Control, ScheduledAppointment } from '../../../shared/api/contracts';
 
 interface CalendarViewProps {
   appointments: Appointment[];
   controls: Control[];
+  scheduledAppointments: ScheduledAppointment[];
   onAppointmentClick: (appointment: Appointment) => void;
   onControlClick: (control: Control) => void;
+  onScheduledAppointmentClick: (scheduledAppointment: ScheduledAppointment) => void;
+  onScheduleAppointment: () => void;
 }
 
 export function CalendarView({
   appointments,
   controls,
+  scheduledAppointments,
   onAppointmentClick,
   onControlClick,
+  onScheduledAppointmentClick,
+  onScheduleAppointment,
 }: CalendarViewProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [value, setValue] = useState<Date>(new Date());
@@ -27,8 +33,11 @@ export function CalendarView({
         isSameDay(new Date(appointment.date), selectedDate)
       ),
       controls: controls.filter((control) => isSameDay(new Date(control.date), selectedDate)),
+      scheduledAppointments: scheduledAppointments.filter((scheduledAppointment) =>
+        isSameDay(new Date(scheduledAppointment.scheduledAt), selectedDate)
+      ),
     }),
-    [selectedDate, appointments, controls]
+    [selectedDate, appointments, controls, scheduledAppointments]
   );
 
   const tileContent = ({ date }: { date: Date }) => {
@@ -36,13 +45,17 @@ export function CalendarView({
       isSameDay(new Date(appointment.date), date)
     );
     const hasControl = controls.some((control) => isSameDay(new Date(control.date), date));
+    const hasScheduledAppointment = scheduledAppointments.some((scheduledAppointment) =>
+      isSameDay(new Date(scheduledAppointment.scheduledAt), date)
+    );
 
-    if (!hasAppointment && !hasControl) return null;
+    if (!hasAppointment && !hasControl && !hasScheduledAppointment) return null;
 
     return (
       <div className="flex justify-center gap-1 mt-1">
         {hasAppointment && <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>}
         {hasControl && <div className="w-1.5 h-1.5 bg-orange-600 rounded-full"></div>}
+        {hasScheduledAppointment && <div className="w-1.5 h-1.5 bg-emerald-600 rounded-full"></div>}
       </div>
     );
   };
@@ -59,6 +72,13 @@ export function CalendarView({
               <h2 className="text-xl font-semibold text-gray-900">Calendario Médico</h2>
               <p className="text-sm text-gray-600">Vista mensual de citas y controles</p>
             </div>
+            <button
+              onClick={onScheduleAppointment}
+              className="ml-auto flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
+            >
+              <CalendarPlus2 className="h-4 w-4" />
+              Programar cita
+            </button>
           </div>
 
           <div className="calendar-container">
@@ -78,6 +98,7 @@ export function CalendarView({
           <div className="flex items-center gap-6 mt-6 pt-4 border-t border-gray-200">
             <LegendDot color="bg-blue-600" label="Citas médicas" />
             <LegendDot color="bg-orange-600" label="Controles programados" />
+            <LegendDot color="bg-emerald-600" label="Citas agendadas" />
           </div>
         </div>
       </div>
@@ -88,7 +109,9 @@ export function CalendarView({
             {format(selectedDate, "d 'de' MMMM, yyyy", { locale: es })}
           </h3>
 
-          {eventsOnDate.appointments.length === 0 && eventsOnDate.controls.length === 0 ? (
+          {eventsOnDate.appointments.length === 0 &&
+          eventsOnDate.controls.length === 0 &&
+          eventsOnDate.scheduledAppointments.length === 0 ? (
             <div className="text-center py-8 text-gray-400">
               <CalendarIcon className="w-12 h-12 mx-auto mb-2 opacity-30" />
               <p className="text-sm">No hay eventos este día</p>
@@ -127,6 +150,28 @@ export function CalendarView({
                       <p className="font-medium text-orange-900">{control.specialty}</p>
                       <p className="text-sm text-orange-700">{control.type}</p>
                       <p className="text-xs text-orange-600 mt-1">{control.doctor}</p>
+                    </div>
+                  </div>
+                </button>
+              ))}
+
+              {eventsOnDate.scheduledAppointments.map((scheduledAppointment) => (
+                <button
+                  key={scheduledAppointment.id}
+                  onClick={() => onScheduledAppointmentClick(scheduledAppointment)}
+                  className="w-full text-left rounded-lg border border-emerald-200 bg-emerald-50 p-3 transition-colors hover:bg-emerald-100"
+                >
+                  <div className="flex items-start gap-2">
+                    <CalendarPlus2 className="mt-1 h-4 w-4 flex-shrink-0 text-emerald-600" />
+                    <div className="flex-1">
+                      <p className="font-medium text-emerald-900">{scheduledAppointment.specialty}</p>
+                      <p className="text-sm text-emerald-700">{scheduledAppointment.doctor}</p>
+                      <p className="text-xs text-emerald-600 mt-1">
+                        {format(new Date(scheduledAppointment.scheduledAt), "h:mm a", {
+                          locale: es,
+                        })}
+                        {scheduledAppointment.location ? ` • ${scheduledAppointment.location}` : ''}
+                      </p>
                     </div>
                   </div>
                 </button>

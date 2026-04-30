@@ -32,6 +32,13 @@ interface AddAppointmentModalProps {
   existingDoctors: string[];
   existingSpecialties: string[];
   editingAppointment?: Appointment;
+  initialDraft?: {
+    date: Date;
+    specialty: string;
+    doctor: string;
+    documents: Document[];
+    notes?: string;
+  };
   existingControls?: Control[];
   availableTags?: AppointmentTag[];
   onCreateTag?: (tag: Omit<AppointmentTag, 'id'>) => void;
@@ -63,6 +70,7 @@ export function AddAppointmentModal({
   existingDoctors,
   existingSpecialties,
   editingAppointment,
+  initialDraft,
   existingControls = [],
   availableTags,
   onCreateTag,
@@ -77,6 +85,29 @@ export function AddAppointmentModal({
 
   useEffect(() => {
     if (!editingAppointment) {
+      if (initialDraft) {
+        setDate(toDateInputValue(initialDraft.date));
+        setSpecialty(initialDraft.specialty);
+        setDoctor(initialDraft.doctor);
+        setNotes(initialDraft.notes || '');
+        setSelectedTags([]);
+        setDocuments(
+          initialDraft.documents.map((document) => ({
+            type: document.type,
+            name: document.name,
+            date: document.date instanceof Date ? document.date : new Date(document.date),
+            file: document.file,
+            fileUrl: document.fileUrl,
+            aiSummary: undefined,
+            aiSummaryStatus: 'idle',
+            aiSummaryError: undefined,
+            aiSummaryUpdatedAt: undefined,
+          }))
+        );
+        setControls([]);
+        return;
+      }
+
       setDate('');
       setSpecialty('');
       setDoctor('');
@@ -112,7 +143,7 @@ export function AddAppointmentModal({
         type: control.type,
       }))
     );
-  }, [editingAppointment, existingControls]);
+  }, [editingAppointment, existingControls, initialDraft]);
 
   const handleAddDocument = () => {
     setDocuments([

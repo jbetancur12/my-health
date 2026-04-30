@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { AlertCircle, Bell, Check, Clock, Mail, MessageSquare } from 'lucide-react';
+import { AlertCircle, Bell, Check, Clock, Mail, MessageCircleMore, MessageSquare } from 'lucide-react';
 import { requestNotificationPermission } from '../../../shared/lib/notifications';
 import type { NotificationPreferences } from '../../../shared/api/contracts';
 
@@ -14,6 +14,8 @@ export function NotificationSettings({ preferences, onUpdate }: NotificationSett
   const [phone, setPhone] = useState(preferences.phone || '');
   const [emailEnabled, setEmailEnabled] = useState(preferences.emailEnabled);
   const [smsEnabled, setSmsEnabled] = useState(preferences.smsEnabled);
+  const [whatsappEnabled, setWhatsappEnabled] = useState(preferences.whatsappEnabled);
+  const [whatsappOptIn, setWhatsappOptIn] = useState(preferences.whatsappOptIn);
   const [reminderDays, setReminderDays] = useState<number[]>(preferences.reminderDays);
   const [saved, setSaved] = useState(false);
   const [browserNotificationsEnabled, setBrowserNotificationsEnabled] = useState(false);
@@ -59,6 +61,8 @@ export function NotificationSettings({ preferences, onUpdate }: NotificationSett
       phone,
       emailEnabled,
       smsEnabled,
+      whatsappEnabled,
+      whatsappOptIn,
       reminderDays,
     });
     setSaved(true);
@@ -138,6 +142,34 @@ export function NotificationSettings({ preferences, onUpdate }: NotificationSett
         />
 
         <div className="rounded-lg bg-gray-50 p-4">
+          <NotificationToggle
+            icon={<MessageCircleMore className="h-5 w-5 text-green-600" />}
+            title="Recordatorios por WhatsApp"
+            enabled={whatsappEnabled}
+            setEnabled={setWhatsappEnabled}
+            value={phone}
+            setValue={setPhone}
+            type="tel"
+            placeholder="573001234567"
+            helperText="Usaremos Meta WhatsApp Cloud API y un template aprobado para mandarte recordatorios."
+          />
+
+          {whatsappEnabled && (
+            <label className="mt-3 flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-900">
+              <input
+                type="checkbox"
+                checked={whatsappOptIn}
+                onChange={(event) => setWhatsappOptIn(event.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-green-300 text-green-600 focus:ring-green-500"
+              />
+              <span>
+                Confirmo que quiero recibir recordatorios por WhatsApp en este número.
+              </span>
+            </label>
+          )}
+        </div>
+
+        <div className="rounded-lg bg-gray-50 p-4">
           <div className="mb-3 flex items-center gap-2">
             <Clock className="h-5 w-5 text-gray-600" />
             <span className="font-medium text-gray-900">Cuando recibir recordatorios</span>
@@ -169,8 +201,9 @@ export function NotificationSettings({ preferences, onUpdate }: NotificationSett
 
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
           <p className="text-sm text-blue-800">
-            <strong>Nota:</strong> Las notificaciones por email y SMS son preparacion de interfaz.
-            La app principal hoy envia recordatorios visuales y del navegador.
+            <strong>Nota:</strong> La app hoy envia recordatorios del navegador y ya puede usar
+            WhatsApp si configuras Meta Cloud API y un template aprobado. Email y SMS siguen como
+            preparacion de interfaz.
           </p>
         </div>
 

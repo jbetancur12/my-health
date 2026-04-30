@@ -10,6 +10,7 @@ import { MobileOptimization } from './layout/MobileOptimization';
 import type { AppTab } from './types';
 import { useAppointmentFilters } from '../features/appointments/hooks/useAppointmentFilters';
 import { useAppointmentsData } from '../features/appointments/hooks/useAppointmentsData';
+import { useScheduledAppointmentsData } from '../features/appointments/hooks/useScheduledAppointmentsData';
 import { useMedicalProfileData } from '../features/medical-profile/hooks/useMedicalProfileData';
 import { ControlAlerts } from '../features/controls/components/ControlAlerts';
 import { DeleteAppointmentDialog } from '../features/appointments/components/DeleteAppointmentDialog';
@@ -20,7 +21,13 @@ import { useVaccinesData } from '../features/vaccines/hooks/useVaccinesData';
 import { useVitalSignsData } from '../features/vital-signs/hooks/useVitalSignsData';
 import { importAppData } from '../shared/api/api';
 import { checkAndShowReminders } from '../shared/lib/notifications';
-import type { AppDataBundle, Appointment, Control } from '../shared/api/contracts';
+import type {
+  AppDataBundle,
+  Appointment,
+  Control,
+  Document,
+  ScheduledAppointment,
+} from '../shared/api/contracts';
 
 const AddAppointmentModal = lazy(async () => {
   const module = await import('../features/appointments/components/AddAppointmentModal');
@@ -35,6 +42,11 @@ const AppointmentDetail = lazy(async () => {
 const PDFViewer = lazy(async () => {
   const module = await import('../features/reports/components/PDFViewer');
   return { default: module.PDFViewer };
+});
+
+const ScheduledAppointmentModal = lazy(async () => {
+  const module = await import('../features/appointments/components/ScheduledAppointmentModal');
+  return { default: module.ScheduledAppointmentModal };
 });
 
 export default function App() {
@@ -53,6 +65,14 @@ export default function App() {
     retryDocumentSummaryForAppointment,
     refreshAppointmentsData,
   } = useAppointmentsData();
+  const {
+    scheduledAppointments,
+    error: scheduledAppointmentsError,
+    isLoading: scheduledAppointmentsLoading,
+    saveScheduledAppointment,
+    removeScheduledAppointment,
+    markScheduledAppointmentConverted,
+  } = useScheduledAppointmentsData();
   const {
     medications,
     error: medicationsError,
@@ -96,6 +116,11 @@ export default function App() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [appointmentToDelete, setAppointmentToDelete] = useState<Appointment | null>(null);
+  const [showScheduledAppointmentModal, setShowScheduledAppointmentModal] = useState(false);
+  const [editingScheduledAppointment, setEditingScheduledAppointment] =
+    useState<ScheduledAppointment | null>(null);
+  const [scheduledAppointmentToConvert, setScheduledAppointmentToConvert] =
+    useState<ScheduledAppointment | null>(null);
   const [activeTab, setActiveTab] = useState<AppTab>('dashboard');
   const [pdfViewer, setPdfViewer] = useState<{ url: string; name: string } | null>(null);
   const {
@@ -178,9 +203,18 @@ export default function App() {
     }
   ) => {
     try {
-      await saveAppointment(newAppointment);
+      const savedAppointment = await saveAppointment(newAppointment);
+      if (scheduledAppointmentToConvert) {
+        await markScheduledAppointmentConverted(
+          scheduledAppointmentToConvert.id,
+          savedAppointment.id
+        );
+        setScheduledAppointmentToConvert(null);
+      }
       setShowAddModal(false);
       setEditingAppointment(null);
+      setSelectedAppointment(savedAppointment);
+      setActiveTab('appointments');
     } catch (error) {
       console.error('Error saving appointment to backend:', error);
     }
@@ -193,6 +227,51 @@ export default function App() {
 
   const handleDeleteAppointment = async (appointment: Appointment) => {
     setAppointmentToDelete(appointment);
+  };
+
+  const handleSaveScheduledAppointment = async (
+    scheduledAppointment: {
+      id?: string;
+      scheduledAt: string;
+      specialty: string;
+      doctor: string;
+      location?: string;
+      notes?: string;
+      expectedDocuments?: Array<{
+        id: string;
+        type: Document['type'];
+        name: string;
+        date: string;
+      }>;
+      status?: ScheduledAppointment['status'];
+    }
+  ) => {
+    await saveScheduledAppointment(scheduledAppointment);
+    setShowScheduledAppointmentModal(false);
+    setEditingScheduledAppointment(null);
+  };
+
+  const handleEditScheduledAppointment = (scheduledAppointment: ScheduledAppointment) => {
+    setEditingScheduledAppointment(scheduledAppointment);
+    setShowScheduledAppointmentModal(true);
+  };
+
+  const handleDeleteScheduledAppointment = async (scheduledAppointment: ScheduledAppointment) => {
+    try {
+      await removeScheduledAppointment(scheduledAppointment.id);
+      setShowScheduledAppointmentModal(false);
+      setEditingScheduledAppointment(null);
+    } catch (error) {
+      console.error('Error deleting scheduled appointment:', error);
+    }
+  };
+
+  const handleConvertScheduledAppointment = (scheduledAppointment: ScheduledAppointment) => {
+    setScheduledAppointmentToConvert(scheduledAppointment);
+    setEditingScheduledAppointment(null);
+    setShowScheduledAppointmentModal(false);
+    setShowAddModal(true);
+    setActiveTab('appointments');
   };
 
   const confirmDeleteAppointment = async () => {
@@ -343,6 +422,9 @@ export default function App() {
             notificationPreferences={notificationPreferences}
             notificationPreferencesLoading={notificationPreferencesLoading}
             notificationPreferencesError={notificationPreferencesError}
+            scheduledAppointments={scheduledAppointments}
+            scheduledAppointmentsError={scheduledAppointmentsError}
+            scheduledAppointmentsLoading={scheduledAppointmentsLoading}
             specialties={specialties}
             stats={stats}
             tags={tags}
@@ -369,6 +451,11 @@ export default function App() {
             onRemoveVaccine={removeVaccine}
             onRemoveVitalSign={removeVitalSign}
             onSearch={setSearchFilters}
+            onScheduleAppointment={() => {
+              setEditingScheduledAppointment(null);
+              setShowScheduledAppointmentModal(true);
+            }}
+            onScheduledAppointmentClick={handleEditScheduledAppointment}
             onSettingsUpdate={updateNotificationPreferences}
             onSpecialtyFilterChange={setFilterSpecialty}
             onTimelineEventClick={handleTimelineEventClick}
@@ -408,11 +495,23 @@ export default function App() {
               onClose={() => {
                 setShowAddModal(false);
                 setEditingAppointment(null);
+                setScheduledAppointmentToConvert(null);
               }}
               onAdd={handleAddAppointment}
               existingDoctors={doctors}
               existingSpecialties={specialties}
               editingAppointment={editingAppointment || undefined}
+              initialDraft={
+                scheduledAppointmentToConvert
+                  ? {
+                      date: scheduledAppointmentToConvert.scheduledAt,
+                      specialty: scheduledAppointmentToConvert.specialty,
+                      doctor: scheduledAppointmentToConvert.doctor,
+                      notes: scheduledAppointmentToConvert.notes,
+                      documents: scheduledAppointmentToConvert.expectedDocuments,
+                    }
+                  : undefined
+              }
               existingControls={
                 editingAppointment
                   ? controls.filter(
@@ -422,6 +521,24 @@ export default function App() {
               }
               availableTags={tags}
               onCreateTag={createTag}
+            />
+          </LazyOverlay>
+        )}
+
+        {showScheduledAppointmentModal && (
+          <LazyOverlay>
+            <ScheduledAppointmentModal
+              doctors={doctors}
+              open={showScheduledAppointmentModal}
+              scheduledAppointment={editingScheduledAppointment || undefined}
+              specialties={specialties}
+              onClose={() => {
+                setShowScheduledAppointmentModal(false);
+                setEditingScheduledAppointment(null);
+              }}
+              onDelete={handleDeleteScheduledAppointment}
+              onConvert={handleConvertScheduledAppointment}
+              onSave={handleSaveScheduledAppointment}
             />
           </LazyOverlay>
         )}
@@ -451,11 +568,19 @@ export default function App() {
         <MobileDrawer activeTab={activeTab} onTabChange={setActiveTab} />
         <InstallPrompt />
 
-        {activeTab === 'appointments' && (
+        {(activeTab === 'appointments' || activeTab === 'calendar') && (
           <FloatingActionButton
-            ariaLabel="Nueva cita"
+            ariaLabel={activeTab === 'calendar' ? 'Programar cita' : 'Nueva cita'}
             icon={<Plus className="h-6 w-6" />}
-            onClick={() => setShowAddModal(true)}
+            onClick={() => {
+              if (activeTab === 'calendar') {
+                setEditingScheduledAppointment(null);
+                setShowScheduledAppointmentModal(true);
+                return;
+              }
+
+              setShowAddModal(true);
+            }}
           />
         )}
       </div>

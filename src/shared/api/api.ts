@@ -21,6 +21,9 @@ import type {
   NotificationPreferences,
   NotificationPreferencesApiDto,
   NotificationPreferencesApiPayload,
+  ScheduledAppointment,
+  ScheduledAppointmentApiDto,
+  ScheduledAppointmentApiPayload,
   Vaccine,
   VaccineApiDto,
   VaccineApiPayload,
@@ -95,6 +98,25 @@ function parseMedication(medication: MedicationApiDto): Medication {
     ...medication,
     startDate: new Date(medication.startDate),
     endDate: medication.endDate ? new Date(medication.endDate) : undefined,
+  };
+}
+
+function parseScheduledAppointment(scheduledAppointment: ScheduledAppointmentApiDto): ScheduledAppointment {
+  return {
+    ...scheduledAppointment,
+    scheduledAt: new Date(scheduledAppointment.scheduledAt),
+    expectedDocuments: scheduledAppointment.expectedDocuments.map((document) => ({
+      ...document,
+      date: new Date(document.date),
+      aiSummaryUpdatedAt: document.aiSummaryUpdatedAt
+        ? new Date(document.aiSummaryUpdatedAt)
+        : undefined,
+    })),
+    lastWhatsappReminderAt: scheduledAppointment.lastWhatsappReminderAt
+      ? new Date(scheduledAppointment.lastWhatsappReminderAt)
+      : undefined,
+    createdAt: new Date(scheduledAppointment.createdAt),
+    updatedAt: new Date(scheduledAppointment.updatedAt),
   };
 }
 
@@ -341,6 +363,60 @@ export async function getNotificationPreferences(): Promise<NotificationPreferen
   return data.notificationPreferences;
 }
 
+export async function getScheduledAppointments(): Promise<ScheduledAppointment[]> {
+  const data = (await fetchAPI('/scheduled-appointments')) as {
+    scheduledAppointments: ScheduledAppointmentApiDto[];
+  };
+  return data.scheduledAppointments.map(parseScheduledAppointment);
+}
+
+export async function saveScheduledAppointment(
+  scheduledAppointment: ScheduledAppointmentApiPayload
+): Promise<ScheduledAppointment> {
+  const data = await fetchAPI('/scheduled-appointments', {
+    method: 'POST',
+    body: JSON.stringify(scheduledAppointment),
+  });
+
+  return parseScheduledAppointment(
+    (data as { scheduledAppointment: ScheduledAppointmentApiDto }).scheduledAppointment
+  );
+}
+
+export async function updateScheduledAppointment(
+  id: string,
+  scheduledAppointment: Partial<ScheduledAppointmentApiPayload>
+): Promise<ScheduledAppointment> {
+  const data = await fetchAPI(`/scheduled-appointments/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(scheduledAppointment),
+  });
+
+  return parseScheduledAppointment(
+    (data as { scheduledAppointment: ScheduledAppointmentApiDto }).scheduledAppointment
+  );
+}
+
+export async function deleteScheduledAppointment(id: string): Promise<void> {
+  await fetchAPI(`/scheduled-appointments/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function convertScheduledAppointment(
+  id: string,
+  appointmentId: string
+): Promise<ScheduledAppointment> {
+  const data = await fetchAPI(`/scheduled-appointments/${id}/convert`, {
+    method: 'POST',
+    body: JSON.stringify({ appointmentId }),
+  });
+
+  return parseScheduledAppointment(
+    (data as { scheduledAppointment: ScheduledAppointmentApiDto }).scheduledAppointment
+  );
+}
+
 export async function saveNotificationPreferences(
   preferences: NotificationPreferences
 ): Promise<NotificationPreferences> {
@@ -349,6 +425,8 @@ export async function saveNotificationPreferences(
     phone: preferences.phone,
     emailEnabled: preferences.emailEnabled,
     smsEnabled: preferences.smsEnabled,
+    whatsappEnabled: preferences.whatsappEnabled,
+    whatsappOptIn: preferences.whatsappOptIn,
     reminderDays: preferences.reminderDays,
   };
   const data = await fetchAPI('/notification-preferences', {
