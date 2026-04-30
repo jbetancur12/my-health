@@ -54,6 +54,30 @@ function formatExecutiveSummary(summary: string) {
   return sections;
 }
 
+const pdfColors = {
+  navy: [20, 47, 91] as const,
+  blue: [33, 99, 171] as const,
+  slate: [81, 95, 111] as const,
+  lightBlue: [232, 240, 250] as const,
+  paleBlue: [244, 248, 252] as const,
+  border: [212, 224, 236] as const,
+  text: [37, 52, 67] as const,
+  muted: [107, 119, 140] as const,
+  white: [255, 255, 255] as const,
+} satisfies Record<string, readonly [number, number, number]>;
+
+function setPdfTextColor(doc: jsPDF, color: readonly [number, number, number]) {
+  doc.setTextColor(color[0], color[1], color[2]);
+}
+
+function setPdfFillColor(doc: jsPDF, color: readonly [number, number, number]) {
+  doc.setFillColor(color[0], color[1], color[2]);
+}
+
+function setPdfDrawColor(doc: jsPDF, color: readonly [number, number, number]) {
+  doc.setDrawColor(color[0], color[1], color[2]);
+}
+
 export function PDFReport({
   appointments,
   medications,
@@ -181,46 +205,146 @@ export function PDFReport({
       }
 
       const doc = new jsPDF();
-      let yPosition = 20;
+      const pageWidth = doc.internal.pageSize.width;
       const pageHeight = doc.internal.pageSize.height;
-      const margin = 20;
+      const margin = 18;
       const lineHeight = 7;
+      let yPosition = 48;
+
+      const drawPageFrame = () => {
+        setPdfDrawColor(doc, pdfColors.border);
+        doc.setLineWidth(0.4);
+        doc.rect(8, 8, pageWidth - 16, pageHeight - 16);
+      };
+
+      const drawTopBand = (isCover = false) => {
+        setPdfFillColor(doc, pdfColors.navy);
+        doc.rect(0, 0, pageWidth, isCover ? 32 : 24, 'F');
+        setPdfFillColor(doc, pdfColors.lightBlue);
+        doc.rect(0, isCover ? 32 : 24, pageWidth, 8, 'F');
+        drawPageFrame();
+      };
+
+      const drawCoverHeader = () => {
+        drawTopBand(true);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(20);
+        setPdfTextColor(doc, pdfColors.white);
+        doc.text('Informe Clínico Personal', margin, 18);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.text('Resumen médico consolidado para consulta y continuidad de atención', margin, 25);
+
+        setPdfTextColor(doc, pdfColors.navy);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.text(`Fecha de emisión: ${format(new Date(), "d 'de' MMMM, yyyy", { locale: es })}`, margin, 45);
+        doc.text(`Periodo analizado: ${dateRange === 'all' ? 'Todo el historial' : dateRange === '1year' ? 'Último año' : 'Últimos 6 meses'}`, margin, 52);
+        yPosition = 64;
+      };
+
+      const drawRunningHeader = () => {
+        drawTopBand(false);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        setPdfTextColor(doc, pdfColors.white);
+        doc.text('Informe Clínico Personal', margin, 14.5);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.text('Documento consolidado para apoyo clínico', pageWidth - margin, 14.5, {
+          align: 'right',
+        });
+
+        yPosition = 38;
+      };
+
+      const addStyledPage = () => {
+        doc.addPage();
+        drawRunningHeader();
+      };
 
       // Helper to add new page if needed
       const checkAddPage = (neededSpace: number = 20) => {
         if (yPosition + neededSpace > pageHeight - margin) {
-          doc.addPage();
-          yPosition = 20;
+          addStyledPage();
           return true;
         }
         return false;
       };
 
-      // Header
-      doc.setFontSize(20);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Reporte Médico Personal', margin, yPosition);
-      yPosition += 10;
+      const drawSectionHeader = (title: string, tone: 'primary' | 'executive' = 'primary') => {
+        checkAddPage(18);
+        const fill = tone === 'executive' ? pdfColors.lightBlue : pdfColors.paleBlue;
+        const accent = tone === 'executive' ? pdfColors.blue : pdfColors.navy;
 
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(
-        `Generado el ${format(new Date(), "d 'de' MMMM, yyyy", { locale: es })}`,
-        margin,
-        yPosition
-      );
-      yPosition += 15;
+        setPdfFillColor(doc, fill);
+        doc.roundedRect(margin, yPosition - 4, pageWidth - margin * 2, 11, 2, 2, 'F');
+        setPdfFillColor(doc, accent);
+        doc.rect(margin, yPosition - 4, 4, 11, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(13);
+        setPdfTextColor(doc, pdfColors.navy);
+        doc.text(title, margin + 8, yPosition + 2.5);
+        yPosition += 14;
+      };
+
+      const drawLabeledLine = (label: string, value: string) => {
+        const labelWidth = 34;
+        const wrappedLines = wrapPdfLines(doc, value, pageWidth - margin * 2 - labelWidth - 6);
+        checkAddPage(wrappedLines.length * lineHeight + 4);
+        doc.setFont('helvetica', 'bold');
+        setPdfTextColor(doc, pdfColors.text);
+        doc.text(`${label}:`, margin + 4, yPosition);
+        doc.setFont('helvetica', 'normal');
+        setPdfTextColor(doc, pdfColors.text);
+        doc.text(wrappedLines, margin + labelWidth, yPosition);
+        yPosition += wrappedLines.length * lineHeight;
+      };
+
+      const drawBullet = (text: string, indent = 5) => {
+        const wrappedLines = wrapPdfLines(doc, `• ${text}`, pageWidth - margin * 2 - indent - 4);
+        checkAddPage(wrappedLines.length * lineHeight + 3);
+        doc.setFont('helvetica', 'normal');
+        setPdfTextColor(doc, pdfColors.text);
+        doc.text(wrappedLines, margin + indent, yPosition);
+        yPosition += wrappedLines.length * lineHeight;
+      };
+
+      const drawCard = (title: string, lines: string[]) => {
+        const wrappedLineGroups = lines.map((line) => wrapPdfLines(doc, line, pageWidth - margin * 2 - 12));
+        const contentHeight =
+          wrappedLineGroups.reduce((sum, group) => sum + group.length * lineHeight, 0) + 12;
+        checkAddPage(contentHeight + 8);
+
+        setPdfFillColor(doc, pdfColors.white);
+        setPdfDrawColor(doc, pdfColors.border);
+        doc.roundedRect(margin, yPosition - 5, pageWidth - margin * 2, contentHeight, 3, 3, 'FD');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11.5);
+        setPdfTextColor(doc, pdfColors.navy);
+        doc.text(title, margin + 5, yPosition + 1);
+        yPosition += 8;
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10.5);
+        for (const group of wrappedLineGroups) {
+          doc.text(group, margin + 5, yPosition);
+          yPosition += group.length * lineHeight;
+        }
+
+        yPosition += 5;
+      };
+
+      drawCoverHeader();
 
       if (executiveReport) {
-        checkAddPage(45);
-
-        doc.setFontSize(16);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Reporte ejecutivo con IA', margin, yPosition);
-        yPosition += lineHeight + 2;
+        drawSectionHeader('Síntesis ejecutiva asistida por IA', 'executive');
 
         doc.setFontSize(10);
         doc.setFont('helvetica', 'italic');
+        setPdfTextColor(doc, pdfColors.muted);
         doc.text(
           `Generado con ${executiveReport.provider === 'openai' ? 'OpenAI' : 'Gemini'} el ${format(executiveReport.generatedAt, "d 'de' MMMM, yyyy h:mm a", { locale: es })}`,
           margin,
@@ -232,88 +356,54 @@ export function PDFReport({
         doc.setFontSize(11);
 
         for (const section of sections) {
-          checkAddPage(20);
-          doc.setFont('helvetica', 'bold');
-          doc.text(section.heading, margin, yPosition);
-          yPosition += lineHeight;
-
-          doc.setFont('helvetica', 'normal');
-
-          for (const item of section.items) {
-            const wrappedLines = wrapPdfLines(doc, `• ${item}`, 170);
-            checkAddPage(wrappedLines.length * lineHeight + 4);
-            doc.text(wrappedLines, margin + 3, yPosition);
-            yPosition += wrappedLines.length * lineHeight;
-          }
-
-          if (section.items.length === 0) {
-            const wrappedLines = wrapPdfLines(doc, '• Sin datos relevantes', 170);
-            doc.text(wrappedLines, margin + 3, yPosition);
-            yPosition += wrappedLines.length * lineHeight;
-          }
-
-          yPosition += 4;
+          drawCard(
+            section.heading,
+            (section.items.length > 0 ? section.items : ['Sin datos relevantes']).map(
+              (item) => `• ${item}`
+            )
+          );
         }
       }
 
       // Medical Profile
       if (includeProfile && medicalProfile) {
-        checkAddPage(40);
-
-        doc.setFontSize(16);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Información Personal Médica', margin, yPosition);
-        yPosition += lineHeight + 3;
+        drawSectionHeader('Información personal y antecedentes');
 
         doc.setFontSize(11);
         doc.setFont('helvetica', 'normal');
+        setPdfTextColor(doc, pdfColors.text);
 
         if (medicalProfile.bloodType) {
-          doc.setFont('helvetica', 'bold');
-          doc.text('Tipo de Sangre:', margin, yPosition);
-          doc.setFont('helvetica', 'normal');
-          doc.text(medicalProfile.bloodType, margin + 35, yPosition);
-          yPosition += lineHeight;
+          drawLabeledLine('Tipo de sangre', medicalProfile.bloodType);
         }
 
         if (medicalProfile.allergies && medicalProfile.allergies.length > 0) {
-          checkAddPage(20);
           doc.setFont('helvetica', 'bold');
-          doc.text('Alergias:', margin, yPosition);
+          setPdfTextColor(doc, pdfColors.slate);
+          doc.text('Alergias registradas', margin + 4, yPosition);
           yPosition += lineHeight;
-          doc.setFont('helvetica', 'normal');
           medicalProfile.allergies.forEach((allergy: string) => {
-            checkAddPage();
-            doc.text(`• ${allergy}`, margin + 5, yPosition);
-            yPosition += lineHeight;
+            drawBullet(allergy, 5);
           });
         }
 
         if (medicalProfile.chronicConditions && medicalProfile.chronicConditions.length > 0) {
-          checkAddPage(20);
           doc.setFont('helvetica', 'bold');
-          doc.text('Condiciones Crónicas:', margin, yPosition);
+          setPdfTextColor(doc, pdfColors.slate);
+          doc.text('Condiciones o antecedentes crónicos', margin + 4, yPosition);
           yPosition += lineHeight;
-          doc.setFont('helvetica', 'normal');
           medicalProfile.chronicConditions.forEach((condition: string) => {
-            checkAddPage();
-            doc.text(`• ${condition}`, margin + 5, yPosition);
-            yPosition += lineHeight;
+            drawBullet(condition, 5);
           });
         }
 
         if (medicalProfile.emergencyContacts && medicalProfile.emergencyContacts.length > 0) {
-          checkAddPage(30);
           doc.setFont('helvetica', 'bold');
-          doc.text('Contactos de Emergencia:', margin, yPosition);
+          setPdfTextColor(doc, pdfColors.slate);
+          doc.text('Contactos de emergencia', margin + 4, yPosition);
           yPosition += lineHeight;
-          doc.setFont('helvetica', 'normal');
           medicalProfile.emergencyContacts.forEach((contact) => {
-            checkAddPage(15);
-            doc.text(`• ${contact.name} (${contact.relationship})`, margin + 5, yPosition);
-            yPosition += lineHeight;
-            doc.text(`  Tel: ${contact.phone}`, margin + 5, yPosition);
-            yPosition += lineHeight;
+            drawCard(`${contact.name} (${contact.relationship})`, [`Teléfono: ${contact.phone}`]);
           });
         }
 
@@ -327,101 +417,58 @@ export function PDFReport({
         );
 
         if (filteredApts.length > 0) {
-          checkAddPage(30);
-
-          doc.setFontSize(16);
-          doc.setFont('helvetica', 'bold');
-          doc.text(`Citas Médicas (${filteredApts.length})`, margin, yPosition);
-          yPosition += lineHeight + 3;
+          drawSectionHeader(`Citas médicas y atención especializada (${filteredApts.length})`);
 
           doc.setFontSize(11);
 
           filteredApts.forEach((apt, index) => {
-            checkAddPage(25);
-
-            doc.setFont('helvetica', 'bold');
-            doc.text(`${index + 1}. ${apt.specialty}`, margin, yPosition);
-            yPosition += lineHeight;
-
-            doc.setFont('helvetica', 'normal');
-            doc.text(
+            const lines = [
               `Fecha: ${format(new Date(apt.date), "d 'de' MMMM, yyyy", { locale: es })}`,
-              margin + 5,
-              yPosition
-            );
-            yPosition += lineHeight;
-            doc.text(`Médico: ${apt.doctor}`, margin + 5, yPosition);
-            yPosition += lineHeight;
+              `Médico tratante: ${apt.doctor}`,
+            ];
 
             if (apt.documents && apt.documents.length > 0) {
-              doc.text(`Documentos: ${apt.documents.length}`, margin + 5, yPosition);
-              yPosition += lineHeight;
+              lines.push(`Documentos adjuntos: ${apt.documents.length}`);
             }
 
             if (apt.notes) {
-              checkAddPage(15);
               const notes =
                 apt.notes.length > 100 ? apt.notes.substring(0, 100) + '...' : apt.notes;
-              doc.text(`Notas: ${notes}`, margin + 5, yPosition);
-              yPosition += lineHeight;
+              lines.push(`Notas clínicas: ${notes}`);
             }
 
-            yPosition += 3;
+            drawCard(`${index + 1}. ${apt.specialty}`, lines);
           });
         }
       }
 
       // Medications
       if (includeMedications && medications.length > 0) {
-        checkAddPage(30);
-
         const activeMeds = medications.filter((m) => m.active);
 
-        doc.setFontSize(16);
-        doc.setFont('helvetica', 'bold');
-        doc.text(`Medicamentos (${activeMeds.length} activos)`, margin, yPosition);
-        yPosition += lineHeight + 3;
+        drawSectionHeader(`Medicamentos activos (${activeMeds.length})`);
 
         doc.setFontSize(11);
 
         activeMeds.forEach((med, index) => {
-          checkAddPage(20);
-
-          doc.setFont('helvetica', 'bold');
-          doc.text(`${index + 1}. ${med.name}`, margin, yPosition);
-          yPosition += lineHeight;
-
-          doc.setFont('helvetica', 'normal');
-          doc.text(`Dosis: ${med.dosage}`, margin + 5, yPosition);
-          yPosition += lineHeight;
-          doc.text(`Frecuencia: ${med.frequency}`, margin + 5, yPosition);
-          yPosition += lineHeight;
-          doc.text(
+          const lines = [
+            `Dosis: ${med.dosage}`,
+            `Frecuencia: ${med.frequency}`,
             `Inicio: ${format(new Date(med.startDate), "d 'de' MMM, yyyy", { locale: es })}`,
-            margin + 5,
-            yPosition
-          );
-          yPosition += lineHeight;
+          ];
 
           if (med.notes) {
-            checkAddPage(10);
             const notes = med.notes.length > 80 ? med.notes.substring(0, 80) + '...' : med.notes;
-            doc.text(`Notas: ${notes}`, margin + 5, yPosition);
-            yPosition += lineHeight;
+            lines.push(`Observaciones: ${notes}`);
           }
 
-          yPosition += 3;
+          drawCard(`${index + 1}. ${med.name}`, lines);
         });
       }
 
       // Vaccines
       if (includeVaccines && vaccines.length > 0) {
-        checkAddPage(30);
-
-        doc.setFontSize(16);
-        doc.setFont('helvetica', 'bold');
-        doc.text(`Historial de Vacunas (${vaccines.length})`, margin, yPosition);
-        yPosition += lineHeight + 3;
+        drawSectionHeader(`Historial de vacunación (${vaccines.length})`);
 
         doc.setFontSize(11);
 
@@ -430,41 +477,25 @@ export function PDFReport({
         );
 
         sortedVaccines.forEach((vac, index) => {
-          checkAddPage(20);
-
-          doc.setFont('helvetica', 'bold');
-          doc.text(`${index + 1}. ${vac.name}`, margin, yPosition);
-          yPosition += lineHeight;
-
-          doc.setFont('helvetica', 'normal');
-          doc.text(
+          const lines = [
             `Fecha: ${format(new Date(vac.date), "d 'de' MMMM, yyyy", { locale: es })}`,
-            margin + 5,
-            yPosition
-          );
-          yPosition += lineHeight;
+          ];
 
           if (vac.doseNumber && vac.totalDoses) {
-            doc.text(`Dosis: ${vac.doseNumber}/${vac.totalDoses}`, margin + 5, yPosition);
-            yPosition += lineHeight;
+            lines.push(`Dosis: ${vac.doseNumber}/${vac.totalDoses}`);
           }
 
           if (vac.location) {
-            doc.text(`Lugar: ${vac.location}`, margin + 5, yPosition);
-            yPosition += lineHeight;
+            lines.push(`Lugar: ${vac.location}`);
           }
 
           if (vac.nextDose) {
-            checkAddPage(10);
-            doc.text(
-              `Próxima dosis: ${format(new Date(vac.nextDose), "d 'de' MMM, yyyy", { locale: es })}`,
-              margin + 5,
-              yPosition
+            lines.push(
+              `Próxima dosis: ${format(new Date(vac.nextDose), "d 'de' MMM, yyyy", { locale: es })}`
             );
-            yPosition += lineHeight;
           }
 
-          yPosition += 3;
+          drawCard(`${index + 1}. ${vac.name}`, lines);
         });
       }
 
@@ -475,41 +506,24 @@ export function PDFReport({
         );
 
         if (filteredVitals.length > 0) {
-          checkAddPage(30);
-
-          doc.setFontSize(16);
-          doc.setFont('helvetica', 'bold');
-          doc.text(`Signos Vitales (últimos ${filteredVitals.length})`, margin, yPosition);
-          yPosition += lineHeight + 3;
+          drawSectionHeader(`Signos vitales recientes (${filteredVitals.length})`);
 
           doc.setFontSize(11);
 
           filteredVitals.slice(0, 10).forEach((vs) => {
-            checkAddPage(20);
-
-            doc.setFont('helvetica', 'bold');
-            doc.text(
-              `${format(new Date(vs.date), "d 'de' MMM, yyyy", { locale: es })}`,
-              margin,
-              yPosition
-            );
-            yPosition += lineHeight;
-
-            doc.setFont('helvetica', 'normal');
-            const vitals = [];
+            const vitals = [
+              `Fecha: ${format(new Date(vs.date), "d 'de' MMM, yyyy", { locale: es })}`,
+            ];
             if (vs.bloodPressureSystolic)
               vitals.push(`PA: ${vs.bloodPressureSystolic}/${vs.bloodPressureDiastolic}`);
             if (vs.heartRate) vitals.push(`FC: ${vs.heartRate} bpm`);
             if (vs.weight) vitals.push(`Peso: ${vs.weight} kg`);
             if (vs.glucose) vitals.push(`Glucosa: ${vs.glucose} mg/dL`);
+            if (vs.temperature) vitals.push(`Temperatura: ${vs.temperature} °C`);
+            if (vs.oxygenSaturation) vitals.push(`Saturación O2: ${vs.oxygenSaturation}%`);
+            if (vs.notes) vitals.push(`Notas: ${vs.notes}`);
 
-            vitals.forEach((vital) => {
-              checkAddPage();
-              doc.text(`• ${vital}`, margin + 5, yPosition);
-              yPosition += lineHeight;
-            });
-
-            yPosition += 3;
+            drawCard('Registro de control', vitals);
           });
         }
       }
@@ -518,14 +532,23 @@ export function PDFReport({
       const totalPages = doc.getNumberOfPages();
       for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'italic');
+        setPdfDrawColor(doc, pdfColors.border);
+        doc.line(margin, pageHeight - 16, pageWidth - margin, pageHeight - 16);
+        doc.setFontSize(8.5);
+        doc.setFont('helvetica', 'normal');
+        setPdfTextColor(doc, pdfColors.muted);
         doc.text(`Página ${i} de ${totalPages}`, margin, pageHeight - 10);
         doc.text(
-          'Archivo Médico Personal - Uso exclusivo médico',
+          'Documento clínico de referencia - uso informativo y apoyo médico',
           doc.internal.pageSize.width / 2,
           pageHeight - 10,
           { align: 'center' }
+        );
+        doc.text(
+          'Confidencial',
+          pageWidth - margin,
+          pageHeight - 10,
+          { align: 'right' }
         );
       }
 
