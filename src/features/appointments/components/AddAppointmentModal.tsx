@@ -237,8 +237,8 @@ export function AddAppointmentModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 pb-24 md:p-4">
-      <div className="max-h-[calc(100vh-7rem)] w-full max-w-2xl overflow-y-auto rounded-lg bg-white md:max-h-[90vh]">
+    <div className="fixed inset-0 z-50 overflow-x-hidden bg-black/50 p-3 pb-24 md:flex md:items-center md:justify-center md:p-4">
+      <div className="max-h-[calc(100vh-7rem)] w-full max-w-2xl overflow-x-hidden overflow-y-auto rounded-lg bg-white md:max-h-[90vh]">
         <div className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-white p-4">
           <h2 className="text-xl font-semibold text-gray-900">
             {editingAppointment ? 'Editar Cita Médica' : 'Nueva Cita Médica'}
@@ -248,7 +248,7 @@ export function AddAppointmentModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 pb-28 md:p-6 md:pb-6">
+        <form onSubmit={handleSubmit} className="overflow-x-hidden p-4 pb-28 md:p-6 md:pb-6">
           <div className="mb-6 space-y-4">
             <InputField
               label="Fecha de la cita"
@@ -322,7 +322,7 @@ export function AddAppointmentModal({
                     <select
                       value={document.type}
                       onChange={(event) => handleDocumentChange(index, 'type', event.target.value)}
-                      className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full min-w-0 max-w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       {documentTypes.map((type) => (
                         <option key={type.value} value={type.value}>
@@ -393,7 +393,7 @@ export function AddAppointmentModal({
                     onChange={(event) =>
                       handleControlChange(index, 'date', new Date(event.target.value))
                     }
-                    className="flex-1 rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="min-w-0 flex-1 max-w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                   <button
                     type="button"
@@ -487,7 +487,8 @@ function InputField({
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className={`w-full rounded-lg border border-gray-300 ${compact ? 'px-2 py-1.5 text-sm' : 'px-3 py-2'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+        className={`block w-full min-w-0 max-w-full appearance-none rounded-lg border border-gray-300 ${compact ? 'px-2 py-1.5 text-sm' : 'px-3 py-2'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+        style={{ minWidth: 0 }}
         required={required}
       />
     </div>
