@@ -5,6 +5,7 @@ import { ScheduledAppointment } from '../../entities/ScheduledAppointment.js';
 import { getOrm } from '../../orm.js';
 
 const DEFAULT_META_GRAPH_API_VERSION = 'v23.0';
+const DEFAULT_REMINDER_INTERVAL_MS = 15 * 60 * 1000;
 
 interface MetaWhatsappConfig {
   accessToken: string;
@@ -178,7 +179,11 @@ export function startScheduledAppointmentReminderWorker() {
   }
 
   void runScheduledAppointmentReminderCycle();
-  const intervalMs = 15 * 60 * 1000;
+  const configuredInterval = Number(process.env.WHATSAPP_REMINDER_INTERVAL_MS);
+  const intervalMs =
+    Number.isFinite(configuredInterval) && configuredInterval >= 30_000
+      ? configuredInterval
+      : DEFAULT_REMINDER_INTERVAL_MS;
   const timer = setInterval(() => {
     void runScheduledAppointmentReminderCycle();
   }, intervalMs);

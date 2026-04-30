@@ -140,6 +140,7 @@ Variables relevantes:
 - `WHATSAPP_TEMPLATE_APPOINTMENT_REMINDER`
 - `WHATSAPP_LANGUAGE_CODE`
 - `META_GRAPH_API_VERSION`
+- `WHATSAPP_REMINDER_INTERVAL_MS`
 
 El template actual espera 4 variables en el body:
 
@@ -147,6 +148,14 @@ El template actual espera 4 variables en el body:
 2. medico
 3. fecha y hora de la cita
 4. ubicacion
+
+En desarrollo puedes bajar el intervalo del worker para probar mas rapido. Ejemplo:
+
+```env
+WHATSAPP_REMINDER_INTERVAL_MS=60000
+```
+
+Eso hace que el backend revise recordatorios cada 60 segundos en vez de cada 15 minutos.
 
 ## Migraciones
 
