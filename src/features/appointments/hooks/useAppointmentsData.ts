@@ -4,6 +4,7 @@ import type { Appointment, AppointmentTag, Control } from '../../../shared/api/c
 import { buildAutocompleteOptions } from '../lib/autocomplete';
 
 type PendingAppointmentControl = Omit<Control, 'specialty' | 'doctor' | 'relatedAppointmentId'>;
+type DocumentSummaryAction = 'generate' | 'retry' | 'regenerate';
 
 export function useAppointmentsData() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -192,8 +193,16 @@ export function useAppointmentsData() {
     );
   }
 
-  async function retryDocumentSummaryForAppointment(documentId: string) {
-    const updatedDocument = await api.retryDocumentSummary(documentId);
+  async function runDocumentSummaryActionForAppointment(
+    documentId: string,
+    action: DocumentSummaryAction
+  ) {
+    const updatedDocument =
+      action === 'generate'
+        ? await api.generateDocumentSummary(documentId)
+        : action === 'regenerate'
+          ? await api.regenerateDocumentSummary(documentId)
+          : await api.retryDocumentSummary(documentId);
 
     setAppointments((current) =>
       current.map((appointment) => ({
@@ -229,7 +238,7 @@ export function useAppointmentsData() {
     removeAppointment,
     createTag,
     replaceAppointmentsData,
-    retryDocumentSummaryForAppointment,
+    runDocumentSummaryActionForAppointment,
     refreshAppointmentsData: loadData,
   };
 }

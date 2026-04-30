@@ -1,7 +1,11 @@
 import { promises as fs } from 'node:fs';
 import { Readable } from 'node:stream';
 import path from 'node:path';
-import { Document, DocumentAiSummaryStatus } from '../../entities/Document.js';
+import {
+  Document,
+  DocumentAiSummaryAction,
+  DocumentAiSummaryStatus,
+} from '../../entities/Document.js';
 import { getOrm } from '../../orm.js';
 import {
   extractContentType,
@@ -26,6 +30,8 @@ interface SummaryConfig {
   model: string;
   maxFileBytes: number;
 }
+
+type SummaryTrigger = 'generated' | 'retried' | 'regenerated';
 
 function getSummaryProviderPreference() {
   const provider = process.env.AI_SUMMARY_PROVIDER?.trim().toLowerCase();
@@ -214,7 +220,11 @@ async function generateSummary(document: Document) {
     throw new Error('La IA no devolvió un resumen utilizable para este documento.');
   }
 
-  return summary;
+  return {
+    summary,
+    provider: config.provider,
+    model: config.model,
+  };
 }
 
 async function generateOpenAiSummary(input: {
@@ -334,7 +344,7 @@ async function generateGeminiSummary(input: {
   return summary;
 }
 
-async function processDocumentSummary(documentId: string) {
+async function processDocumentSummary(documentId: string, trigger: SummaryTrigger) {
   if (activeSummaryJobs.has(documentId)) {
     return;
   }
@@ -354,11 +364,19 @@ async function processDocumentSummary(documentId: string) {
     document.aiSummaryError = undefined;
     await em.flush();
 
-    const summary = await generateSummary(document);
-    document.aiSummary = summary;
+    const generated = await generateSummary(document);
+    document.aiSummary = generated.summary;
     document.aiSummaryStatus = DocumentAiSummaryStatus.COMPLETED;
     document.aiSummaryError = undefined;
     document.aiSummaryUpdatedAt = new Date();
+    document.aiSummaryProvider = generated.provider;
+    document.aiSummaryModel = generated.model;
+    document.aiSummaryLastAction =
+      trigger === 'generated'
+        ? DocumentAiSummaryAction.GENERATED
+        : trigger === 'retried'
+          ? DocumentAiSummaryAction.RETRIED
+          : DocumentAiSummaryAction.REGENERATED;
     await em.flush();
   } catch (error) {
     const orm = await getOrm();
@@ -376,9 +394,9 @@ async function processDocumentSummary(documentId: string) {
   }
 }
 
-function startSummaryJob(documentId: string) {
+function startSummaryJobForTrigger(documentId: string, trigger: SummaryTrigger) {
   queueMicrotask(() => {
-    void processDocumentSummary(documentId);
+    void processDocumentSummary(documentId, trigger);
   });
 }
 
@@ -386,7 +404,18 @@ export function isDocumentSummaryEnabled() {
   return getSummaryConfig() !== null;
 }
 
+export function getDocumentSummaryConfigurationErrorMessage() {
+  return 'AI summaries are not configured. Check AI_SUMMARY_PROVIDER and the matching API key.';
+}
+
 export async function queueDocumentSummary(documentId: string, force = false) {
+  return queueDocumentSummaryByTrigger(documentId, force ? 'regenerated' : 'generated');
+}
+
+export async function queueDocumentSummaryByTrigger(
+  documentId: string,
+  trigger: SummaryTrigger
+) {
   const config = getSummaryConfig();
   const orm = await getOrm();
   const em = orm.em.fork();
@@ -404,20 +433,40 @@ export async function queueDocumentSummary(documentId: string, force = false) {
   }
 
   if (
-    !force &&
+    trigger === 'generated' &&
     (document.aiSummaryStatus === DocumentAiSummaryStatus.PENDING ||
       document.aiSummaryStatus === DocumentAiSummaryStatus.PROCESSING)
   ) {
     return serializeAppointmentDocument(document);
   }
 
-  document.aiSummary = force ? undefined : document.aiSummary;
+  if (trigger === 'regenerated') {
+    document.aiSummary = undefined;
+  }
   document.aiSummaryStatus = DocumentAiSummaryStatus.PENDING;
   document.aiSummaryError = undefined;
+  document.aiSummaryLastAction =
+    trigger === 'generated'
+      ? DocumentAiSummaryAction.GENERATED
+      : trigger === 'retried'
+        ? DocumentAiSummaryAction.RETRIED
+        : DocumentAiSummaryAction.REGENERATED;
   await em.flush();
 
-  startSummaryJob(documentId);
+  startSummaryJobForTrigger(documentId, trigger);
   return serializeAppointmentDocument(document);
+}
+
+export async function generateDocumentSummary(documentId: string) {
+  return queueDocumentSummaryByTrigger(documentId, 'generated');
+}
+
+export async function retryDocumentSummary(documentId: string) {
+  return queueDocumentSummaryByTrigger(documentId, 'retried');
+}
+
+export async function regenerateDocumentSummary(documentId: string) {
+  return queueDocumentSummaryByTrigger(documentId, 'regenerated');
 }
 
 export async function resumePendingDocumentSummaries() {
@@ -434,6 +483,13 @@ export async function resumePendingDocumentSummaries() {
   });
 
   documents.forEach((document) => {
-    startSummaryJob(document.id);
+    startSummaryJobForTrigger(
+      document.id,
+      document.aiSummaryLastAction === DocumentAiSummaryAction.REGENERATED
+        ? 'regenerated'
+        : document.aiSummaryLastAction === DocumentAiSummaryAction.RETRIED
+          ? 'retried'
+          : 'generated'
+    );
   });
 }

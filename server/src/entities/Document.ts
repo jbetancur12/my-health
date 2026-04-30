@@ -17,6 +17,12 @@ export enum DocumentAiSummaryStatus {
   FAILED = 'failed',
 }
 
+export enum DocumentAiSummaryAction {
+  GENERATED = 'generated',
+  RETRIED = 'retried',
+  REGENERATED = 'regenerated',
+}
+
 @Entity({ tableName: 'documents' })
 export class Document {
   @PrimaryKey({ type: 'uuid' })
@@ -54,6 +60,15 @@ export class Document {
 
   @Property({ type: 'timestamptz', nullable: true })
   aiSummaryUpdatedAt?: Date;
+
+  @Property({ type: 'string', nullable: true })
+  aiSummaryProvider?: 'openai' | 'gemini';
+
+  @Property({ type: 'string', nullable: true })
+  aiSummaryModel?: string;
+
+  @Enum({ items: () => DocumentAiSummaryAction, nullable: true })
+  aiSummaryLastAction?: DocumentAiSummaryAction;
 
   @ManyToOne(() => Appointment)
   appointment!: Appointment;

@@ -62,7 +62,7 @@ export default function App() {
     removeAppointment,
     createTag,
     replaceAppointmentsData,
-    retryDocumentSummaryForAppointment,
+    runDocumentSummaryActionForAppointment,
     refreshAppointmentsData,
   } = useAppointmentsData();
   const {
@@ -489,8 +489,11 @@ export default function App() {
               onEdit={handleEditAppointment}
               tags={tags}
               onViewFile={(url, name) => setPdfViewer({ url, name })}
-              onRetryDocumentSummary={async (documentId) => {
-                const updatedDocument = await retryDocumentSummaryForAppointment(documentId);
+              onDocumentSummaryAction={async (documentId, action) => {
+                const updatedDocument = await runDocumentSummaryActionForAppointment(
+                  documentId,
+                  action
+                );
                 setSelectedAppointment((current) =>
                   current
                     ? {

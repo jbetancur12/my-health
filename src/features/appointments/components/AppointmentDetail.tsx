@@ -20,6 +20,8 @@ import { useMemo, useState } from 'react';
 import { TagDisplay } from './TagManager';
 import type { Appointment, AppointmentTag, Document } from '../../../shared/api/contracts';
 
+type DocumentSummaryAction = 'generate' | 'retry' | 'regenerate';
+
 interface AppointmentDetailProps {
   appointment: Appointment;
   onClose: () => void;
@@ -27,7 +29,10 @@ interface AppointmentDetailProps {
   onEdit: (appointment: Appointment) => void;
   tags?: AppointmentTag[];
   onViewFile?: (url: string, name: string) => void;
-  onRetryDocumentSummary?: (documentId: string) => void | Promise<unknown>;
+  onDocumentSummaryAction?: (
+    documentId: string,
+    action: DocumentSummaryAction
+  ) => void | Promise<unknown>;
 }
 
 const documentTypeLabels: Record<Document['type'], string> = {
@@ -54,6 +59,32 @@ function formatSummaryLines(summary: string) {
     .map((line) => line.replace(/\*\*/g, ''));
 }
 
+function getSummaryActionLabel(action?: Document['aiSummaryLastAction']) {
+  if (action === 'regenerated') return 'Regenerado';
+  if (action === 'retried') return 'Reintentado';
+  return 'Generado';
+}
+
+function getSummaryProviderLabel(provider?: Document['aiSummaryProvider']) {
+  if (provider === 'openai') return 'OpenAI';
+  if (provider === 'gemini') return 'Gemini';
+  return undefined;
+}
+
+function getSummaryMetaLine(document: Document) {
+  const metaParts = [
+    document.aiSummaryLastAction ? getSummaryActionLabel(document.aiSummaryLastAction) : undefined,
+    getSummaryProviderLabel(document.aiSummaryProvider),
+    document.aiSummaryModel,
+  ].filter(Boolean);
+
+  if (metaParts.length === 0) {
+    return undefined;
+  }
+
+  return metaParts.join(' · ');
+}
+
 export function AppointmentDetail({
   appointment,
   onClose,
@@ -61,7 +92,7 @@ export function AppointmentDetail({
   onEdit,
   tags = [],
   onViewFile,
-  onRetryDocumentSummary,
+  onDocumentSummaryAction,
 }: AppointmentDetailProps) {
   const [expandedSummaries, setExpandedSummaries] = useState<Record<string, boolean>>({});
   const isStandalonePwa = useMemo(() => {
@@ -148,11 +179,14 @@ export function AppointmentDetail({
             </h4>
 
             <div className="space-y-2">
-              {appointment.documents.map((document) => (
-                <div
-                  key={document.id}
-                  className="rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
-                >
+              {appointment.documents.map((document) => {
+                const summaryMetaLine = getSummaryMetaLine(document);
+
+                return (
+                  <div
+                    key={document.id}
+                    className="rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+                  >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
                       <div className="mb-2 flex items-center gap-2">
@@ -214,6 +248,11 @@ export function AppointmentDetail({
                     document.aiSummaryStatus === 'completed' &&
                     document.aiSummary ? (
                       <div className="space-y-2">
+                        {summaryMetaLine && (
+                          <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                            {summaryMetaLine}
+                          </p>
+                        )}
                         <div className="space-y-2">
                           {formatSummaryLines(document.aiSummary).map((line, index) => {
                             const separatorIndex = line.indexOf(':');
@@ -246,6 +285,14 @@ export function AppointmentDetail({
                             })}
                           </p>
                         )}
+                        <button
+                          type="button"
+                          onClick={() => onDocumentSummaryAction?.(document.id, 'regenerate')}
+                          className="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-3 py-2 text-sm text-blue-700 transition-colors hover:bg-blue-50"
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                          Regenerar resumen
+                        </button>
                       </div>
                     ) : null}
 
@@ -274,7 +321,7 @@ export function AppointmentDetail({
                         </div>
                         <button
                           type="button"
-                          onClick={() => onRetryDocumentSummary?.(document.id)}
+                          onClick={() => onDocumentSummaryAction?.(document.id, 'retry')}
                           className="inline-flex items-center gap-2 rounded-lg border border-amber-200 px-3 py-2 text-sm text-amber-700 transition-colors hover:bg-amber-50"
                         >
                           <RefreshCw className="h-4 w-4" />
@@ -290,7 +337,7 @@ export function AppointmentDetail({
                         </p>
                         <button
                           type="button"
-                          onClick={() => onRetryDocumentSummary?.(document.id)}
+                          onClick={() => onDocumentSummaryAction?.(document.id, 'generate')}
                           className="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-3 py-2 text-sm text-blue-700 transition-colors hover:bg-blue-50"
                         >
                           <Sparkles className="h-4 w-4" />
@@ -299,8 +346,9 @@ export function AppointmentDetail({
                       </div>
                     )}
                   </div>
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

@@ -279,6 +279,38 @@ export async function retryDocumentSummary(
   };
 }
 
+export async function generateDocumentSummary(
+  documentId: string
+): Promise<Appointment['documents'][number]> {
+  const data = (await fetchAPI(`/documents/${documentId}/summary/generate`, {
+    method: 'POST',
+  })) as { document: AppointmentApiDto['documents'][number] };
+
+  return {
+    ...data.document,
+    date: new Date(data.document.date),
+    aiSummaryUpdatedAt: data.document.aiSummaryUpdatedAt
+      ? new Date(data.document.aiSummaryUpdatedAt)
+      : undefined,
+  };
+}
+
+export async function regenerateDocumentSummary(
+  documentId: string
+): Promise<Appointment['documents'][number]> {
+  const data = (await fetchAPI(`/documents/${documentId}/summary/regenerate`, {
+    method: 'POST',
+  })) as { document: AppointmentApiDto['documents'][number] };
+
+  return {
+    ...data.document,
+    date: new Date(data.document.date),
+    aiSummaryUpdatedAt: data.document.aiSummaryUpdatedAt
+      ? new Date(data.document.aiSummaryUpdatedAt)
+      : undefined,
+  };
+}
+
 export async function generateExecutiveReport(
   payload: ExecutiveReportApiPayload
 ): Promise<ExecutiveReport> {

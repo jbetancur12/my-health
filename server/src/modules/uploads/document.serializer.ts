@@ -15,5 +15,8 @@ export function serializeAppointmentDocument(document: Document): AppointmentDoc
     aiSummaryStatus: document.aiSummaryStatus,
     aiSummaryError: document.aiSummaryError,
     aiSummaryUpdatedAt: document.aiSummaryUpdatedAt?.toISOString(),
+    aiSummaryProvider: document.aiSummaryProvider,
+    aiSummaryModel: document.aiSummaryModel,
+    aiSummaryLastAction: document.aiSummaryLastAction,
   };
 }

@@ -38,6 +38,9 @@ export interface Document {
   aiSummaryStatus: 'idle' | 'pending' | 'processing' | 'completed' | 'failed';
   aiSummaryError?: string;
   aiSummaryUpdatedAt?: Date;
+  aiSummaryProvider?: 'openai' | 'gemini';
+  aiSummaryModel?: string;
+  aiSummaryLastAction?: 'generated' | 'retried' | 'regenerated';
 }
 
 export interface Appointment {

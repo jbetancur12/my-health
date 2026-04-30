@@ -116,6 +116,9 @@ export interface AppointmentDocumentDto extends AppointmentDocumentPayload {
   aiSummaryStatus: 'idle' | 'pending' | 'processing' | 'completed' | 'failed';
   aiSummaryError?: string;
   aiSummaryUpdatedAt?: string;
+  aiSummaryProvider?: 'openai' | 'gemini';
+  aiSummaryModel?: string;
+  aiSummaryLastAction?: 'generated' | 'retried' | 'regenerated';
 }
 
 export interface AppointmentDto {

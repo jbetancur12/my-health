@@ -1,10 +1,15 @@
 import type { NextFunction, Request, Response } from 'express';
 import {
+  generateDocumentSummaryAction,
   getStoredDocumentFile,
+  regenerateDocumentSummaryAction,
   retryDocumentSummary,
   uploadDocumentFile,
 } from './upload.service.js';
-import { isDocumentSummaryEnabled } from './document-summary.service.js';
+import {
+  getDocumentSummaryConfigurationErrorMessage,
+  isDocumentSummaryEnabled,
+} from './document-summary.service.js';
 import { isMinioDocumentStorageConfigured } from './minio-storage.js';
 
 export function createUploadController() {
@@ -84,12 +89,68 @@ export function createDocumentSummaryRetryController() {
       }
 
       if (!isDocumentSummaryEnabled()) {
-        return res.status(503).json({
-          error: 'AI summaries are not configured. Set OPENAI_API_KEY to enable them.',
-        });
+        return res.status(503).json({ error: getDocumentSummaryConfigurationErrorMessage() });
       }
 
       const document = await retryDocumentSummary(documentId);
+      if (!document) {
+        return res.status(404).json({ error: 'Document not found' });
+      }
+
+      return res.status(202).json({ document });
+    } catch (error) {
+      return next(error);
+    }
+  };
+}
+
+export function createDocumentSummaryGenerateController() {
+  return async function postDocumentSummaryGenerate(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const documentId = String(req.params.documentId ?? '');
+
+      if (!documentId) {
+        return res.status(400).json({ error: 'Document id is required' });
+      }
+
+      if (!isDocumentSummaryEnabled()) {
+        return res.status(503).json({ error: getDocumentSummaryConfigurationErrorMessage() });
+      }
+
+      const document = await generateDocumentSummaryAction(documentId);
+      if (!document) {
+        return res.status(404).json({ error: 'Document not found' });
+      }
+
+      return res.status(202).json({ document });
+    } catch (error) {
+      return next(error);
+    }
+  };
+}
+
+export function createDocumentSummaryRegenerateController() {
+  return async function postDocumentSummaryRegenerate(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const documentId = String(req.params.documentId ?? '');
+
+      if (!documentId) {
+        return res.status(400).json({ error: 'Document id is required' });
+      }
+
+      if (!isDocumentSummaryEnabled()) {
+        return res.status(503).json({ error: getDocumentSummaryConfigurationErrorMessage() });
+      }
+
+      const document = await regenerateDocumentSummaryAction(documentId);
       if (!document) {
         return res.status(404).json({ error: 'Document not found' });
       }

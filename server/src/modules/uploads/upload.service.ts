@@ -13,7 +13,12 @@ import {
   uploadBufferToMinio,
 } from './minio-storage.js';
 import { serializeAppointmentDocument } from './document.serializer.js';
-import { isDocumentSummaryEnabled, queueDocumentSummary } from './document-summary.service.js';
+import {
+  generateDocumentSummary,
+  isDocumentSummaryEnabled,
+  regenerateDocumentSummary,
+  retryDocumentSummary as queueRetryDocumentSummary,
+} from './document-summary.service.js';
 
 interface UploadDocumentFileInput {
   appointmentId: string;
@@ -60,13 +65,16 @@ export async function uploadDocumentFile({ appointmentId, documentId, file }: Up
   document.aiSummary = undefined;
   document.aiSummaryError = undefined;
   document.aiSummaryUpdatedAt = undefined;
+  document.aiSummaryProvider = undefined;
+  document.aiSummaryModel = undefined;
+  document.aiSummaryLastAction = undefined;
   document.aiSummaryStatus = isDocumentSummaryEnabled()
     ? DocumentAiSummaryStatus.PENDING
     : DocumentAiSummaryStatus.IDLE;
   await em.flush();
 
   if (isDocumentSummaryEnabled()) {
-    const queuedDocument = await queueDocumentSummary(document.id, true);
+    const queuedDocument = await generateDocumentSummary(document.id);
     if (queuedDocument) {
       return { document: queuedDocument };
     }
@@ -116,5 +124,17 @@ export async function getStoredDocumentFile(documentId: string): Promise<StoredD
 }
 
 export async function retryDocumentSummary(documentId: string) {
-  return queueDocumentSummary(documentId, true);
+  return retryDocumentSummaryAction(documentId);
+}
+
+export async function generateDocumentSummaryAction(documentId: string) {
+  return generateDocumentSummary(documentId);
+}
+
+export async function retryDocumentSummaryAction(documentId: string) {
+  return queueRetryDocumentSummary(documentId);
+}
+
+export async function regenerateDocumentSummaryAction(documentId: string) {
+  return regenerateDocumentSummary(documentId);
 }
