@@ -129,7 +129,10 @@ function parseMedicalProfile(input: unknown) {
     emergencyContacts:
       parseOptionalArray(record.emergencyContacts)?.map(parseEmergencyContact) ?? [],
     insurance:
-      record.insurance === undefined
+      record.insurance === undefined ||
+      record.insurance === null ||
+      typeof record.insurance !== 'object' ||
+      Array.isArray(record.insurance)
         ? undefined
         : (() => {
             const insurance = parseObject(record.insurance, 'Seguro inválido');
