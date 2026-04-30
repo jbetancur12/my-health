@@ -321,7 +321,7 @@ Resultado esperado:
 
 ### Fase 6: Integración con PDF ejecutivo
 
-Estado: `planned`
+Estado: `done`
 
 Objetivos:
 
@@ -329,14 +329,35 @@ Objetivos:
 
 Tareas:
 
-- [ ] mantener la capa de resumen reciente por rango
-- [ ] sumar la memoria general como contexto fijo
-- [ ] mostrar:
+- [x] mantener la capa de resumen reciente por rango
+- [x] sumar la memoria general como contexto fijo
+- [x] mostrar:
   - problemas activos
   - tratamientos activos
   - estudios pendientes
   - evolución reciente
-- [ ] evitar repetir patologías o medicamentos ya consolidados
+- [x] evitar repetir patologías o medicamentos ya consolidados
+
+Notas de implementación:
+
+- el reporte ejecutivo ahora combina:
+  - contexto reciente filtrado por rango
+  - memoria clínica longitudinal consolidada
+- el backend guarda snapshots en caché de cada combinación relevante de:
+  - rango
+  - flags del reporte
+  - proveedor IA
+  - fingerprint del contexto clínico
+- si ese contexto no cambió, se reutiliza automáticamente el último reporte ejecutivo
+- la UI del PDF ya puede indicar si el resumen fue:
+  - reutilizado desde caché
+  - regenerado con IA
+
+Decisión de producto aplicada:
+
+- es mejor reutilizar automáticamente el último reporte ejecutivo equivalente
+- esto evita gastar tokens cuando no hubo cambios clínicos relevantes en ese rango
+- y elimina la necesidad de que el usuario recuerde un botón manual de "descargar último"
 
 Resultado esperado:
 

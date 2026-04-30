@@ -6,7 +6,7 @@ export async function postExecutiveSummaryReport(req: Request, res: Response, ne
   try {
     const input = parseExecutiveReportInput(req.body);
     const report = await generateExecutiveReport(input);
-    res.status(201).json({ report });
+    res.status(200).json({ report });
   } catch (error) {
     next(error);
   }

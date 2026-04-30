@@ -360,6 +360,7 @@ export interface ExecutiveReportPayload {
   vaccines: VaccineDto[];
   vitalSigns: VitalSignDto[];
   medicalProfile: MedicalProfileDto;
+  clinicalMemory?: ClinicalMemoryDto;
   dateRange: ReportDateRange;
   includeProfile: boolean;
   includeAppointments: boolean;
@@ -372,4 +373,6 @@ export interface ExecutiveReportDto {
   summary: string;
   generatedAt: string;
   provider: 'openai' | 'gemini';
+  model?: string;
+  cached: boolean;
 }

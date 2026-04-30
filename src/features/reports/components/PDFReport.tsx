@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type {
   Appointment,
+  ClinicalMemory,
   MedicalProfile,
   Medication,
   ReportDateRange,
@@ -15,6 +16,7 @@ import { generateExecutiveReport as requestExecutiveReport } from '../../../shar
 
 interface PDFReportProps {
   appointments: Appointment[];
+  clinicalMemory: ClinicalMemory;
   medications: Medication[];
   vaccines: Vaccine[];
   vitalSigns: VitalSignReading[];
@@ -80,6 +82,7 @@ function setPdfDrawColor(doc: jsPDF, color: readonly [number, number, number]) {
 
 export function PDFReport({
   appointments,
+  clinicalMemory,
   medications,
   vaccines,
   vitalSigns,
@@ -93,6 +96,10 @@ export function PDFReport({
   const [dateRange, setDateRange] = useState<DateRange>('6months');
   const [includeExecutiveSummary, setIncludeExecutiveSummary] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [executiveReportStatus, setExecutiveReportStatus] = useState<{
+    cached: boolean;
+    generatedAt: Date;
+  } | null>(null);
 
   function filterByDate<T extends { date: Date }>(items: T[]) {
     if (dateRange === 'all') return items;
@@ -118,6 +125,8 @@ export function PDFReport({
             summary: string;
             generatedAt: Date;
             provider: 'openai' | 'gemini';
+            model?: string;
+            cached: boolean;
           }
         | undefined;
 
@@ -189,6 +198,55 @@ export function PDFReport({
               insurance: medicalProfile.insurance,
               notes: medicalProfile.notes,
             },
+            clinicalMemory: {
+              id: clinicalMemory.id,
+              activeConditions: clinicalMemory.activeConditions.map((fact) => ({
+                label: fact.label,
+                sourceDocumentIds: fact.sourceDocumentIds,
+                sourceAppointmentIds: fact.sourceAppointmentIds,
+                lastSeenAt: fact.lastSeenAt?.toISOString(),
+              })),
+              historicalConditions: clinicalMemory.historicalConditions.map((fact) => ({
+                label: fact.label,
+                sourceDocumentIds: fact.sourceDocumentIds,
+                sourceAppointmentIds: fact.sourceAppointmentIds,
+                lastSeenAt: fact.lastSeenAt?.toISOString(),
+              })),
+              activeMedications: clinicalMemory.activeMedications.map((fact) => ({
+                label: fact.label,
+                sourceDocumentIds: fact.sourceDocumentIds,
+                sourceAppointmentIds: fact.sourceAppointmentIds,
+                lastSeenAt: fact.lastSeenAt?.toISOString(),
+                dosage: fact.dosage,
+                frequency: fact.frequency,
+                notes: fact.notes,
+                status: fact.status,
+              })),
+              importantFindings: clinicalMemory.importantFindings.map((fact) => ({
+                label: fact.label,
+                sourceDocumentIds: fact.sourceDocumentIds,
+                sourceAppointmentIds: fact.sourceAppointmentIds,
+                lastSeenAt: fact.lastSeenAt?.toISOString(),
+              })),
+              pendingStudies: clinicalMemory.pendingStudies.map((fact) => ({
+                label: fact.label,
+                sourceDocumentIds: fact.sourceDocumentIds,
+                sourceAppointmentIds: fact.sourceAppointmentIds,
+                lastSeenAt: fact.lastSeenAt?.toISOString(),
+              })),
+              followUpRecommendations: clinicalMemory.followUpRecommendations.map((fact) => ({
+                label: fact.label,
+                sourceDocumentIds: fact.sourceDocumentIds,
+                sourceAppointmentIds: fact.sourceAppointmentIds,
+                lastSeenAt: fact.lastSeenAt?.toISOString(),
+                description: fact.description,
+                interval: fact.interval,
+                suggestedSpecialty: fact.suggestedSpecialty,
+              })),
+              lastUpdatedAt: clinicalMemory.lastUpdatedAt?.toISOString(),
+              createdAt: clinicalMemory.createdAt?.toISOString(),
+              updatedAt: clinicalMemory.updatedAt?.toISOString(),
+            },
             dateRange,
             includeProfile,
             includeAppointments,
@@ -196,8 +254,13 @@ export function PDFReport({
             includeVaccines,
             includeVitals,
           });
+          setExecutiveReportStatus({
+            cached: executiveReport.cached,
+            generatedAt: executiveReport.generatedAt,
+          });
         } catch (error) {
           console.error('Error generating executive report:', error);
+          setExecutiveReportStatus(null);
           alert(
             'No pudimos generar el reporte ejecutivo con IA. Continuaremos con el PDF estructurado.'
           );
@@ -560,6 +623,7 @@ export function PDFReport({
     } catch (error) {
       console.error('Error generating PDF:', error);
       setGenerating(false);
+      setExecutiveReportStatus(null);
       alert('Error al generar el PDF. Por favor intenta nuevamente.');
     }
   }
@@ -723,6 +787,14 @@ export function PDFReport({
             </>
           )}
         </button>
+
+        {includeExecutiveSummary && executiveReportStatus ? (
+          <p className="mt-3 text-sm text-gray-600">
+            {executiveReportStatus.cached
+              ? `Se reutilizará el último reporte ejecutivo generado el ${format(executiveReportStatus.generatedAt, "d 'de' MMM yyyy h:mm a", { locale: es })} porque no hubo cambios clínicos relevantes para este rango.`
+              : `El próximo PDF usará un reporte ejecutivo actualizado al ${format(executiveReportStatus.generatedAt, "d 'de' MMM yyyy h:mm a", { locale: es })}.`}
+          </p>
+        ) : null}
       </div>
 
       {/* Tips */}

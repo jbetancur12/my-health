@@ -7,6 +7,7 @@ import { ClinicalMemory } from './entities/ClinicalMemory.js';
 import { ClinicalSuggestion } from './entities/ClinicalSuggestion.js';
 import { Control } from './entities/Control.js';
 import { Document } from './entities/Document.js';
+import { ExecutiveReportSnapshot } from './entities/ExecutiveReportSnapshot.js';
 import { Medication } from './entities/Medication.js';
 import { MedicalProfile } from './entities/MedicalProfile.js';
 import { NotificationPreference } from './entities/NotificationPreference.js';
@@ -32,6 +33,7 @@ export default defineConfig({
     ClinicalSuggestion,
     Control,
     Document,
+    ExecutiveReportSnapshot,
     Medication,
     MedicalProfile,
     NotificationPreference,

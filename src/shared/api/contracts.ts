@@ -249,6 +249,8 @@ export interface ExecutiveReport {
   summary: string;
   generatedAt: Date;
   provider: 'openai' | 'gemini';
+  model?: string;
+  cached: boolean;
 }
 
 export type AppointmentApiPayload = AppointmentPayload;

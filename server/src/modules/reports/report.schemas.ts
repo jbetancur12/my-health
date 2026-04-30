@@ -31,6 +31,82 @@ function parseDocument(input: unknown) {
   };
 }
 
+function parseClinicalMemoryFact(input: unknown) {
+  const record = parseObject(input, 'Hecho de memoria clínica inválido');
+
+  return {
+    label: parseNonEmptyString(record.label, 'El hecho de memoria clínica requiere label'),
+    sourceDocumentIds:
+      parseOptionalArray(record.sourceDocumentIds)?.map((item) =>
+        parseNonEmptyString(item, 'Cada sourceDocumentId debe ser texto')
+      ) ?? [],
+    sourceAppointmentIds:
+      parseOptionalArray(record.sourceAppointmentIds)?.map((item) =>
+        parseNonEmptyString(item, 'Cada sourceAppointmentId debe ser texto')
+      ) ?? [],
+    lastSeenAt: parseOptionalString(record.lastSeenAt),
+  };
+}
+
+function parseClinicalMemoryMedicationFact(input: unknown) {
+  const fact = parseClinicalMemoryFact(input);
+  const record = parseObject(input, 'Medicamento de memoria clínica inválido');
+
+  return {
+    ...fact,
+    dosage: parseOptionalString(record.dosage),
+    frequency: parseOptionalString(record.frequency),
+    notes: parseOptionalString(record.notes),
+    status: parseNonEmptyString(
+      record.status,
+      'El medicamento de memoria clínica requiere estado'
+    ) as 'active' | 'suspended' | 'mentioned',
+  };
+}
+
+function parseClinicalMemoryFollowUpFact(input: unknown) {
+  const fact = parseClinicalMemoryFact(input);
+  const record = parseObject(input, 'Control de memoria clínica inválido');
+
+  return {
+    ...fact,
+    description: parseNonEmptyString(
+      record.description,
+      'La recomendación de control requiere descripción'
+    ),
+    interval: parseOptionalString(record.interval),
+    suggestedSpecialty: parseOptionalString(record.suggestedSpecialty),
+  };
+}
+
+function parseClinicalMemory(input: unknown) {
+  if (input === undefined || input === null) {
+    return undefined;
+  }
+
+  const record = parseObject(input, 'Memoria clínica inválida para reporte');
+
+  return {
+    id: parseOptionalString(record.id),
+    activeConditions:
+      parseOptionalArray(record.activeConditions)?.map(parseClinicalMemoryFact) ?? [],
+    historicalConditions:
+      parseOptionalArray(record.historicalConditions)?.map(parseClinicalMemoryFact) ?? [],
+    activeMedications:
+      parseOptionalArray(record.activeMedications)?.map(parseClinicalMemoryMedicationFact) ?? [],
+    importantFindings:
+      parseOptionalArray(record.importantFindings)?.map(parseClinicalMemoryFact) ?? [],
+    pendingStudies:
+      parseOptionalArray(record.pendingStudies)?.map(parseClinicalMemoryFact) ?? [],
+    followUpRecommendations:
+      parseOptionalArray(record.followUpRecommendations)?.map(parseClinicalMemoryFollowUpFact) ??
+      [],
+    lastUpdatedAt: parseOptionalString(record.lastUpdatedAt),
+    createdAt: parseOptionalString(record.createdAt),
+    updatedAt: parseOptionalString(record.updatedAt),
+  };
+}
+
 function parseAppointment(input: unknown) {
   const record = parseObject(input, 'Cita inválida para reporte');
 
@@ -174,6 +250,7 @@ export function parseExecutiveReportInput(input: unknown): ExecutiveReportInput 
       parseVitalSign
     ),
     medicalProfile: parseMedicalProfile(record.medicalProfile),
+    clinicalMemory: parseClinicalMemory(record.clinicalMemory),
     dateRange,
     includeProfile: parseBoolean(record.includeProfile, 'includeProfile debe ser booleano'),
     includeAppointments: parseBoolean(

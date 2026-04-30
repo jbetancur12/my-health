@@ -638,14 +638,15 @@ export function AppTabContent({
     }
 
     return (
-      <LazySection>
-        <PDFReport
-          appointments={appointments}
-          medications={medications}
-          vaccines={vaccines}
-          vitalSigns={vitalSigns}
-          medicalProfile={medicalProfile}
-        />
+        <LazySection>
+          <PDFReport
+            appointments={appointments}
+            clinicalMemory={clinicalMemory}
+            medications={medications}
+            vaccines={vaccines}
+            vitalSigns={vitalSigns}
+            medicalProfile={medicalProfile}
+          />
       </LazySection>
     );
   }
