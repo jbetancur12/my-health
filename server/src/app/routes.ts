@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import { registerAppDataRoutes } from '../modules/app-data/routes.js';
 import { registerAppointmentRoutes } from '../modules/appointments/routes.js';
+import { registerClinicalMemoryRoutes } from '../modules/clinical-memory/routes.js';
 import { registerControlRoutes } from '../modules/controls/routes.js';
 import { registerHealthRoutes } from '../modules/health/routes.js';
 import { registerMedicalProfileRoutes } from '../modules/medical-profile/routes.js';
@@ -25,6 +26,7 @@ export function registerRoutes({ app, nodeEnv, upload, uploadsRoot }: RegisterRo
   void uploadsRoot;
   registerHealthRoutes(app, nodeEnv);
   registerAppointmentRoutes(app);
+  registerClinicalMemoryRoutes(app);
   registerControlRoutes(app);
   registerUploadRoutes(app, upload);
   registerMedicationRoutes(app);

@@ -6,6 +6,8 @@ import type {
   AppointmentApiPayload,
   AppointmentTag,
   AppointmentTagApiDto,
+  ClinicalMemory,
+  ClinicalMemoryApiDto,
   Control,
   ControlApiDto,
   ControlApiPayload,
@@ -38,6 +40,7 @@ export type {
   AppDataBundle,
   Appointment,
   AppointmentTag,
+  ClinicalMemory,
   Control,
   Document,
   DocumentType,
@@ -142,6 +145,26 @@ function parseMedicalProfile(profile: MedicalProfileApiDto): MedicalProfile {
       ...contact,
       id: contact.id ?? crypto.randomUUID(),
     })),
+  };
+}
+
+function parseClinicalMemory(memory: ClinicalMemoryApiDto): ClinicalMemory {
+  const parseFact = <T extends { lastSeenAt?: string }>(fact: T) => ({
+    ...fact,
+    lastSeenAt: fact.lastSeenAt ? new Date(fact.lastSeenAt) : undefined,
+  });
+
+  return {
+    ...memory,
+    activeConditions: memory.activeConditions.map(parseFact),
+    historicalConditions: memory.historicalConditions.map(parseFact),
+    activeMedications: memory.activeMedications.map(parseFact),
+    importantFindings: memory.importantFindings.map(parseFact),
+    pendingStudies: memory.pendingStudies.map(parseFact),
+    followUpRecommendations: memory.followUpRecommendations.map(parseFact),
+    lastUpdatedAt: memory.lastUpdatedAt ? new Date(memory.lastUpdatedAt) : undefined,
+    createdAt: memory.createdAt ? new Date(memory.createdAt) : undefined,
+    updatedAt: memory.updatedAt ? new Date(memory.updatedAt) : undefined,
   };
 }
 
@@ -370,6 +393,11 @@ export async function deleteMedication(id: string): Promise<void> {
 export async function getMedicalProfile(): Promise<MedicalProfile> {
   const data = (await fetchAPI('/medical-profile')) as { medicalProfile: MedicalProfileApiDto };
   return parseMedicalProfile(data.medicalProfile);
+}
+
+export async function getClinicalMemory(): Promise<ClinicalMemory> {
+  const data = (await fetchAPI('/clinical-memory')) as { clinicalMemory: ClinicalMemoryApiDto };
+  return parseClinicalMemory(data.clinicalMemory);
 }
 
 export async function saveMedicalProfile(profile: MedicalProfile): Promise<MedicalProfile> {

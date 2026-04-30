@@ -11,6 +11,7 @@ import type { AppointmentStats } from '../features/appointments/hooks/useAppoint
 import type {
   Appointment,
   AppDataBundle,
+  ClinicalMemory,
   Control,
   MedicalProfile,
   Medication,
@@ -87,8 +88,11 @@ interface AppTabContentProps {
   filterDoctor: string;
   filterSpecialty: string;
   medicalProfile: MedicalProfile;
+  clinicalMemory: ClinicalMemory;
   medicalProfileError: string | null;
   medicalProfileLoading: boolean;
+  clinicalMemoryError: string | null;
+  clinicalMemoryLoading: boolean;
   medications: Medication[];
   medicationsError: string | null;
   medicationsLoading: boolean;
@@ -146,8 +150,11 @@ export function AppTabContent({
   filterDoctor,
   filterSpecialty,
   medicalProfile,
+  clinicalMemory,
   medicalProfileError,
   medicalProfileLoading,
+  clinicalMemoryError,
+  clinicalMemoryLoading,
   medications,
   medicationsError,
   medicationsLoading,
@@ -347,27 +354,33 @@ export function AppTabContent({
   }
 
   if (activeTab === 'profile') {
-    if (medicalProfileLoading) {
+    if (medicalProfileLoading || clinicalMemoryLoading) {
       return (
         <FeatureStatePanel
           variant="loading"
           title="Cargando perfil médico"
-          message="Estamos preparando tu información personal."
+          message="Estamos preparando tu información personal y la memoria clínica consolidada."
         />
       );
     }
 
-    if (medicalProfileError) {
+    if (medicalProfileError || clinicalMemoryError) {
       return (
         <FeatureStatePanel
           variant="error"
           title="No pudimos cargar el perfil médico"
-          message={medicalProfileError}
+          message={medicalProfileError ?? clinicalMemoryError ?? 'Intenta nuevamente en unos segundos.'}
         />
       );
     }
 
-    return <MedicalProfileScreen profile={medicalProfile} onUpdate={onProfileUpdate} />;
+    return (
+      <MedicalProfileScreen
+        profile={medicalProfile}
+        clinicalMemory={clinicalMemory}
+        onUpdate={onProfileUpdate}
+      />
+    );
   }
 
   if (activeTab === 'vitals') {

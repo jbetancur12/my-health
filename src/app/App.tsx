@@ -11,6 +11,7 @@ import type { AppTab } from './types';
 import { useAppointmentFilters } from '../features/appointments/hooks/useAppointmentFilters';
 import { useAppointmentsData } from '../features/appointments/hooks/useAppointmentsData';
 import { useScheduledAppointmentsData } from '../features/appointments/hooks/useScheduledAppointmentsData';
+import { useClinicalMemoryData } from '../features/medical-profile/hooks/useClinicalMemoryData';
 import { useMedicalProfileData } from '../features/medical-profile/hooks/useMedicalProfileData';
 import { ControlAlerts } from '../features/controls/components/ControlAlerts';
 import { DeleteAppointmentDialog } from '../features/appointments/components/DeleteAppointmentDialog';
@@ -83,6 +84,11 @@ export default function App() {
     toggleMedication,
     replaceMedications,
   } = useMedicationsData();
+  const {
+    clinicalMemory,
+    error: clinicalMemoryError,
+    isLoading: clinicalMemoryLoading,
+  } = useClinicalMemoryData();
   const {
     medicalProfile,
     error: medicalProfileError,
@@ -430,8 +436,11 @@ export default function App() {
             filterDoctor={filterDoctor}
             filterSpecialty={filterSpecialty}
             medicalProfile={medicalProfile}
+            clinicalMemory={clinicalMemory}
             appointmentsLoading={appointmentsLoading}
             controlsLoading={appointmentsLoading}
+            clinicalMemoryError={clinicalMemoryError}
+            clinicalMemoryLoading={clinicalMemoryLoading}
             medicalProfileError={medicalProfileError}
             medications={medications}
             medicationsLoading={medicationsLoading}

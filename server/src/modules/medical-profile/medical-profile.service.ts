@@ -4,6 +4,7 @@ import { serializeMedicalProfile } from './medical-profile.serializer.js';
 import type { MedicalProfileInput } from './medical-profile.types.js';
 import { updateMedicalProfileEntity } from '../shared/entity-factories.js';
 import { findFirst } from '../shared/find-first.js';
+import { rebuildClinicalMemory } from '../clinical-memory/clinical-memory.service.js';
 
 export async function getMedicalProfile() {
   const orm = await getOrm();
@@ -30,6 +31,7 @@ export async function upsertMedicalProfile(input: MedicalProfileInput) {
 
   updateMedicalProfileEntity(profile, input);
   await em.flush();
+  await rebuildClinicalMemory();
 
   return serializeMedicalProfile(profile);
 }

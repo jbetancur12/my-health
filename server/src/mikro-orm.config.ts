@@ -3,6 +3,7 @@ import { Migrator } from '@mikro-orm/migrations';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Appointment } from './entities/Appointment.js';
+import { ClinicalMemory } from './entities/ClinicalMemory.js';
 import { Control } from './entities/Control.js';
 import { Document } from './entities/Document.js';
 import { Medication } from './entities/Medication.js';
@@ -26,6 +27,7 @@ export default defineConfig({
   clientUrl: databaseUrl,
   entities: [
     Appointment,
+    ClinicalMemory,
     Control,
     Document,
     Medication,

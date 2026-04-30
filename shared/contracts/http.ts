@@ -39,6 +39,39 @@ export interface DocumentStructuredDataDto {
   confidenceNotes: string[];
 }
 
+export interface ClinicalMemoryFactDto {
+  label: string;
+  sourceDocumentIds: string[];
+  sourceAppointmentIds: string[];
+  lastSeenAt?: string;
+}
+
+export interface ClinicalMemoryMedicationFactDto extends ClinicalMemoryFactDto {
+  dosage?: string;
+  frequency?: string;
+  notes?: string;
+  status: DocumentStructuredMedicationStatus;
+}
+
+export interface ClinicalMemoryFollowUpFactDto extends ClinicalMemoryFactDto {
+  description: string;
+  interval?: string;
+  suggestedSpecialty?: string;
+}
+
+export interface ClinicalMemoryDto {
+  id?: string;
+  activeConditions: ClinicalMemoryFactDto[];
+  historicalConditions: ClinicalMemoryFactDto[];
+  activeMedications: ClinicalMemoryMedicationFactDto[];
+  importantFindings: ClinicalMemoryFactDto[];
+  pendingStudies: ClinicalMemoryFactDto[];
+  followUpRecommendations: ClinicalMemoryFollowUpFactDto[];
+  lastUpdatedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface AppointmentPayload {
   date: string;
   specialty: string;

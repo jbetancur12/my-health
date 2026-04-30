@@ -5,6 +5,7 @@ import type {
   DocumentStructuredDataDto,
   DocumentStructuredMedicationDto,
   DocumentStructuredMedicationStatus,
+  ClinicalMemoryDto,
   AppointmentDto,
   AppointmentPayload,
   AppointmentTagDto,
@@ -37,6 +38,39 @@ export type DocumentStructuredMedication = DocumentStructuredMedicationDto;
 export type DocumentStructuredControl = DocumentStructuredControlDto;
 
 export type DocumentStructuredData = DocumentStructuredDataDto;
+
+export interface ClinicalMemoryFact {
+  label: string;
+  sourceDocumentIds: string[];
+  sourceAppointmentIds: string[];
+  lastSeenAt?: Date;
+}
+
+export interface ClinicalMemoryMedicationFact extends ClinicalMemoryFact {
+  dosage?: string;
+  frequency?: string;
+  notes?: string;
+  status: DocumentStructuredMedicationStatus;
+}
+
+export interface ClinicalMemoryFollowUpFact extends ClinicalMemoryFact {
+  description: string;
+  interval?: string;
+  suggestedSpecialty?: string;
+}
+
+export interface ClinicalMemory {
+  id?: string;
+  activeConditions: ClinicalMemoryFact[];
+  historicalConditions: ClinicalMemoryFact[];
+  activeMedications: ClinicalMemoryMedicationFact[];
+  importantFindings: ClinicalMemoryFact[];
+  pendingStudies: ClinicalMemoryFact[];
+  followUpRecommendations: ClinicalMemoryFollowUpFact[];
+  lastUpdatedAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 export interface Document {
   id: string;
@@ -205,4 +239,5 @@ export type VitalSignApiDto = VitalSignDto;
 export type VaccineApiDto = VaccineDto;
 export type AppDataBundleApiDto = AppDataBundleDto;
 export type AppointmentDocumentApiPayload = AppointmentDocumentPayload;
+export type ClinicalMemoryApiDto = ClinicalMemoryDto;
 export type { ReportDateRange, ScheduledAppointmentStatus };
