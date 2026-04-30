@@ -133,13 +133,18 @@ function parseMedicalProfile(input: unknown) {
         ? undefined
         : (() => {
             const insurance = parseObject(record.insurance, 'Seguro inválido');
+            const provider = parseOptionalString(insurance.provider);
+            const policyNumber = parseOptionalString(insurance.policyNumber);
+            const groupNumber = parseOptionalString(insurance.groupNumber);
+
+            if (!provider || !policyNumber) {
+              return undefined;
+            }
+
             return {
-              provider: parseNonEmptyString(insurance.provider, 'El seguro requiere proveedor'),
-              policyNumber: parseNonEmptyString(
-                insurance.policyNumber,
-                'El seguro requiere número de póliza'
-              ),
-              groupNumber: parseOptionalString(insurance.groupNumber),
+              provider,
+              policyNumber,
+              groupNumber,
             };
           })(),
     notes: parseOptionalString(record.notes),
