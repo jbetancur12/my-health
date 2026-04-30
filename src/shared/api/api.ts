@@ -417,6 +417,16 @@ export async function convertScheduledAppointment(
   );
 }
 
+export async function sendScheduledAppointmentReminder(id: string): Promise<ScheduledAppointment> {
+  const data = await fetchAPI(`/scheduled-appointments/${id}/send-reminder`, {
+    method: 'POST',
+  });
+
+  return parseScheduledAppointment(
+    (data as { scheduledAppointment: ScheduledAppointmentApiDto }).scheduledAppointment
+  );
+}
+
 export async function saveNotificationPreferences(
   preferences: NotificationPreferences
 ): Promise<NotificationPreferences> {

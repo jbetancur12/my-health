@@ -72,6 +72,7 @@ export default function App() {
     saveScheduledAppointment,
     removeScheduledAppointment,
     markScheduledAppointmentConverted,
+    sendReminderNow,
   } = useScheduledAppointmentsData();
   const {
     medications,
@@ -272,6 +273,22 @@ export default function App() {
     setShowScheduledAppointmentModal(false);
     setShowAddModal(true);
     setActiveTab('appointments');
+  };
+
+  const handleSendScheduledAppointmentReminder = async (
+    scheduledAppointment: ScheduledAppointment
+  ) => {
+    try {
+      await sendReminderNow(scheduledAppointment.id);
+      window.alert('Recordatorio enviado correctamente.');
+    } catch (error) {
+      console.error('Error sending scheduled appointment reminder:', error);
+      window.alert(
+        error instanceof Error
+          ? `No pudimos enviar el recordatorio: ${error.message}`
+          : 'No pudimos enviar el recordatorio.'
+      );
+    }
   };
 
   const confirmDeleteAppointment = async () => {
@@ -538,6 +555,7 @@ export default function App() {
               }}
               onDelete={handleDeleteScheduledAppointment}
               onConvert={handleConvertScheduledAppointment}
+              onSendReminder={handleSendScheduledAppointmentReminder}
               onSave={handleSaveScheduledAppointment}
             />
           </LazyOverlay>

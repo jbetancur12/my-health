@@ -3,6 +3,7 @@ import { getOrm } from '../../orm.js';
 import { createScheduledAppointmentEntity, updateScheduledAppointmentEntity } from '../shared/entity-factories.js';
 import { serializeScheduledAppointment } from './scheduled-appointment.serializer.js';
 import type { ScheduledAppointmentInput } from './scheduled-appointment.types.js';
+import { sendScheduledAppointmentReminderNow } from './whatsapp-meta.service.js';
 
 export async function listScheduledAppointments() {
   const orm = await getOrm();
@@ -74,6 +75,15 @@ export async function convertScheduledAppointment(id: string, appointmentId: str
   scheduledAppointment.convertedAppointmentId = appointmentId;
   scheduledAppointment.lastWhatsappReminderError = undefined;
   await em.flush();
+
+  return serializeScheduledAppointment(scheduledAppointment);
+}
+
+export async function triggerScheduledAppointmentReminder(id: string) {
+  const scheduledAppointment = await sendScheduledAppointmentReminderNow(id);
+  if (!scheduledAppointment) {
+    return null;
+  }
 
   return serializeScheduledAppointment(scheduledAppointment);
 }

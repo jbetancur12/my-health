@@ -15,6 +15,7 @@ interface ScheduledAppointmentModalProps {
   onClose: () => void;
   onDelete?: (scheduledAppointment: ScheduledAppointment) => void;
   onConvert?: (scheduledAppointment: ScheduledAppointment) => void;
+  onSendReminder?: (scheduledAppointment: ScheduledAppointment) => Promise<unknown> | unknown;
   onSave: (
     payload: ScheduledAppointmentApiPayload & {
       id?: string;
@@ -60,6 +61,7 @@ export function ScheduledAppointmentModal({
   onClose,
   onDelete,
   onConvert,
+  onSendReminder,
   onSave,
 }: ScheduledAppointmentModalProps) {
   const [scheduledAt, setScheduledAt] = useState('');
@@ -300,6 +302,16 @@ export function ScheduledAppointmentModal({
                 className="rounded-lg bg-emerald-600 px-4 py-2 text-white transition-colors hover:bg-emerald-700"
               >
                 Registrar cita realizada
+              </button>
+            ) : null}
+
+            {scheduledAppointment && onSendReminder ? (
+              <button
+                type="button"
+                onClick={() => onSendReminder(scheduledAppointment)}
+                className="rounded-lg border border-blue-200 px-4 py-2 text-blue-700 transition-colors hover:bg-blue-50"
+              >
+                Enviar recordatorio de prueba
               </button>
             ) : null}
 

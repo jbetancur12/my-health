@@ -3,6 +3,7 @@ import {
   getScheduledAppointments,
   postScheduledAppointment,
   postScheduledAppointmentConversion,
+  postScheduledAppointmentReminder,
   putScheduledAppointment,
   removeScheduledAppointment,
 } from './scheduled-appointment.controller.js';
@@ -13,4 +14,5 @@ export function registerScheduledAppointmentRoutes(app: express.Express) {
   app.put('/api/scheduled-appointments/:id', putScheduledAppointment);
   app.delete('/api/scheduled-appointments/:id', removeScheduledAppointment);
   app.post('/api/scheduled-appointments/:id/convert', postScheduledAppointmentConversion);
+  app.post('/api/scheduled-appointments/:id/send-reminder', postScheduledAppointmentReminder);
 }

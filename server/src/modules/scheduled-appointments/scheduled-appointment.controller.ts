@@ -10,6 +10,7 @@ import {
   createScheduledAppointment,
   deleteScheduledAppointment,
   listScheduledAppointments,
+  triggerScheduledAppointmentReminder,
   updateScheduledAppointment,
 } from './scheduled-appointment.service.js';
 
@@ -86,6 +87,29 @@ export async function postScheduledAppointmentConversion(
       scheduledAppointmentId,
       input.appointmentId
     );
+
+    if (!scheduledAppointment) {
+      return res.status(404).json({ error: 'Scheduled appointment not found' });
+    }
+
+    return res.json({ scheduledAppointment });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function postScheduledAppointmentReminder(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const scheduledAppointmentId = getRouteId(req.params.id);
+    if (!scheduledAppointmentId) {
+      return res.status(400).json({ error: 'Invalid scheduled appointment id' });
+    }
+
+    const scheduledAppointment = await triggerScheduledAppointmentReminder(scheduledAppointmentId);
 
     if (!scheduledAppointment) {
       return res.status(404).json({ error: 'Scheduled appointment not found' });

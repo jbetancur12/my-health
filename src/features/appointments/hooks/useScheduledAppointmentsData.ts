@@ -57,6 +57,14 @@ export function useScheduledAppointmentsData() {
     return saved;
   }
 
+  async function sendReminderNow(id: string) {
+    const saved = await api.sendScheduledAppointmentReminder(id);
+    setScheduledAppointments((current) =>
+      current.map((item) => (item.id === saved.id ? saved : item))
+    );
+    return saved;
+  }
+
   return {
     scheduledAppointments,
     error,
@@ -64,6 +72,7 @@ export function useScheduledAppointmentsData() {
     saveScheduledAppointment,
     removeScheduledAppointment,
     markScheduledAppointmentConverted,
+    sendReminderNow,
     refreshScheduledAppointments: loadData,
   };
 }

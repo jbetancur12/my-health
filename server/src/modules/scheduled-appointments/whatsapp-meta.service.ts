@@ -95,6 +95,36 @@ async function sendMetaTemplateReminder(
   }
 }
 
+async function getReminderContext() {
+  const config = getMetaWhatsappConfig();
+  if (!config) {
+    throw new Error('WhatsApp no está configurado en este entorno.');
+  }
+
+  const orm = await getOrm();
+  const em = orm.em.fork();
+  const preferences = await findFirst(em, NotificationPreference, { createdAt: 'asc' });
+
+  if (!preferences?.whatsappEnabled) {
+    throw new Error('Activa WhatsApp en configuración antes de enviar recordatorios.');
+  }
+
+  if (!preferences.whatsappOptIn) {
+    throw new Error('Debes marcar el consentimiento de WhatsApp antes de enviar recordatorios.');
+  }
+
+  if (!preferences.phone) {
+    throw new Error('Configura un número de WhatsApp antes de enviar recordatorios.');
+  }
+
+  const to = normalizeWhatsappPhone(preferences.phone);
+  if (!to) {
+    throw new Error('El número de WhatsApp no tiene un formato válido.');
+  }
+
+  return { config, em, preferences, to };
+}
+
 function pickDueReminderOffsets(
   reminderDays: number[],
   reminderSentOffsets: number[],
@@ -114,23 +144,14 @@ function pickDueReminderOffsets(
 }
 
 export async function runScheduledAppointmentReminderCycle() {
-  const config = getMetaWhatsappConfig();
-  if (!config) {
+  let context;
+  try {
+    context = await getReminderContext();
+  } catch {
     return;
   }
 
-  const orm = await getOrm();
-  const em = orm.em.fork();
-  const preferences = await findFirst(em, NotificationPreference, { createdAt: 'asc' });
-
-  if (!preferences?.whatsappEnabled || !preferences.whatsappOptIn || !preferences.phone) {
-    return;
-  }
-
-  const to = normalizeWhatsappPhone(preferences.phone);
-  if (!to) {
-    return;
-  }
+  const { config, em, preferences, to } = context;
 
   const scheduledAppointments = await em.find(
     ScheduledAppointment,
@@ -172,6 +193,22 @@ export async function runScheduledAppointmentReminderCycle() {
       await em.flush();
     }
   }
+}
+
+export async function sendScheduledAppointmentReminderNow(scheduledAppointmentId: string) {
+  const { config, em, to } = await getReminderContext();
+  const scheduledAppointment = await em.findOne(ScheduledAppointment, { id: scheduledAppointmentId });
+
+  if (!scheduledAppointment) {
+    return null;
+  }
+
+  await sendMetaTemplateReminder(to, scheduledAppointment, config);
+  scheduledAppointment.lastWhatsappReminderAt = new Date();
+  scheduledAppointment.lastWhatsappReminderError = undefined;
+  await em.flush();
+
+  return scheduledAppointment;
 }
 
 export function startScheduledAppointmentReminderWorker() {
