@@ -143,33 +143,38 @@ export function AppointmentDetail({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 pb-24 md:p-4">
+      <div className="max-h-[calc(100vh-7rem)] w-full max-w-2xl overflow-y-auto rounded-lg bg-white md:max-h-[90vh]">
         <div className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-white p-4">
-          <h2 className="text-xl font-semibold text-gray-900">Detalles de la Cita</h2>
-          <button onClick={onClose} className="rounded-lg p-2 transition-colors hover:bg-gray-100">
+          <h2 className="pr-4 text-lg font-semibold text-gray-900 md:text-xl">Detalles de la Cita</h2>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-2 transition-colors hover:bg-gray-100"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           <div className="mb-6">
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <h3 className="text-2xl font-semibold text-gray-900">{appointment.specialty}</h3>
-              <div className="flex gap-2">
+            <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <h3 className="text-xl font-semibold text-gray-900 md:text-2xl">
+                {appointment.specialty}
+              </h3>
+              <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:justify-end">
                 <button
                   onClick={() => onEdit(appointment)}
-                  className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                  className="inline-flex min-w-0 items-center justify-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
                 >
                   <Edit className="h-4 w-4" />
-                  Editar
+                  <span className="truncate">Editar</span>
                 </button>
                 <button
                   onClick={() => onDelete(appointment)}
-                  className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50"
+                  className="inline-flex min-w-0 items-center justify-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50"
                 >
                   <Trash2 className="h-4 w-4" />
-                  Eliminar
+                  <span className="truncate">Eliminar</span>
                 </button>
               </div>
             </div>
@@ -215,266 +220,280 @@ export function AppointmentDetail({
                     key={document.id}
                     className="rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
                   >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <div className="mb-2 flex items-center gap-2">
-                        <span
-                          className={`rounded px-2 py-1 text-xs font-medium ${documentTypeColors[document.type]}`}
-                        >
-                          {documentTypeLabels[document.type]}
-                        </span>
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-2 flex flex-wrap items-center gap-2">
+                          <span
+                            className={`rounded px-2 py-1 text-xs font-medium ${documentTypeColors[document.type]}`}
+                          >
+                            {documentTypeLabels[document.type]}
+                          </span>
+                        </div>
+                        <p className="mb-1 break-words font-medium text-gray-900">{document.name}</p>
+                        <p className="text-sm text-gray-500">
+                          {format(document.date, "d 'de' MMMM, yyyy", { locale: es })}
+                        </p>
                       </div>
-                      <p className="mb-1 font-medium text-gray-900">{document.name}</p>
-                      <p className="text-sm text-gray-500">
-                        {format(document.date, "d 'de' MMMM, yyyy", { locale: es })}
-                      </p>
+
+                      {document.fileUrl ? (
+                        <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:min-w-[180px]">
+                          <button
+                            onClick={() => onViewFile?.(document.fileUrl!, document.name)}
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm text-white transition-colors hover:bg-blue-700"
+                            title="Ver archivo"
+                          >
+                            <Eye className="h-4 w-4 shrink-0" />
+                            <span className="truncate">Ver archivo</span>
+                          </button>
+                          <a
+                            href={document.fileUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+                          >
+                            <Download className="h-4 w-4 shrink-0" />
+                            <span className="truncate">
+                              {isStandalonePwa ? 'Abrir fuera de la app' : 'Abrir aparte'}
+                            </span>
+                          </a>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">Sin archivo subido</span>
+                      )}
                     </div>
 
-                    {document.fileUrl ? (
-                      <div className="flex flex-col gap-2">
-                        <button
-                          onClick={() => onViewFile?.(document.fileUrl!, document.name)}
-                          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm text-white transition-colors hover:bg-blue-700"
-                          title="Ver archivo"
-                        >
-                          <Eye className="h-4 w-4" />
-                          Ver archivo
-                        </button>
-                        <a
-                          href={document.fileUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
-                        >
-                          <Download className="h-4 w-4" />
-                          {isStandalonePwa ? 'Abrir fuera de la app' : 'Abrir aparte'}
-                        </a>
-                      </div>
-                    ) : (
-                      <span className="text-sm text-gray-400">Sin archivo subido</span>
-                    )}
-                  </div>
-
-                  <div className="mt-4 rounded-lg border border-gray-100 bg-gray-50 p-3">
-                    <button
-                      type="button"
-                      onClick={() => toggleSummary(document.id)}
-                      className="flex w-full items-center justify-between gap-3 text-left"
-                    >
-                      <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                        <Sparkles className="h-4 w-4 text-blue-500" />
-                        <span>Resumen IA</span>
-                      </div>
-                      {expandedSummaries[document.id] ? (
-                        <ChevronDown className="h-4 w-4 text-gray-500" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4 text-gray-500" />
-                      )}
-                    </button>
-
-                    {expandedSummaries[document.id] &&
-                    document.aiSummaryStatus === 'completed' &&
-                    document.aiSummary ? (
-                      <div className="space-y-2">
-                        {summaryMetaLine && (
-                          <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                            {summaryMetaLine}
-                          </p>
+                    <div className="mt-4 rounded-lg border border-gray-100 bg-gray-50 p-3">
+                      <button
+                        type="button"
+                        onClick={() => toggleSummary(document.id)}
+                        className="flex w-full items-center justify-between gap-3 text-left"
+                      >
+                        <div className="flex min-w-0 items-center gap-2 text-sm font-medium text-gray-700">
+                          <Sparkles className="h-4 w-4 shrink-0 text-blue-500" />
+                          <span className="truncate">Resumen IA</span>
+                        </div>
+                        {expandedSummaries[document.id] ? (
+                          <ChevronDown className="h-4 w-4 shrink-0 text-gray-500" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 shrink-0 text-gray-500" />
                         )}
+                      </button>
+
+                      {expandedSummaries[document.id] &&
+                      document.aiSummaryStatus === 'completed' &&
+                      document.aiSummary ? (
                         <div className="space-y-2">
-                          {formatSummaryLines(document.aiSummary).map((line, index) => {
-                            const separatorIndex = line.indexOf(':');
-                            const hasLabel = separatorIndex > 0;
-                            const label = hasLabel ? line.slice(0, separatorIndex).trim() : '';
-                            const content = hasLabel ? line.slice(separatorIndex + 1).trim() : line;
-
-                            return (
-                              <div
-                                key={`${document.id}-summary-${index}`}
-                                className="rounded-md bg-white px-3 py-2 text-sm leading-6 text-gray-700"
-                              >
-                                {hasLabel ? (
-                                  <>
-                                    <span className="font-semibold text-gray-900">{label}:</span>{' '}
-                                    <span>{content}</span>
-                                  </>
-                                ) : (
-                                  <span>{content}</span>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                        {hasStructuredContent(document) && document.aiStructuredData && (
-                          <div className="space-y-3 rounded-md border border-gray-200 bg-white p-3">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                              Datos estructurados detectados
+                          {summaryMetaLine && (
+                            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                              {summaryMetaLine}
                             </p>
+                          )}
+                          <div className="space-y-2">
+                            {formatSummaryLines(document.aiSummary).map((line, index) => {
+                              const separatorIndex = line.indexOf(':');
+                              const hasLabel = separatorIndex > 0;
+                              const label = hasLabel ? line.slice(0, separatorIndex).trim() : '';
+                              const content = hasLabel ? line.slice(separatorIndex + 1).trim() : line;
 
-                            {document.aiStructuredData.detectedDiagnoses.length > 0 && (
-                              <div className="space-y-2">
-                                <p className="text-xs font-medium text-gray-700">Diagnósticos</p>
-                                {renderStructuredStringList(
-                                  document.aiStructuredData.detectedDiagnoses,
-                                  'bg-red-50 text-red-700'
-                                )}
-                              </div>
-                            )}
-
-                            {document.aiStructuredData.detectedConditions.length > 0 && (
-                              <div className="space-y-2">
-                                <p className="text-xs font-medium text-gray-700">Patologías o antecedentes</p>
-                                {renderStructuredStringList(
-                                  document.aiStructuredData.detectedConditions,
-                                  'bg-purple-50 text-purple-700'
-                                )}
-                              </div>
-                            )}
-
-                            {document.aiStructuredData.detectedMedications.length > 0 && (
-                              <div className="space-y-2">
-                                <p className="text-xs font-medium text-gray-700">Medicamentos</p>
-                                <div className="space-y-2">
-                                  {document.aiStructuredData.detectedMedications.map((medication) => (
-                                    <div
-                                      key={`${medication.name}-${medication.dosage ?? ''}-${medication.frequency ?? ''}-${medication.status}`}
-                                      className="rounded-md border border-green-100 bg-green-50 px-3 py-2 text-sm text-green-900"
-                                    >
-                                      <p className="font-medium">{medication.name}</p>
-                                      <p className="text-xs text-green-800">
-                                        {[
-                                          medication.dosage,
-                                          medication.frequency,
-                                          medication.status === 'active'
-                                            ? 'Activo'
-                                            : medication.status === 'suspended'
-                                              ? 'Suspendido'
-                                              : 'Mencionado',
-                                        ]
-                                          .filter(Boolean)
-                                          .join(' · ')}
-                                      </p>
-                                      {medication.notes && (
-                                        <p className="mt-1 text-xs text-green-800">{medication.notes}</p>
-                                      )}
-                                    </div>
-                                  ))}
+                              return (
+                                <div
+                                  key={`${document.id}-summary-${index}`}
+                                  className="rounded-md bg-white px-3 py-2 text-sm leading-6 text-gray-700"
+                                >
+                                  {hasLabel ? (
+                                    <>
+                                      <span className="font-semibold text-gray-900">{label}:</span>{' '}
+                                      <span>{content}</span>
+                                    </>
+                                  ) : (
+                                    <span>{content}</span>
+                                  )}
                                 </div>
-                              </div>
-                            )}
-
-                            {document.aiStructuredData.detectedPendingStudies.length > 0 && (
-                              <div className="space-y-2">
-                                <p className="text-xs font-medium text-gray-700">Estudios pendientes</p>
-                                {renderStructuredStringList(
-                                  document.aiStructuredData.detectedPendingStudies,
-                                  'bg-amber-50 text-amber-700'
-                                )}
-                              </div>
-                            )}
-
-                            {document.aiStructuredData.detectedControls.length > 0 && (
-                              <div className="space-y-2">
-                                <p className="text-xs font-medium text-gray-700">Controles sugeridos</p>
-                                <div className="space-y-2">
-                                  {document.aiStructuredData.detectedControls.map((control) => (
-                                    <div
-                                      key={`${control.description}-${control.interval ?? ''}-${control.suggestedSpecialty ?? ''}`}
-                                      className="rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-900"
-                                    >
-                                      <p className="font-medium">{control.description}</p>
-                                      <p className="text-xs text-blue-800">
-                                        {[control.interval, control.suggestedSpecialty]
-                                          .filter(Boolean)
-                                          .join(' · ')}
-                                      </p>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {document.aiStructuredData.confidenceNotes.length > 0 && (
-                              <div className="space-y-2">
-                                <p className="text-xs font-medium text-gray-700">Notas de confianza</p>
-                                <ul className="list-disc space-y-1 pl-5 text-xs text-gray-600">
-                                  {document.aiStructuredData.confidenceNotes.map((note) => (
-                                    <li key={note}>{note}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        {document.aiSummaryUpdatedAt && (
-                          <p className="text-xs text-gray-500">
-                            Actualizado el{' '}
-                            {format(document.aiSummaryUpdatedAt, "d 'de' MMMM, yyyy h:mm a", {
-                              locale: es,
+                              );
                             })}
-                          </p>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => onDocumentSummaryAction?.(document.id, 'regenerate')}
-                          className="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-3 py-2 text-sm text-blue-700 transition-colors hover:bg-blue-50"
-                        >
-                          <RefreshCw className="h-4 w-4" />
-                          Regenerar resumen
-                        </button>
-                      </div>
-                    ) : null}
-
-                    {expandedSummaries[document.id] &&
-                      (document.aiSummaryStatus === 'pending' ||
-                        document.aiSummaryStatus === 'processing') && (
-                      <div className="mt-3 flex items-start gap-2 text-sm text-blue-700">
-                        <LoaderCircle className="mt-0.5 h-4 w-4 animate-spin" />
-                        <p>
-                          Estamos procesando este archivo para generar un resumen automático.
-                          Mantén abierta esta vista o vuelve a entrar en unos segundos.
-                        </p>
-                      </div>
-                    )}
-
-                    {expandedSummaries[document.id] && document.aiSummaryStatus === 'failed' && (
-                      <div className="mt-3 space-y-3">
-                        <div className="flex items-start gap-2 text-sm text-amber-700">
-                          <AlertCircle className="mt-0.5 h-4 w-4" />
-                          <div>
-                            <p className="font-medium">No pudimos generar el resumen.</p>
-                            {document.aiSummaryError && (
-                              <p className="mt-1 text-amber-700/90">{document.aiSummaryError}</p>
-                            )}
                           </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => onDocumentSummaryAction?.(document.id, 'retry')}
-                          className="inline-flex items-center gap-2 rounded-lg border border-amber-200 px-3 py-2 text-sm text-amber-700 transition-colors hover:bg-amber-50"
-                        >
-                          <RefreshCw className="h-4 w-4" />
-                          Reintentar resumen
-                        </button>
-                      </div>
-                    )}
+                          {hasStructuredContent(document) && document.aiStructuredData && (
+                            <div className="space-y-3 rounded-md border border-gray-200 bg-white p-3">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                Datos estructurados detectados
+                              </p>
 
-                    {expandedSummaries[document.id] && document.aiSummaryStatus === 'idle' && (
-                      <div className="mt-3 space-y-3">
-                        <p className="text-sm text-gray-500">
-                          Este documento aún no tiene un resumen automático disponible.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => onDocumentSummaryAction?.(document.id, 'generate')}
-                          className="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-3 py-2 text-sm text-blue-700 transition-colors hover:bg-blue-50"
-                        >
-                          <Sparkles className="h-4 w-4" />
-                          Generar resumen
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                              {document.aiStructuredData.detectedDiagnoses.length > 0 && (
+                                <div className="space-y-2">
+                                  <p className="text-xs font-medium text-gray-700">Diagnósticos</p>
+                                  {renderStructuredStringList(
+                                    document.aiStructuredData.detectedDiagnoses,
+                                    'bg-red-50 text-red-700'
+                                  )}
+                                </div>
+                              )}
+
+                              {document.aiStructuredData.detectedConditions.length > 0 && (
+                                <div className="space-y-2">
+                                  <p className="text-xs font-medium text-gray-700">
+                                    Patologías o antecedentes
+                                  </p>
+                                  {renderStructuredStringList(
+                                    document.aiStructuredData.detectedConditions,
+                                    'bg-purple-50 text-purple-700'
+                                  )}
+                                </div>
+                              )}
+
+                              {document.aiStructuredData.detectedMedications.length > 0 && (
+                                <div className="space-y-2">
+                                  <p className="text-xs font-medium text-gray-700">Medicamentos</p>
+                                  <div className="space-y-2">
+                                    {document.aiStructuredData.detectedMedications.map((medication) => (
+                                      <div
+                                        key={`${medication.name}-${medication.dosage ?? ''}-${medication.frequency ?? ''}-${medication.status}`}
+                                        className="rounded-md border border-green-100 bg-green-50 px-3 py-2 text-sm text-green-900"
+                                      >
+                                        <p className="font-medium break-words">{medication.name}</p>
+                                        <p className="text-xs text-green-800">
+                                          {[
+                                            medication.dosage,
+                                            medication.frequency,
+                                            medication.status === 'active'
+                                              ? 'Activo'
+                                              : medication.status === 'suspended'
+                                                ? 'Suspendido'
+                                                : 'Mencionado',
+                                          ]
+                                            .filter(Boolean)
+                                            .join(' · ')}
+                                        </p>
+                                        {medication.notes && (
+                                          <p className="mt-1 text-xs text-green-800">
+                                            {medication.notes}
+                                          </p>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {document.aiStructuredData.detectedPendingStudies.length > 0 && (
+                                <div className="space-y-2">
+                                  <p className="text-xs font-medium text-gray-700">
+                                    Estudios pendientes
+                                  </p>
+                                  {renderStructuredStringList(
+                                    document.aiStructuredData.detectedPendingStudies,
+                                    'bg-amber-50 text-amber-700'
+                                  )}
+                                </div>
+                              )}
+
+                              {document.aiStructuredData.detectedControls.length > 0 && (
+                                <div className="space-y-2">
+                                  <p className="text-xs font-medium text-gray-700">
+                                    Controles sugeridos
+                                  </p>
+                                  <div className="space-y-2">
+                                    {document.aiStructuredData.detectedControls.map((control) => (
+                                      <div
+                                        key={`${control.description}-${control.interval ?? ''}-${control.suggestedSpecialty ?? ''}`}
+                                        className="rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-900"
+                                      >
+                                        <p className="font-medium break-words">
+                                          {control.description}
+                                        </p>
+                                        <p className="text-xs text-blue-800">
+                                          {[control.interval, control.suggestedSpecialty]
+                                            .filter(Boolean)
+                                            .join(' · ')}
+                                        </p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {document.aiStructuredData.confidenceNotes.length > 0 && (
+                                <div className="space-y-2">
+                                  <p className="text-xs font-medium text-gray-700">
+                                    Notas de confianza
+                                  </p>
+                                  <ul className="list-disc space-y-1 pl-5 text-xs text-gray-600">
+                                    {document.aiStructuredData.confidenceNotes.map((note) => (
+                                      <li key={note}>{note}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {document.aiSummaryUpdatedAt && (
+                            <p className="text-xs text-gray-500">
+                              Actualizado el{' '}
+                              {format(document.aiSummaryUpdatedAt, "d 'de' MMMM, yyyy h:mm a", {
+                                locale: es,
+                              })}
+                            </p>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => onDocumentSummaryAction?.(document.id, 'regenerate')}
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 px-3 py-2 text-sm text-blue-700 transition-colors hover:bg-blue-50 sm:w-auto"
+                          >
+                            <RefreshCw className="h-4 w-4" />
+                            Regenerar resumen
+                          </button>
+                        </div>
+                      ) : null}
+
+                      {expandedSummaries[document.id] &&
+                        (document.aiSummaryStatus === 'pending' ||
+                          document.aiSummaryStatus === 'processing') && (
+                        <div className="mt-3 flex items-start gap-2 text-sm text-blue-700">
+                          <LoaderCircle className="mt-0.5 h-4 w-4 shrink-0 animate-spin" />
+                          <p>
+                            Estamos procesando este archivo para generar un resumen automático.
+                            Mantén abierta esta vista o vuelve a entrar en unos segundos.
+                          </p>
+                        </div>
+                      )}
+
+                      {expandedSummaries[document.id] && document.aiSummaryStatus === 'failed' && (
+                        <div className="mt-3 space-y-3">
+                          <div className="flex items-start gap-2 text-sm text-amber-700">
+                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                            <div>
+                              <p className="font-medium">No pudimos generar el resumen.</p>
+                              {document.aiSummaryError && (
+                                <p className="mt-1 text-amber-700/90">{document.aiSummaryError}</p>
+                              )}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => onDocumentSummaryAction?.(document.id, 'retry')}
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-amber-200 px-3 py-2 text-sm text-amber-700 transition-colors hover:bg-amber-50 sm:w-auto"
+                          >
+                            <RefreshCw className="h-4 w-4" />
+                            Reintentar resumen
+                          </button>
+                        </div>
+                      )}
+
+                      {expandedSummaries[document.id] && document.aiSummaryStatus === 'idle' && (
+                        <div className="mt-3 space-y-3">
+                          <p className="text-sm text-gray-500">
+                            Este documento aún no tiene un resumen automático disponible.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => onDocumentSummaryAction?.(document.id, 'generate')}
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 px-3 py-2 text-sm text-blue-700 transition-colors hover:bg-blue-50 sm:w-auto"
+                          >
+                            <Sparkles className="h-4 w-4" />
+                            Generar resumen
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })}
