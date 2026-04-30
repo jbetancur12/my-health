@@ -3,6 +3,7 @@ import { es } from 'date-fns/locale';
 import { NotificationPreference } from '../../entities/NotificationPreference.js';
 import { ScheduledAppointment } from '../../entities/ScheduledAppointment.js';
 import { getOrm } from '../../orm.js';
+import { findFirst } from '../shared/find-first.js';
 
 const DEFAULT_META_GRAPH_API_VERSION = 'v23.0';
 const DEFAULT_REMINDER_INTERVAL_MS = 15 * 60 * 1000;
@@ -123,7 +124,7 @@ export async function runScheduledAppointmentReminderCycle() {
 
   const orm = await getOrm();
   const em = orm.em.fork();
-  const preferences = await em.findOne(NotificationPreference, {}, { orderBy: { createdAt: 'asc' } });
+  const preferences = await findFirst(em, NotificationPreference, { createdAt: 'asc' });
 
   if (!preferences?.whatsappEnabled || !preferences.whatsappOptIn || !preferences.phone) {
     return;
