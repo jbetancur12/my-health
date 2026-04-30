@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Download, Check, Printer } from 'lucide-react';
+import { FileText, Download, Check, Printer, Sparkles } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -7,9 +7,11 @@ import type {
   Appointment,
   MedicalProfile,
   Medication,
+  ReportDateRange,
   Vaccine,
   VitalSignReading,
 } from '../../../shared/api/contracts';
+import { generateExecutiveReport as requestExecutiveReport } from '../../../shared/api/api';
 
 interface PDFReportProps {
   appointments: Appointment[];
@@ -19,7 +21,38 @@ interface PDFReportProps {
   medicalProfile: MedicalProfile;
 }
 
-type DateRange = 'all' | '6months' | '1year';
+type DateRange = ReportDateRange;
+
+function wrapPdfLines(doc: jsPDF, text: string, maxWidth: number) {
+  return doc.splitTextToSize(text, maxWidth) as string[];
+}
+
+function formatExecutiveSummary(summary: string) {
+  const lines = summary
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const sections: Array<{ heading: string; items: string[] }> = [];
+  let currentSection: { heading: string; items: string[] } | null = null;
+
+  for (const line of lines) {
+    if (!line.startsWith('- ')) {
+      currentSection = { heading: line, items: [] };
+      sections.push(currentSection);
+      continue;
+    }
+
+    if (!currentSection) {
+      currentSection = { heading: 'Resumen ejecutivo', items: [] };
+      sections.push(currentSection);
+    }
+
+    currentSection.items.push(line.slice(2).trim());
+  }
+
+  return sections;
+}
 
 export function PDFReport({
   appointments,
@@ -34,6 +67,7 @@ export function PDFReport({
   const [includeVaccines, setIncludeVaccines] = useState(true);
   const [includeVitals, setIncludeVitals] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange>('6months');
+  const [includeExecutiveSummary, setIncludeExecutiveSummary] = useState(true);
   const [generating, setGenerating] = useState(false);
 
   function filterByDate<T extends { date: Date }>(items: T[]) {
@@ -51,10 +85,101 @@ export function PDFReport({
     return items.filter((item) => new Date(item.date) >= cutoffDate);
   }
 
-  function generatePDF() {
+  async function generatePDF() {
     setGenerating(true);
 
     try {
+      let executiveReport:
+        | {
+            summary: string;
+            generatedAt: Date;
+            provider: 'openai' | 'gemini';
+          }
+        | undefined;
+
+      if (includeExecutiveSummary) {
+        try {
+          executiveReport = await requestExecutiveReport({
+            appointments: appointments.map((appointment) => ({
+              id: appointment.id,
+              date: appointment.date.toISOString(),
+              specialty: appointment.specialty,
+              doctor: appointment.doctor,
+              notes: appointment.notes,
+              tags: appointment.tags,
+              createdAt: appointment.date.toISOString(),
+              documents: appointment.documents.map((document) => ({
+                id: document.id,
+                type: document.type,
+                name: document.name,
+                date: document.date.toISOString(),
+                fileUrl: document.fileUrl,
+                aiSummary: document.aiSummary,
+                aiSummaryStatus: document.aiSummaryStatus,
+                aiSummaryError: document.aiSummaryError,
+                aiSummaryUpdatedAt: document.aiSummaryUpdatedAt?.toISOString(),
+              })),
+            })),
+            medications: medications.map((medication) => ({
+              id: medication.id,
+              name: medication.name,
+              dosage: medication.dosage,
+              frequency: medication.frequency,
+              startDate: medication.startDate.toISOString(),
+              endDate: medication.endDate?.toISOString(),
+              notes: medication.notes,
+              active: medication.active,
+              createdAt: medication.startDate.toISOString(),
+            })),
+            vaccines: vaccines.map((vaccine) => ({
+              id: vaccine.id,
+              name: vaccine.name,
+              date: vaccine.date.toISOString(),
+              nextDose: vaccine.nextDose?.toISOString(),
+              doseNumber: vaccine.doseNumber,
+              totalDoses: vaccine.totalDoses,
+              location: vaccine.location,
+              lot: vaccine.lot,
+              notes: vaccine.notes,
+              createdAt: vaccine.date.toISOString(),
+            })),
+            vitalSigns: vitalSigns.map((reading) => ({
+              id: reading.id,
+              date: reading.date.toISOString(),
+              bloodPressureSystolic: reading.bloodPressureSystolic,
+              bloodPressureDiastolic: reading.bloodPressureDiastolic,
+              heartRate: reading.heartRate,
+              weight: reading.weight,
+              glucose: reading.glucose,
+              temperature: reading.temperature,
+              oxygenSaturation: reading.oxygenSaturation,
+              notes: reading.notes,
+              createdAt: reading.date.toISOString(),
+            })),
+            medicalProfile: {
+              id: medicalProfile.id,
+              bloodType: medicalProfile.bloodType,
+              allergies: medicalProfile.allergies,
+              chronicConditions: medicalProfile.chronicConditions,
+              emergencyContacts: medicalProfile.emergencyContacts,
+              insurance: medicalProfile.insurance,
+              notes: medicalProfile.notes,
+            },
+            dateRange,
+            includeProfile,
+            includeAppointments,
+            includeMedications,
+            includeVaccines,
+            includeVitals,
+          });
+        } catch (error) {
+          console.error('Error generating executive report:', error);
+          alert(
+            'No pudimos generar el reporte ejecutivo con IA. Continuaremos con el PDF estructurado.'
+          );
+        }
+      }
+
       const doc = new jsPDF();
       let yPosition = 20;
       const pageHeight = doc.internal.pageSize.height;
@@ -85,6 +210,51 @@ export function PDFReport({
         yPosition
       );
       yPosition += 15;
+
+      if (executiveReport) {
+        checkAddPage(45);
+
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Reporte ejecutivo con IA', margin, yPosition);
+        yPosition += lineHeight + 2;
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'italic');
+        doc.text(
+          `Generado con ${executiveReport.provider === 'openai' ? 'OpenAI' : 'Gemini'} el ${format(executiveReport.generatedAt, "d 'de' MMMM, yyyy h:mm a", { locale: es })}`,
+          margin,
+          yPosition
+        );
+        yPosition += lineHeight + 3;
+
+        const sections = formatExecutiveSummary(executiveReport.summary);
+        doc.setFontSize(11);
+
+        for (const section of sections) {
+          checkAddPage(20);
+          doc.setFont('helvetica', 'bold');
+          doc.text(section.heading, margin, yPosition);
+          yPosition += lineHeight;
+
+          doc.setFont('helvetica', 'normal');
+
+          for (const item of section.items) {
+            const wrappedLines = wrapPdfLines(doc, `• ${item}`, 170);
+            checkAddPage(wrappedLines.length * lineHeight + 4);
+            doc.text(wrappedLines, margin + 3, yPosition);
+            yPosition += wrappedLines.length * lineHeight;
+          }
+
+          if (section.items.length === 0) {
+            const wrappedLines = wrapPdfLines(doc, '• Sin datos relevantes', 170);
+            doc.text(wrappedLines, margin + 3, yPosition);
+            yPosition += wrappedLines.length * lineHeight;
+          }
+
+          yPosition += 4;
+        }
+      }
 
       // Medical Profile
       if (includeProfile && medicalProfile) {
@@ -475,6 +645,25 @@ export function PDFReport({
               </p>
             </div>
           </label>
+
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={includeExecutiveSummary}
+              onChange={(e) => setIncludeExecutiveSummary(e.target.checked)}
+              className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+            />
+            <div className="flex-1">
+              <p className="font-medium text-gray-900 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-500" />
+                Reporte ejecutivo con IA
+              </p>
+              <p className="text-sm text-gray-600">
+                Sintetiza evolución reciente, hallazgos por especialidad, laboratorios y próximos
+                pasos usando las últimas citas y documentos resumidos.
+              </p>
+            </div>
+          </label>
         </div>
 
         <div className="mb-6">
@@ -502,7 +691,7 @@ export function PDFReport({
           {generating ? (
             <>
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              Generando PDF...
+              Generando reporte...
             </>
           ) : (
             <>

@@ -216,3 +216,25 @@ export interface AppDataBundleDto {
   vitalSigns: VitalSignDto[];
   vaccines: VaccineDto[];
 }
+
+export type ReportDateRange = 'all' | '6months' | '1year';
+
+export interface ExecutiveReportPayload {
+  appointments: AppointmentDto[];
+  medications: MedicationDto[];
+  vaccines: VaccineDto[];
+  vitalSigns: VitalSignDto[];
+  medicalProfile: MedicalProfileDto;
+  dateRange: ReportDateRange;
+  includeProfile: boolean;
+  includeAppointments: boolean;
+  includeMedications: boolean;
+  includeVaccines: boolean;
+  includeVitals: boolean;
+}
+
+export interface ExecutiveReportDto {
+  summary: string;
+  generatedAt: string;
+  provider: 'openai' | 'gemini';
+}

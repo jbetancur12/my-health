@@ -9,6 +9,9 @@ import type {
   Control,
   ControlApiDto,
   ControlApiPayload,
+  ExecutiveReport,
+  ExecutiveReportApiDto,
+  ExecutiveReportApiPayload,
   Medication,
   MedicationApiDto,
   MedicationApiPayload,
@@ -251,6 +254,20 @@ export async function retryDocumentSummary(
     aiSummaryUpdatedAt: data.document.aiSummaryUpdatedAt
       ? new Date(data.document.aiSummaryUpdatedAt)
       : undefined,
+  };
+}
+
+export async function generateExecutiveReport(
+  payload: ExecutiveReportApiPayload
+): Promise<ExecutiveReport> {
+  const data = (await fetchAPI('/reports/executive-summary', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })) as { report: ExecutiveReportApiDto };
+
+  return {
+    ...data.report,
+    generatedAt: new Date(data.report.generatedAt),
   };
 }
 

@@ -7,12 +7,15 @@ import type {
   ControlDto,
   ControlPayload,
   DocumentType,
+  ExecutiveReportDto,
+  ExecutiveReportPayload,
   MedicationDto,
   MedicationPayload,
   MedicalProfileDto,
   MedicalProfilePayload,
   NotificationPreferencesDto,
   NotificationPreferencePayload,
+  ReportDateRange,
   VaccineDto,
   VaccinePayload,
   VitalSignDto,
@@ -138,8 +141,16 @@ export interface AppDataBundle {
   vaccines: Vaccine[];
 }
 
+export interface ExecutiveReport {
+  summary: string;
+  generatedAt: Date;
+  provider: 'openai' | 'gemini';
+}
+
 export type AppointmentApiPayload = AppointmentPayload;
 export type ControlApiPayload = ControlPayload;
+export type ExecutiveReportApiDto = ExecutiveReportDto;
+export type ExecutiveReportApiPayload = ExecutiveReportPayload;
 export type MedicationApiPayload = MedicationPayload;
 export type MedicalProfileApiPayload = MedicalProfilePayload;
 export type NotificationPreferencesApiPayload = NotificationPreferencePayload;
@@ -155,3 +166,4 @@ export type VitalSignApiDto = VitalSignDto;
 export type VaccineApiDto = VaccineDto;
 export type AppDataBundleApiDto = AppDataBundleDto;
 export type AppointmentDocumentApiPayload = AppointmentDocumentPayload;
+export type { ReportDateRange };

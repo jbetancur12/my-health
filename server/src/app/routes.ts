@@ -7,6 +7,7 @@ import { registerHealthRoutes } from '../modules/health/routes.js';
 import { registerMedicalProfileRoutes } from '../modules/medical-profile/routes.js';
 import { registerMedicationRoutes } from '../modules/medications/routes.js';
 import { registerNotificationPreferenceRoutes } from '../modules/notification-preferences/routes.js';
+import { registerReportRoutes } from '../modules/reports/routes.js';
 import { registerTagRoutes } from '../modules/tags/routes.js';
 import { registerUploadRoutes } from '../modules/uploads/routes.js';
 import { registerVaccineRoutes } from '../modules/vaccines/routes.js';
@@ -28,6 +29,7 @@ export function registerRoutes({ app, nodeEnv, upload, uploadsRoot }: RegisterRo
   registerMedicationRoutes(app);
   registerMedicalProfileRoutes(app);
   registerNotificationPreferenceRoutes(app);
+  registerReportRoutes(app);
   registerTagRoutes(app);
   registerVitalSignRoutes(app);
   registerVaccineRoutes(app);
