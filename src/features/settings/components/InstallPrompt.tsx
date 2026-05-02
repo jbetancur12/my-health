@@ -61,7 +61,7 @@ export function InstallPrompt() {
           <Download className="w-6 h-6" />
         </div>
         <div className="flex-1">
-          <h3 className="font-semibold mb-1">Instalar Mi Salud</h3>
+          <h3 className="font-semibold mb-1">Instalar VitaCita</h3>
           <p className="text-sm text-blue-100 mb-3">
             Instala la app en tu dispositivo para acceso rápido y uso sin conexión.
           </p>

@@ -1,13 +1,19 @@
 {
-  "name": "Archivo Médico Personal",
-  "short_name": "Mi Salud",
-  "description": "Gestiona tu historial médico completo",
+  "name": "VitaCita",
+  "short_name": "VitaCita",
+  "description": "Tu vida médica, organizada",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#3B82F6",
+  "theme_color": "#155DFC",
   "orientation": "portrait",
   "icons": [
+    {
+      "src": "/vitacita-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
     {
       "src": "/icon-192.png",
       "sizes": "192x192",

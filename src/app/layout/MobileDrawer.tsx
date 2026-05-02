@@ -103,7 +103,7 @@ export function MobileDrawer({ activeTab, onTabChange }: MobileDrawerProps) {
           </div>
 
           <div className="border-t border-gray-200 bg-gray-50 p-4">
-            <p className="text-center text-xs text-gray-500">Archivo Médico Personal v4.0</p>
+            <p className="text-center text-xs text-gray-500">VitaCita v4.0</p>
           </div>
         </div>
       </div>

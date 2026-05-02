@@ -12,12 +12,12 @@ export function MobileOptimization() {
         name: 'viewport',
         content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
       },
-      { name: 'theme-color', content: '#3B82F6' },
+      { name: 'theme-color', content: '#155DFC' },
       { name: 'apple-mobile-web-app-capable', content: 'yes' },
       { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
-      { name: 'apple-mobile-web-app-title', content: 'Mi Salud' },
+      { name: 'apple-mobile-web-app-title', content: 'VitaCita' },
       { name: 'mobile-web-app-capable', content: 'yes' },
-      { name: 'application-name', content: 'Mi Salud' },
+      { name: 'application-name', content: 'VitaCita' },
     ];
 
     metaTags.forEach(({ name, content }) => {
