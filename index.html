@@ -3,8 +3,96 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>VitaCita</title>
+
+    <!-- ═══════════════════════════════════════
+         Primary Meta Tags
+    ═══════════════════════════════════════ -->
+    <title>VitaCita — Tu vida médica, organizada</title>
+    <meta name="title" content="VitaCita — Tu vida médica, organizada" />
+    <meta
+      name="description"
+      content="Gestiona tus citas médicas, documentos de salud, medicamentos y controles desde un solo lugar. Tu historial médico personal, siempre disponible."
+    />
+    <meta
+      name="keywords"
+      content="citas médicas, historial médico, gestión salud, medicamentos, controles médicos, app salud, salud personal, agenda médica"
+    />
+    <meta name="author" content="VitaCita" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#155DFC" />
+    <meta name="application-name" content="VitaCita" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="VitaCita" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://citas.betancur.work" />
+
+    <!-- Icons & PWA Manifest -->
     <link rel="icon" type="image/svg+xml" href="/vitacita-icon.svg" />
+    <link rel="apple-touch-icon" href="/vitacita-icon.svg" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- ═══════════════════════════════════════
+         Open Graph / Facebook / WhatsApp
+    ═══════════════════════════════════════ -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://citas.betancur.work" />
+    <meta property="og:site_name" content="VitaCita" />
+    <meta property="og:title" content="VitaCita — Tu vida médica, organizada" />
+    <meta
+      property="og:description"
+      content="Gestiona tus citas médicas, documentos de salud, medicamentos y controles desde un solo lugar. Tu historial médico personal, siempre disponible."
+    />
+    <meta property="og:image" content="https://citas.betancur.work/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="VitaCita — Tu vida médica, organizada" />
+    <meta property="og:locale" content="es_CO" />
+
+    <!-- ═══════════════════════════════════════
+         Twitter / X Card
+    ═══════════════════════════════════════ -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://citas.betancur.work" />
+    <meta name="twitter:title" content="VitaCita — Tu vida médica, organizada" />
+    <meta
+      name="twitter:description"
+      content="Gestiona tus citas médicas, documentos de salud, medicamentos y controles desde un solo lugar."
+    />
+    <meta name="twitter:image" content="https://citas.betancur.work/og-image.png" />
+    <meta name="twitter:image:alt" content="VitaCita — Tu vida médica, organizada" />
+
+    <!-- ═══════════════════════════════════════
+         JSON-LD Structured Data
+    ═══════════════════════════════════════ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "VitaCita",
+      "url": "https://citas.betancur.work",
+      "description": "Gestiona tus citas médicas, documentos de salud, medicamentos y controles desde un solo lugar. Tu historial médico personal, siempre disponible.",
+      "applicationCategory": "HealthApplication",
+      "operatingSystem": "Any",
+      "inLanguage": "es-CO",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "COP"
+      },
+      "featureList": [
+        "Gestión de citas médicas por especialidad",
+        "Historial médico personal",
+        "Control de medicamentos",
+        "Seguimiento de controles",
+        "Exportación de datos",
+        "Acceso sin conexión (PWA)"
+      ]
+    }
+    </script>
+
     <style>
       html,
       body {
